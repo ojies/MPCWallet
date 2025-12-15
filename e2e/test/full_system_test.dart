@@ -192,8 +192,20 @@ void main() {
       print('6. Syncing Wallet 2');
       // Wait a bit for Electrum to catch up?
       // electrs is usually fast but might need a moment after block generation
-      await Future.delayed(Duration(seconds: 2));
-      await wallet2.sync(electrumProvider);
+      // Retry loop for sync Wallet 2
+      int retries2 = 15;
+      while (retries2 > 0) {
+        try {
+          await wallet2.sync(electrumProvider);
+          final tempUtxos = await wallet2.store.getUtxos();
+          if (tempUtxos.isNotEmpty) break;
+          // print("Wallet 2 synced 0 UTXOs, retrying...");
+        } catch (e) {
+          print("Wallet 2 Sync error: $e, retrying...");
+        }
+        retries2--;
+        if (retries2 > 0) await Future.delayed(Duration(seconds: 2));
+      }
       final utxos2 = await wallet2.store.getUtxos();
       print(
           'Synced Wallet 2: ${utxos2.length} UTXOs. Balance: ${utxos2.fold(BigInt.zero, (s, u) => s + u.utxo.value)}');

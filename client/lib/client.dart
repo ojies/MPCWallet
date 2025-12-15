@@ -229,10 +229,11 @@ class MpcClient {
     final z =
         threshold.bytesToBigInt(Uint8List.fromList(signStep2Resp.zScalar));
 
+    final tweakedGroupPubKey = groupPubKey.tweak(null);
     final challenge =
-        frost_sig.computeChallenge(R, groupPubKey.verifyingKey, message);
+        frost_sig.computeChallenge(R, tweakedGroupPubKey.verifyingKey, message);
     final zG = (threshold.secp256k1Curve.G * z)!;
-    final cY = (groupPubKey.verifyingKey.E * challenge)!;
+    final cY = (tweakedGroupPubKey.verifyingKey.E * challenge)!;
     final R_plus_cY = (R + cY)!;
 
     final isValid = threshold.pointsEqual(zG, R_plus_cY);
