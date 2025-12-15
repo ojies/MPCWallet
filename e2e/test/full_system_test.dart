@@ -40,7 +40,11 @@ void main() {
     // Probe
     btc = RegtestHelper();
     try {
-      await btc.createWallet("default");
+      try {
+        await btc.createWallet("default");
+      } catch (e) {
+        if (!e.toString().contains("already loaded")) rethrow;
+      }
       // Re-init with wallet path to ensure all calls go to 'default' wallet
       btc = RegtestHelper(rpcUrl: "http://127.0.0.1:18443/wallet/default");
       await btc.getNewAddress();
@@ -129,8 +133,23 @@ void main() {
     print('4. Syncing Wallet 1 via Electrum');
     // Use Real Electrum Provider
     final electrumProvider = RealElectrumProvider();
+
+    // Give electrs a moment to index the new block
+    // Retry loop for sync
     try {
-      await wallet.sync(electrumProvider);
+      int retries = 15;
+      while (retries > 0) {
+        try {
+          await wallet.sync(electrumProvider);
+          final utxos = await wallet.store.getUtxos();
+          if (utxos.isNotEmpty) break;
+          print("Synced 0 UTXOs, retrying...");
+        } catch (e) {
+          print("Sync error: $e, retrying...");
+        }
+        retries--;
+        if (retries > 0) await Future.delayed(Duration(seconds: 2));
+      }
 
       final utxos = await wallet.store.getUtxos();
       expect(utxos.length, greaterThanOrEqualTo(1));
