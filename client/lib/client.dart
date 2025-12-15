@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:grpc/grpc.dart';
+import 'package:threshold/core/dkg.dart';
 import 'package:threshold/threshold.dart' as threshold;
 import 'package:threshold/frost/signing.dart' as frost;
 import 'package:threshold/frost/commitment.dart' as frost_comm;
@@ -40,17 +41,23 @@ class MpcClient {
   threshold.KeyPackage? _keyPackage2;
   threshold.PublicKeyPackage? _publicKeyPackage2;
 
+  final bool _useIdentity2;
+
   // Bitcoin Wallet removed (Decoupled)
 
   /// Creates a client that manages two shares (identities).
   /// [id1] and [id2] are the identifiers for this client's two shares.
   /// [deviceId] identifies this DKG session. If null, a random one is generated.
   MpcClient(ClientChannel channel, this._id1, this._id2,
-      {int maxSigners = 3, int minSigners = 2, String? deviceId})
+      {int maxSigners = 3,
+      int minSigners = 2,
+      String? deviceId,
+      bool useIdentity2 = false})
       : _stub = MPCWalletClient(channel),
         _deviceId = deviceId ?? _generateDeviceId(),
         _maxSigners = maxSigners,
-        _minSigners = minSigners;
+        _minSigners = minSigners,
+        _useIdentity2 = useIdentity2;
 
   static String _generateDeviceId() {
     final r = Random();
@@ -72,7 +79,8 @@ class MpcClient {
   // Getters for testing
   threshold.KeyPackage? get keyPackage1 => _keyPackage1;
   threshold.KeyPackage? get keyPackage2 => _keyPackage2;
-  threshold.PublicKeyPackage? get publicKey => _publicKeyPackage1;
+  threshold.PublicKeyPackage? get publicKey =>
+      _useIdentity2 ? _publicKeyPackage2 : _publicKeyPackage1;
 
   // --- DKG ---
 
@@ -165,13 +173,16 @@ class MpcClient {
     _publicKeyPackage2 = pubKeyPkg2;
   }
 
+  PublicKeyPackage getTweakedPublicKeyPackage(List<int>? merkle_root) {
+    final publicKey = _useIdentity2 ? _publicKeyPackage2 : _publicKeyPackage1;
+    return publicKey!.tweak(merkle_root);
+  }
   // --- SIGNING ---
 
-  Future<threshold.Signature> sign(Uint8List message,
-      {bool useIdentity2 = true}) async {
-    final myId = useIdentity2 ? _id2 : _id1;
-    final myKeyPkg = useIdentity2 ? _keyPackage2 : _keyPackage1;
-    final groupPubKey = _publicKeyPackage1;
+  Future<threshold.Signature> sign(Uint8List message) async {
+    final myId = _useIdentity2 ? _id2 : _id1;
+    final myKeyPkg = _useIdentity2 ? _keyPackage2 : _keyPackage1;
+    final groupPubKey = _useIdentity2 ? _publicKeyPackage2 : _publicKeyPackage1;
 
     if (myKeyPkg == null || groupPubKey == null) {
       throw StateError("DKG not completed.");

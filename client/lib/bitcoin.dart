@@ -23,7 +23,8 @@ class MpcBitcoinWallet {
     return _address;
   }
 
-  MpcBitcoinWallet(this.client, {this.isTestnet = false, String? storageId})
+  MpcBitcoinWallet(this.client,
+      {this.isTestnet = false, String? storageId, bool useIdentity2 = false})
       : store = WalletStore(
             boxName: storageId ?? 'bitcoin_wallet_state_${client.deviceId}');
 
@@ -57,7 +58,7 @@ class MpcBitcoinWallet {
       deviceId: client.deviceId,
       keyPackage1: client.keyPackage1!.toJson(),
       keyPackage2: client.keyPackage2!.toJson(),
-      publicKeyPackage: client.publicKey!.toJson(),
+      publicKeyPackage: client.getTweakedPublicKeyPackage(null).toJson(),
     );
   }
 
@@ -75,8 +76,7 @@ class MpcBitcoinWallet {
   }
 
   void _deriveAddress() {
-    final publicKey = client.publicKey;
-    if (publicKey == null) return; // Should not happen after init
+    final publicKey = client.getTweakedPublicKeyPackage(null);
 
     final point = publicKey.verifyingKey.E;
 
@@ -85,8 +85,8 @@ class MpcBitcoinWallet {
     final pointHex = hex.encode(pointBytes);
 
     final ecPub = ECPublic.fromHex(pointHex);
-    _address = ecPub.toTaprootAddress();
-
+    _address = P2trAddress.fromProgram(
+        program: BytesUtils.toHexString(ecPub.toXOnly()));
     print(
         "Wallet Address: ${_address.toAddress(isTestnet ? BitcoinNetwork.testnet : BitcoinNetwork.mainnet)}");
   }
