@@ -85,7 +85,7 @@ void main() {
     // 1. MPC Setup
     print('1. MPC Setup');
     final channel = ClientChannel(
-      'localhost',
+      '127.0.0.1',
       port: 50051,
       options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
     );
@@ -223,7 +223,7 @@ void main() {
 
 class RealElectrumProvider {
   static const int port = 50001;
-  static const String host = 'localhost';
+  static const String host = '127.0.0.1';
 
   Future<List<dynamic>> request(dynamic request) async {
     final scriptHash = request.scriptHash;
@@ -235,7 +235,7 @@ class RealElectrumProvider {
         retries--;
         print("Electrum Connection Error: $e. Retrying ($retries left)...");
         if (retries == 0) rethrow;
-        await Future.delayed(Duration(seconds: 2));
+        await Future.delayed(Duration(seconds: 3));
       }
     }
     throw Exception("Unreachable");
@@ -254,6 +254,7 @@ class RealElectrumProvider {
       };
 
       socket.writeln(jsonEncode(payload));
+      await socket.flush();
 
       socket
           .cast<List<int>>()
