@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:client/policy.dart';
 import 'package:grpc/grpc.dart';
 import 'package:threshold/core/dkg.dart';
 import 'package:threshold/threshold.dart' as threshold;
@@ -10,6 +11,8 @@ import 'package:threshold/frost/signing.dart' as frost;
 import 'package:threshold/frost/commitment.dart' as frost_comm;
 import 'package:threshold/frost/signature.dart' as frost_sig;
 import 'package:protocol/protocol.dart';
+import 'package:crypto/crypto.dart';
+import 'package:fixnum/fixnum.dart';
 
 class MpcClient {
   final MPCWalletClient _stub;
@@ -18,46 +21,33 @@ class MpcClient {
   String _deviceId;
   String get deviceId => _deviceId;
 
-  // Two client identities
-  final threshold.Identifier _id1;
-  final threshold.Identifier _id2;
+  // Two identities
+  final threshold.Identifier _signingId;
+  final threshold.Identifier _recoveryId;
 
   final int _maxSigners;
   final int _minSigners;
 
-  // State for Identity 1
-  threshold.SecretKey? _secret1;
-  threshold.Round1SecretPackage? _r1Secret1;
-  threshold.Round1Package? _r1Public1;
-  threshold.Round2SecretPackage? _r2Secret1;
-  threshold.KeyPackage? _keyPackage1;
-  threshold.PublicKeyPackage? _publicKeyPackage1;
+  threshold.SecretKey? _signingSecret;
+  threshold.SecretKey? _recoverySecret;
 
-  // State for Identity 2
-  threshold.SecretKey? _secret2;
-  threshold.Round1SecretPackage? _r1Secret2;
-  threshold.Round1Package? _r1Public2;
-  threshold.Round2SecretPackage? _r2Secret2;
-  threshold.KeyPackage? _keyPackage2;
-  threshold.PublicKeyPackage? _publicKeyPackage2;
+  SpendingPolicy? _spendingPolicies;
+  Map<String, ProtectedPolicy> _protectedPolicies;
 
-  final bool _useIdentity2;
+  RecoveryPolicy? _recoveryPolicy;
 
   // Bitcoin Wallet removed (Decoupled)
 
   /// Creates a client that manages two shares (identities).
   /// [id1] and [id2] are the identifiers for this client's two shares.
   /// [deviceId] identifies this DKG session. If null, a random one is generated.
-  MpcClient(ClientChannel channel, this._id1, this._id2,
-      {int maxSigners = 3,
-      int minSigners = 2,
-      String? deviceId,
-      bool useIdentity2 = false})
+  MpcClient(ClientChannel channel, this._signingId, this._recoveryId,
+      {int maxSigners = 3, int minSigners = 2, String? deviceId})
       : _stub = MPCWalletClient(channel),
         _deviceId = deviceId ?? _generateDeviceId(),
         _maxSigners = maxSigners,
         _minSigners = minSigners,
-        _useIdentity2 = useIdentity2;
+        _protectedPolicies = {};
 
   static String _generateDeviceId() {
     final r = Random();
@@ -65,51 +55,52 @@ class MpcClient {
         16, (index) => r.nextInt(255).toRadixString(16).padLeft(2, '0')).join();
   }
 
-  bool get isInitialized => _keyPackage1 != null && _keyPackage2 != null;
+  bool get isInitialized =>
+      _spendingPolicies != null && _recoveryPolicy != null;
 
-  void restoreState(String deviceId, threshold.KeyPackage k1,
-      threshold.KeyPackage k2, threshold.PublicKeyPackage pk) {
-    _deviceId = deviceId;
-    _keyPackage1 = k1;
-    _keyPackage2 = k2;
-    _publicKeyPackage1 = pk;
-    _publicKeyPackage2 = pk;
-  }
+  // TODO (Joshua) Ensure that states are restored
+  // void restoreState(String deviceId, threshold.KeyPackage k1,
+  //     threshold.KeyPackage k2, threshold.PublicKeyPackage pk) {
+  //   _deviceId = deviceId;
+  //   _keyPackages1.add(k1);
+  //   _keyPackages2.add(k2);
+  //   _publicKeyPackages1.add(pk);
+  //   _publicKeyPackages2.add(pk);
+  // }
 
   // Getters for testing
-  threshold.KeyPackage? get keyPackage1 => _keyPackage1;
-  threshold.KeyPackage? get keyPackage2 => _keyPackage2;
-  threshold.PublicKeyPackage? get publicKey =>
-      _useIdentity2 ? _publicKeyPackage2 : _publicKeyPackage1;
+  // threshold.KeyPackage? get keyPackage1 =>
+  //     _keyPackages1.isEmpty ? null : _keyPackages1.last;
+  // threshold.KeyPackage? get keyPackage2 =>
+  //     _keyPackages2.isEmpty ? null : _keyPackages2.last;
+  // threshold.PublicKeyPackage? get publicKey => _useIdentity2
+  //     ? (_publicKeyPackages2.isEmpty ? null : _publicKeyPackages2.last)
+  //     : (_publicKeyPackages1.isEmpty ? null : _publicKeyPackages1.last);
 
   // --- DKG ---
 
   Future<void> doDkg() async {
     // 1. Generate Secrets for both identities
-    _secret1 = threshold.SecretKey(threshold.modNRandom());
+    _signingSecret = threshold.SecretKey(threshold.modNRandom());
     final coeffs1 = threshold.generateCoefficients(_minSigners - 1);
-    final (r1Sec1, r1Pub1) =
-        threshold.dkgPart1(_id1, _maxSigners, _minSigners, _secret1!, coeffs1);
-    _r1Secret1 = r1Sec1;
-    _r1Public1 = r1Pub1;
+    final (r1Sec1, r1Pub1) = threshold.dkgPart1(
+        _signingId, _maxSigners, _minSigners, _signingSecret!, coeffs1);
 
-    _secret2 = threshold.SecretKey(threshold.modNRandom());
+    _recoverySecret = threshold.SecretKey(threshold.modNRandom());
     final coeffs2 = threshold.generateCoefficients(_minSigners - 1);
-    final (r1Sec2, r1Pub2) =
-        threshold.dkgPart1(_id2, _maxSigners, _minSigners, _secret2!, coeffs2);
-    _r1Secret2 = r1Sec2;
-    _r1Public2 = r1Pub2;
+    final (r1Sec2, r1Pub2) = threshold.dkgPart1(
+        _recoveryId, _maxSigners, _minSigners, _recoverySecret!, coeffs2);
 
     // 2. Step 1: Exchange Round 1 Packages for both
     final req1 = DKGStep1Request()
       ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(_id1.toScalar())
-      ..round1Package = jsonEncode(_r1Public1!.toJson());
+      ..identifier = threshold.bigIntToBytes(_signingId.toScalar())
+      ..round1Package = jsonEncode(r1Pub1.toJson());
 
     final req2 = DKGStep1Request()
       ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(_id2.toScalar())
-      ..round1Package = jsonEncode(_r1Public2!.toJson());
+      ..identifier = threshold.bigIntToBytes(_recoveryId.toScalar())
+      ..round1Package = jsonEncode(r1Pub2.toJson());
 
     final step1Futures =
         await Future.wait([_stub.dKGStep1(req1), _stub.dKGStep1(req2)]);
@@ -120,7 +111,7 @@ class MpcClient {
     // Trigger Step 2 on server for this session
     await _stub.dKGStep2(DKGStep2Request()
       ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(_id1.toScalar()));
+      ..identifier = threshold.bigIntToBytes(_signingId.toScalar()));
 
     // Parse R1 packages for Identity 1
     final round1PkgsMap1 = <threshold.Identifier, threshold.Round1Package>{};
@@ -131,28 +122,23 @@ class MpcClient {
       final id = threshold.Identifier(BigInt.parse(k, radix: 16));
       final pkg = threshold.Round1Package.fromJson(jsonDecode(v));
 
-      if (id != _id1) round1PkgsMap1[id] = pkg;
-      if (id != _id2) round1PkgsMap2[id] = pkg;
+      if (id != _signingId) round1PkgsMap1[id] = pkg;
+      if (id != _recoveryId) round1PkgsMap2[id] = pkg;
     });
 
     // Compute shares
-    final (r2Sec1, sharesFrom1) =
-        threshold.dkgPart2(_r1Secret1!, round1PkgsMap1);
-    _r2Secret1 = r2Sec1;
-
-    final (r2Sec2, sharesFrom2) =
-        threshold.dkgPart2(_r1Secret2!, round1PkgsMap2);
-    _r2Secret2 = r2Sec2;
+    final (r2Sec1, sharesFrom1) = threshold.dkgPart2(r1Sec1, round1PkgsMap1);
+    final (r2Sec2, sharesFrom2) = threshold.dkgPart2(r1Sec2, round1PkgsMap2);
 
     // 4. Step 3: Exchange Shares
     final req3_1 = DKGStep3Request()
       ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(_id1.toScalar())
+      ..identifier = threshold.bigIntToBytes(_signingId.toScalar())
       ..round2PackagesForOthers.addAll(_buildSharesMap(sharesFrom1));
 
     final req3_2 = DKGStep3Request()
       ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(_id2.toScalar())
+      ..identifier = threshold.bigIntToBytes(_recoveryId.toScalar())
       ..round2PackagesForOthers.addAll(_buildSharesMap(sharesFrom2));
 
     final step3Futures =
@@ -162,44 +148,202 @@ class MpcClient {
     final sharesForMe2 = _parseShares(step3Futures[1].round2PackagesForMe);
 
     // 5. Finalize for both
-    final (keyPkg1, pubKeyPkg1) = threshold.dkgPart3(
-        _r1Secret1!, _r2Secret1!, round1PkgsMap1, sharesForMe1);
-    _keyPackage1 = keyPkg1;
-    _publicKeyPackage1 = pubKeyPkg1;
+    final (keyPkg1, pubKeyPkg1) =
+        threshold.dkgPart3(r1Sec1, r2Sec1, round1PkgsMap1, sharesForMe1);
+    final (keyPkg2, pubKeyPkg2) =
+        threshold.dkgPart3(r1Sec2, r2Sec2, round1PkgsMap2, sharesForMe2);
 
-    final (keyPkg2, pubKeyPkg2) = threshold.dkgPart3(
-        _r1Secret2!, _r2Secret2!, round1PkgsMap2, sharesForMe2);
-    _keyPackage2 = keyPkg2;
-    _publicKeyPackage2 = pubKeyPkg2;
+    _spendingPolicies = SpendingPolicy(
+        id: "normal_policy_id",
+        keyPackage: keyPkg1,
+        publicKeyPackage: pubKeyPkg1);
+
+    _recoveryPolicy = RecoveryPolicy(
+        id: "recovery_policy_id",
+        keyPackage: keyPkg2,
+        publicKeyPackage: pubKeyPkg2);
   }
 
+  // Note: PublicKey is the unifying key for all identities
   PublicKeyPackage getTweakedPublicKeyPackage(List<int>? merkle_root) {
-    final publicKey = _useIdentity2 ? _publicKeyPackage2 : _publicKeyPackage1;
-    return publicKey!.tweak(merkle_root);
+    final publicKey = _spendingPolicies!.publicKeyPackage;
+    return publicKey.tweak(merkle_root);
   }
-  // --- SIGNING ---
 
-  Future<threshold.Signature> sign(Uint8List message) async {
-    final myId = _useIdentity2 ? _id2 : _id1;
-    final myKeyPkg = _useIdentity2 ? _keyPackage2 : _keyPackage1;
-    final groupPubKey = _useIdentity2 ? _publicKeyPackage2 : _publicKeyPackage1;
+  // --- REFRESH ---
 
-    if (myKeyPkg == null || groupPubKey == null) {
-      throw StateError("DKG not completed.");
+  Future<void> createSpendingPolicy(
+      Duration interval, Int64 thresholdAmount, String pin) async {
+    if (!isInitialized) {
+      throw StateError("Client not initialized (DKG not run).");
     }
 
+    final seed = sha256.convert(utf8.encode(pin)).bytes;
+
+    // Part 1: Generate Refresh Secrets
+    // We use 2-party refresh.
+    final totalParticipants = 2;
+    final thresholdCount = 2;
+
+    final (r1Sec, r1Pub) = threshold.dkgRefreshPart1(
+        _signingId, totalParticipants, thresholdCount,
+        seed: seed);
+
+    // Step 1: Exchange
+    final req = RefreshStep1Request()
+      ..deviceId = _deviceId
+      ..identifier = threshold.bigIntToBytes(_signingId.toScalar())
+      ..round1Package = jsonEncode(r1Pub.toJson())
+      ..interval = Int64(interval.inSeconds)
+      ..thresholdAmount = thresholdAmount;
+
+    final step1Futures = await Future.wait([_stub.refreshStep1(req)]);
+    final step1Resp = step1Futures[0];
+
+    // Step 2: Shares
+    await _stub.refreshStep2(RefreshStep2Request()
+      ..deviceId = _deviceId
+      ..identifier = threshold.bigIntToBytes(_signingId.toScalar()));
+
+    // Parse R1 packages (includes server's)
+    final round1PkgsMap = <threshold.Identifier, threshold.Round1Package>{};
+
+    step1Resp.round1Packages.forEach((k, v) {
+      final id_temp = threshold.Identifier(BigInt.parse(k, radix: 16));
+      final pkg = threshold.Round1Package.fromJson(jsonDecode(v));
+
+      if (id_temp != _signingId) round1PkgsMap[id_temp] = pkg;
+    });
+
+    // Compute shares
+    final (r2Sec, sharesFrom) = threshold.dkgRefreshPart2(r1Sec, round1PkgsMap);
+
+    // Step 3: Finalize
+    final req3 = RefreshStep3Request()
+      ..deviceId = _deviceId
+      ..identifier = threshold.bigIntToBytes(_signingId.toScalar())
+      ..round2PackagesForOthers.addAll(_buildSharesMap(sharesFrom));
+
+    final step3Futures = await Future.wait([_stub.refreshStep3(req3)]);
+    final step3Response = step3Futures[0];
+    final sharesForMe = _parseShares(step3Response.round2PackagesForMe);
+
+    final normalKeyPackage = _spendingPolicies!.keyPackage;
+    final normalPubPackage = _spendingPolicies!.publicKeyPackage;
+
+    final (keyPkg1, pubKeyPkg1) = threshold.dkgRefreshPart3(
+        r2Sec, round1PkgsMap, sharesForMe, normalPubPackage, normalKeyPackage);
+
+    // myUpdate is evaluatePolynomial(myId, coeffs)
+    final myUpdate =
+        threshold.evaluatePolynomial(_signingId, r1Sec.coefficients);
+    final newSecret = keyPkg1.secretShare;
+
+    final n = threshold.secp256k1Curve.n;
+    var diff = (newSecret - myUpdate) % n;
+    if (diff.isNegative) diff += n;
+
+    final protectedKeyPkg = threshold.KeyPackage(
+      keyPkg1.identifier,
+      diff, // Cleared
+      keyPkg1.verifyingShare,
+      keyPkg1.verifyingKey,
+      keyPkg1.minSigners,
+    );
+
+    // TODO: Find a way to create protected policy ID, starting from the spending policy ID
+
+    _protectedPolicies[_spendingPolicies!.id] = ProtectedPolicy(
+      id: step1Resp.policyId,
+      keyPackage: protectedKeyPkg,
+      publicKeyPackage: pubKeyPkg1,
+      startTime:
+          DateTime.fromMillisecondsSinceEpoch(step1Resp.startTime.toInt()),
+      interval: interval,
+    );
+  }
+
+  // --- SIGNING ---
+  Future<String> getPolicyId(Uint8List message) async {
+    final response = await _stub.getPolicyId(GetPolicyIdRequest()
+      ..deviceId = _deviceId
+      ..txMessage = message);
+    return response.policyId;
+  }
+
+  Future<threshold.Signature> sign(Uint8List message,
+      {String? pin, String? policyId}) async {
+    var keyPackage = _spendingPolicies!.keyPackage;
+
+    if (policyId != null &&
+        _protectedPolicies.containsKey(policyId) &&
+        pin != null) {
+      final protectedPolicy = _protectedPolicies[policyId];
+
+      final minSigners = 2;
+
+      final seed = sha256.convert(utf8.encode(pin)).bytes;
+      final coeffUpdate =
+          threshold.generateCoefficients(minSigners - 1, seed: seed);
+
+      final coeffs = [BigInt.zero, ...coeffUpdate];
+
+      final myUpdate = threshold.evaluatePolynomial(_signingId, coeffs);
+
+      final partialShare = protectedPolicy!.keyPackage.secretShare;
+
+      final n = threshold.secp256k1Curve.n;
+      final correctedShare = (partialShare + myUpdate) % n;
+
+      keyPackage = threshold.KeyPackage(
+        protectedPolicy.keyPackage.identifier,
+        correctedShare,
+        protectedPolicy.keyPackage.verifyingShare,
+        protectedPolicy.keyPackage.verifyingKey,
+        protectedPolicy.keyPackage.minSigners,
+      );
+    }
+    final groupPubKey = _spendingPolicies!.publicKeyPackage;
+
+    return signWithContext(
+      message,
+      keyPackage,
+      groupPubKey,
+      null,
+      null,
+    );
+  }
+
+  Future<threshold.Signature> signWithContext(
+    Uint8List message,
+    threshold.KeyPackage keyPkg,
+    threshold.PublicKeyPackage groupPubKey,
+    List<int>? fullTransaction,
+    List<UtxoInfo>? inputUtxos,
+  ) async {
     // 1. Generate Nonce
-    final nonce = frost_comm.newNonce(myKeyPkg.secretShare);
+    // We use the default key (latest) to generate the nonce.
+    // Even if policy enforces a different key later, we reuse this nonce (allowed in FROST if nonce is fresh).
+    final nonce = frost_comm.newNonce(keyPkg.secretShare);
 
     // 2. Step 1: Commitments
-    final signStep1Resp = await _stub.signStep1(SignStep1Request()
+    final req = SignStep1Request()
       ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(myId.toScalar())
+      ..identifier = threshold.bigIntToBytes(_signingId.toScalar())
       ..hidingCommitment =
           threshold.elemSerializeCompressed(nonce.commitments.hiding)
       ..bindingCommitment =
           threshold.elemSerializeCompressed(nonce.commitments.binding)
-      ..messageToSign = message);
+      ..messageToSign = message;
+
+    if (fullTransaction != null) {
+      req.fullTransaction = fullTransaction;
+    }
+    if (inputUtxos != null) {
+      req.inputUtxos.addAll(inputUtxos);
+    }
+
+    final signStep1Resp = await _stub.signStep1(req);
 
     // Parse Commitments
     final commitmentsMap =
@@ -214,13 +358,14 @@ class MpcClient {
     });
 
     // 3. Step 2: Sign
+    // Use the SELECTED key
     final signingPkg = frost_comm.SigningPackage(commitmentsMap, message);
-    final sigShare = frost.sign(signingPkg, nonce, myKeyPkg);
+    final sigShare = frost.sign(signingPkg, nonce, keyPkg);
 
     // 4. Send Share & Get Result
     final signStep2Resp = await _stub.signStep2(SignStep2Request()
       ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(myId.toScalar())
+      ..identifier = threshold.bigIntToBytes(_signingId.toScalar())
       ..signatureShare = threshold.bigIntToBytes(sigShare.s));
 
     // 5. Verify

@@ -12,6 +12,7 @@
 
 import 'dart:core' as $core;
 
+import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
@@ -425,6 +426,8 @@ class SignStep1Request extends $pb.GeneratedMessage {
     $core.List<$core.int>? hidingCommitment,
     $core.List<$core.int>? bindingCommitment,
     $core.List<$core.int>? messageToSign,
+    $core.List<$core.int>? fullTransaction,
+    $core.Iterable<UtxoInfo>? inputUtxos,
   }) {
     final result = create();
     if (deviceId != null) result.deviceId = deviceId;
@@ -432,6 +435,8 @@ class SignStep1Request extends $pb.GeneratedMessage {
     if (hidingCommitment != null) result.hidingCommitment = hidingCommitment;
     if (bindingCommitment != null) result.bindingCommitment = bindingCommitment;
     if (messageToSign != null) result.messageToSign = messageToSign;
+    if (fullTransaction != null) result.fullTransaction = fullTransaction;
+    if (inputUtxos != null) result.inputUtxos.addAll(inputUtxos);
     return result;
   }
 
@@ -457,6 +462,10 @@ class SignStep1Request extends $pb.GeneratedMessage {
         4, _omitFieldNames ? '' : 'bindingCommitment', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
         5, _omitFieldNames ? '' : 'messageToSign', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        6, _omitFieldNames ? '' : 'fullTransaction', $pb.PbFieldType.OY)
+    ..pPM<UtxoInfo>(7, _omitFieldNames ? '' : 'inputUtxos',
+        subBuilder: UtxoInfo.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -522,6 +531,96 @@ class SignStep1Request extends $pb.GeneratedMessage {
   $core.bool hasMessageToSign() => $_has(4);
   @$pb.TagNumber(5)
   void clearMessageToSign() => $_clearField(5);
+
+  /// New: Transaction Context for Policy Enforcement
+  @$pb.TagNumber(6)
+  $core.List<$core.int> get fullTransaction => $_getN(5);
+  @$pb.TagNumber(6)
+  set fullTransaction($core.List<$core.int> value) => $_setBytes(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasFullTransaction() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearFullTransaction() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $pb.PbList<UtxoInfo> get inputUtxos => $_getList(6);
+}
+
+class UtxoInfo extends $pb.GeneratedMessage {
+  factory UtxoInfo({
+    $core.String? txHash,
+    $core.int? vout,
+    $fixnum.Int64? amount,
+  }) {
+    final result = create();
+    if (txHash != null) result.txHash = txHash;
+    if (vout != null) result.vout = vout;
+    if (amount != null) result.amount = amount;
+    return result;
+  }
+
+  UtxoInfo._();
+
+  factory UtxoInfo.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UtxoInfo.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UtxoInfo',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'txHash')
+    ..aI(2, _omitFieldNames ? '' : 'vout')
+    ..aInt64(3, _omitFieldNames ? '' : 'amount')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UtxoInfo clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UtxoInfo copyWith(void Function(UtxoInfo) updates) =>
+      super.copyWith((message) => updates(message as UtxoInfo)) as UtxoInfo;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UtxoInfo create() => UtxoInfo._();
+  @$core.override
+  UtxoInfo createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UtxoInfo getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<UtxoInfo>(create);
+  static UtxoInfo? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get txHash => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set txHash($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTxHash() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTxHash() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get vout => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set vout($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasVout() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearVout() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get amount => $_getI64(2);
+  @$pb.TagNumber(3)
+  set amount($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAmount() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAmount() => $_clearField(3);
 }
 
 class SignStep1Response_Commitment extends $pb.GeneratedMessage {
@@ -600,10 +699,12 @@ class SignStep1Response extends $pb.GeneratedMessage {
     $core.Iterable<$core.MapEntry<$core.String, SignStep1Response_Commitment>>?
         commitments,
     $core.List<$core.int>? messageToSign,
+    $core.int? usedKeyIndex,
   }) {
     final result = create();
     if (commitments != null) result.commitments.addEntries(commitments);
     if (messageToSign != null) result.messageToSign = messageToSign;
+    if (usedKeyIndex != null) result.usedKeyIndex = usedKeyIndex;
     return result;
   }
 
@@ -630,6 +731,7 @@ class SignStep1Response extends $pb.GeneratedMessage {
         packageName: const $pb.PackageName('mpc_wallet'))
     ..a<$core.List<$core.int>>(
         2, _omitFieldNames ? '' : 'messageToSign', $pb.PbFieldType.OY)
+    ..aI(3, _omitFieldNames ? '' : 'usedKeyIndex')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -663,6 +765,15 @@ class SignStep1Response extends $pb.GeneratedMessage {
   $core.bool hasMessageToSign() => $_has(1);
   @$pb.TagNumber(2)
   void clearMessageToSign() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.int get usedKeyIndex => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set usedKeyIndex($core.int value) => $_setSignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasUsedKeyIndex() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearUsedKeyIndex() => $_clearField(3);
 }
 
 class SignStep2Request extends $pb.GeneratedMessage {
@@ -813,6 +924,741 @@ class SignStep2Response extends $pb.GeneratedMessage {
   $core.bool hasZScalar() => $_has(1);
   @$pb.TagNumber(2)
   void clearZScalar() => $_clearField(2);
+}
+
+class RefreshStep1Request extends $pb.GeneratedMessage {
+  factory RefreshStep1Request({
+    $core.String? deviceId,
+    $core.List<$core.int>? identifier,
+    $core.String? round1Package,
+    $fixnum.Int64? thresholdAmount,
+    $fixnum.Int64? interval,
+  }) {
+    final result = create();
+    if (deviceId != null) result.deviceId = deviceId;
+    if (identifier != null) result.identifier = identifier;
+    if (round1Package != null) result.round1Package = round1Package;
+    if (thresholdAmount != null) result.thresholdAmount = thresholdAmount;
+    if (interval != null) result.interval = interval;
+    return result;
+  }
+
+  RefreshStep1Request._();
+
+  factory RefreshStep1Request.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RefreshStep1Request.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RefreshStep1Request',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'deviceId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'identifier', $pb.PbFieldType.OY)
+    ..aOS(3, _omitFieldNames ? '' : 'round1Package')
+    ..aInt64(4, _omitFieldNames ? '' : 'thresholdAmount')
+    ..aInt64(5, _omitFieldNames ? '' : 'interval')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RefreshStep1Request clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RefreshStep1Request copyWith(void Function(RefreshStep1Request) updates) =>
+      super.copyWith((message) => updates(message as RefreshStep1Request))
+          as RefreshStep1Request;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RefreshStep1Request create() => RefreshStep1Request._();
+  @$core.override
+  RefreshStep1Request createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RefreshStep1Request getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RefreshStep1Request>(create);
+  static RefreshStep1Request? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get deviceId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set deviceId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasDeviceId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDeviceId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get identifier => $_getN(1);
+  @$pb.TagNumber(2)
+  set identifier($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasIdentifier() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearIdentifier() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get round1Package => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set round1Package($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasRound1Package() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearRound1Package() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get thresholdAmount => $_getI64(3);
+  @$pb.TagNumber(4)
+  set thresholdAmount($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasThresholdAmount() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearThresholdAmount() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get interval => $_getI64(4);
+  @$pb.TagNumber(5)
+  set interval($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasInterval() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearInterval() => $_clearField(5);
+}
+
+class RefreshStep1Response extends $pb.GeneratedMessage {
+  factory RefreshStep1Response({
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? round1Packages,
+    $core.String? policyId,
+    $fixnum.Int64? startTime,
+  }) {
+    final result = create();
+    if (round1Packages != null)
+      result.round1Packages.addEntries(round1Packages);
+    if (policyId != null) result.policyId = policyId;
+    if (startTime != null) result.startTime = startTime;
+    return result;
+  }
+
+  RefreshStep1Response._();
+
+  factory RefreshStep1Response.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RefreshStep1Response.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RefreshStep1Response',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..m<$core.String, $core.String>(1, _omitFieldNames ? '' : 'round1Packages',
+        entryClassName: 'RefreshStep1Response.Round1PackagesEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('mpc_wallet'))
+    ..aOS(2, _omitFieldNames ? '' : 'policyId')
+    ..aInt64(3, _omitFieldNames ? '' : 'startTime')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RefreshStep1Response clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RefreshStep1Response copyWith(void Function(RefreshStep1Response) updates) =>
+      super.copyWith((message) => updates(message as RefreshStep1Response))
+          as RefreshStep1Response;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RefreshStep1Response create() => RefreshStep1Response._();
+  @$core.override
+  RefreshStep1Response createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RefreshStep1Response getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RefreshStep1Response>(create);
+  static RefreshStep1Response? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbMap<$core.String, $core.String> get round1Packages => $_getMap(0);
+
+  @$pb.TagNumber(2)
+  $core.String get policyId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set policyId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPolicyId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPolicyId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get startTime => $_getI64(2);
+  @$pb.TagNumber(3)
+  set startTime($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasStartTime() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearStartTime() => $_clearField(3);
+}
+
+class RefreshStep2Request extends $pb.GeneratedMessage {
+  factory RefreshStep2Request({
+    $core.String? deviceId,
+    $core.List<$core.int>? identifier,
+    $core.String? round1Package,
+  }) {
+    final result = create();
+    if (deviceId != null) result.deviceId = deviceId;
+    if (identifier != null) result.identifier = identifier;
+    if (round1Package != null) result.round1Package = round1Package;
+    return result;
+  }
+
+  RefreshStep2Request._();
+
+  factory RefreshStep2Request.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RefreshStep2Request.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RefreshStep2Request',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'deviceId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'identifier', $pb.PbFieldType.OY)
+    ..aOS(3, _omitFieldNames ? '' : 'round1Package')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RefreshStep2Request clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RefreshStep2Request copyWith(void Function(RefreshStep2Request) updates) =>
+      super.copyWith((message) => updates(message as RefreshStep2Request))
+          as RefreshStep2Request;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RefreshStep2Request create() => RefreshStep2Request._();
+  @$core.override
+  RefreshStep2Request createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RefreshStep2Request getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RefreshStep2Request>(create);
+  static RefreshStep2Request? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get deviceId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set deviceId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasDeviceId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDeviceId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get identifier => $_getN(1);
+  @$pb.TagNumber(2)
+  set identifier($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasIdentifier() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearIdentifier() => $_clearField(2);
+
+  /// In DKG Step 2 we sent round1_package again, but strict state management
+  /// might not need it if session is locked. We will mirror DKG for consistency.
+  @$pb.TagNumber(3)
+  $core.String get round1Package => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set round1Package($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasRound1Package() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearRound1Package() => $_clearField(3);
+}
+
+class RefreshStep2Response extends $pb.GeneratedMessage {
+  factory RefreshStep2Response({
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>?
+        allRound1Packages,
+  }) {
+    final result = create();
+    if (allRound1Packages != null)
+      result.allRound1Packages.addEntries(allRound1Packages);
+    return result;
+  }
+
+  RefreshStep2Response._();
+
+  factory RefreshStep2Response.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RefreshStep2Response.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RefreshStep2Response',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..m<$core.String, $core.String>(
+        1, _omitFieldNames ? '' : 'allRound1Packages',
+        entryClassName: 'RefreshStep2Response.AllRound1PackagesEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('mpc_wallet'))
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RefreshStep2Response clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RefreshStep2Response copyWith(void Function(RefreshStep2Response) updates) =>
+      super.copyWith((message) => updates(message as RefreshStep2Response))
+          as RefreshStep2Response;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RefreshStep2Response create() => RefreshStep2Response._();
+  @$core.override
+  RefreshStep2Response createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RefreshStep2Response getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RefreshStep2Response>(create);
+  static RefreshStep2Response? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbMap<$core.String, $core.String> get allRound1Packages => $_getMap(0);
+}
+
+class RefreshStep3Request extends $pb.GeneratedMessage {
+  factory RefreshStep3Request({
+    $core.String? deviceId,
+    $core.List<$core.int>? identifier,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>?
+        round2PackagesForOthers,
+  }) {
+    final result = create();
+    if (deviceId != null) result.deviceId = deviceId;
+    if (identifier != null) result.identifier = identifier;
+    if (round2PackagesForOthers != null)
+      result.round2PackagesForOthers.addEntries(round2PackagesForOthers);
+    return result;
+  }
+
+  RefreshStep3Request._();
+
+  factory RefreshStep3Request.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RefreshStep3Request.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RefreshStep3Request',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'deviceId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'identifier', $pb.PbFieldType.OY)
+    ..m<$core.String, $core.String>(
+        3, _omitFieldNames ? '' : 'round2PackagesForOthers',
+        entryClassName: 'RefreshStep3Request.Round2PackagesForOthersEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('mpc_wallet'))
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RefreshStep3Request clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RefreshStep3Request copyWith(void Function(RefreshStep3Request) updates) =>
+      super.copyWith((message) => updates(message as RefreshStep3Request))
+          as RefreshStep3Request;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RefreshStep3Request create() => RefreshStep3Request._();
+  @$core.override
+  RefreshStep3Request createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RefreshStep3Request getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RefreshStep3Request>(create);
+  static RefreshStep3Request? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get deviceId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set deviceId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasDeviceId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDeviceId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get identifier => $_getN(1);
+  @$pb.TagNumber(2)
+  set identifier($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasIdentifier() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearIdentifier() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $pb.PbMap<$core.String, $core.String> get round2PackagesForOthers =>
+      $_getMap(2);
+}
+
+class RefreshStep3Response extends $pb.GeneratedMessage {
+  factory RefreshStep3Response({
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>?
+        round2PackagesForMe,
+  }) {
+    final result = create();
+    if (round2PackagesForMe != null)
+      result.round2PackagesForMe.addEntries(round2PackagesForMe);
+    return result;
+  }
+
+  RefreshStep3Response._();
+
+  factory RefreshStep3Response.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RefreshStep3Response.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RefreshStep3Response',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..m<$core.String, $core.String>(
+        1, _omitFieldNames ? '' : 'round2PackagesForMe',
+        entryClassName: 'RefreshStep3Response.Round2PackagesForMeEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('mpc_wallet'))
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RefreshStep3Response clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RefreshStep3Response copyWith(void Function(RefreshStep3Response) updates) =>
+      super.copyWith((message) => updates(message as RefreshStep3Response))
+          as RefreshStep3Response;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RefreshStep3Response create() => RefreshStep3Response._();
+  @$core.override
+  RefreshStep3Response createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RefreshStep3Response getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RefreshStep3Response>(create);
+  static RefreshStep3Response? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbMap<$core.String, $core.String> get round2PackagesForMe => $_getMap(0);
+}
+
+class CreateSpendingPolicyRequest extends $pb.GeneratedMessage {
+  factory CreateSpendingPolicyRequest({
+    $core.String? deviceId,
+    $fixnum.Int64? thresholdSats,
+    $fixnum.Int64? startTime,
+    $fixnum.Int64? intervalSeconds,
+  }) {
+    final result = create();
+    if (deviceId != null) result.deviceId = deviceId;
+    if (thresholdSats != null) result.thresholdSats = thresholdSats;
+    if (startTime != null) result.startTime = startTime;
+    if (intervalSeconds != null) result.intervalSeconds = intervalSeconds;
+    return result;
+  }
+
+  CreateSpendingPolicyRequest._();
+
+  factory CreateSpendingPolicyRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CreateSpendingPolicyRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CreateSpendingPolicyRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'deviceId')
+    ..aInt64(2, _omitFieldNames ? '' : 'thresholdSats')
+    ..aInt64(3, _omitFieldNames ? '' : 'startTime')
+    ..aInt64(4, _omitFieldNames ? '' : 'intervalSeconds')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateSpendingPolicyRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateSpendingPolicyRequest copyWith(
+          void Function(CreateSpendingPolicyRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as CreateSpendingPolicyRequest))
+          as CreateSpendingPolicyRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CreateSpendingPolicyRequest create() =>
+      CreateSpendingPolicyRequest._();
+  @$core.override
+  CreateSpendingPolicyRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CreateSpendingPolicyRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CreateSpendingPolicyRequest>(create);
+  static CreateSpendingPolicyRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get deviceId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set deviceId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasDeviceId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDeviceId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get thresholdSats => $_getI64(1);
+  @$pb.TagNumber(2)
+  set thresholdSats($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasThresholdSats() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearThresholdSats() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get startTime => $_getI64(2);
+  @$pb.TagNumber(3)
+  set startTime($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasStartTime() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearStartTime() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get intervalSeconds => $_getI64(3);
+  @$pb.TagNumber(4)
+  set intervalSeconds($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasIntervalSeconds() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearIntervalSeconds() => $_clearField(4);
+}
+
+class CreateSpendingPolicyResponse extends $pb.GeneratedMessage {
+  factory CreateSpendingPolicyResponse({
+    $core.String? policyId,
+    $core.int? allocatedKeyIndex,
+  }) {
+    final result = create();
+    if (policyId != null) result.policyId = policyId;
+    if (allocatedKeyIndex != null) result.allocatedKeyIndex = allocatedKeyIndex;
+    return result;
+  }
+
+  CreateSpendingPolicyResponse._();
+
+  factory CreateSpendingPolicyResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CreateSpendingPolicyResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CreateSpendingPolicyResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'policyId')
+    ..aI(2, _omitFieldNames ? '' : 'allocatedKeyIndex')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateSpendingPolicyResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateSpendingPolicyResponse copyWith(
+          void Function(CreateSpendingPolicyResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as CreateSpendingPolicyResponse))
+          as CreateSpendingPolicyResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CreateSpendingPolicyResponse create() =>
+      CreateSpendingPolicyResponse._();
+  @$core.override
+  CreateSpendingPolicyResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CreateSpendingPolicyResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CreateSpendingPolicyResponse>(create);
+  static CreateSpendingPolicyResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get policyId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set policyId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPolicyId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPolicyId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get allocatedKeyIndex => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set allocatedKeyIndex($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAllocatedKeyIndex() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAllocatedKeyIndex() => $_clearField(2);
+}
+
+class GetPolicyIdRequest extends $pb.GeneratedMessage {
+  factory GetPolicyIdRequest({
+    $core.String? deviceId,
+    $core.List<$core.int>? txMessage,
+  }) {
+    final result = create();
+    if (deviceId != null) result.deviceId = deviceId;
+    if (txMessage != null) result.txMessage = txMessage;
+    return result;
+  }
+
+  GetPolicyIdRequest._();
+
+  factory GetPolicyIdRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetPolicyIdRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetPolicyIdRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'deviceId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'txMessage', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetPolicyIdRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetPolicyIdRequest copyWith(void Function(GetPolicyIdRequest) updates) =>
+      super.copyWith((message) => updates(message as GetPolicyIdRequest))
+          as GetPolicyIdRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetPolicyIdRequest create() => GetPolicyIdRequest._();
+  @$core.override
+  GetPolicyIdRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetPolicyIdRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetPolicyIdRequest>(create);
+  static GetPolicyIdRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get deviceId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set deviceId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasDeviceId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDeviceId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get txMessage => $_getN(1);
+  @$pb.TagNumber(2)
+  set txMessage($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTxMessage() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTxMessage() => $_clearField(2);
+}
+
+class GetPolicyIdResponse extends $pb.GeneratedMessage {
+  factory GetPolicyIdResponse({
+    $core.String? policyId,
+  }) {
+    final result = create();
+    if (policyId != null) result.policyId = policyId;
+    return result;
+  }
+
+  GetPolicyIdResponse._();
+
+  factory GetPolicyIdResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetPolicyIdResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetPolicyIdResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'policyId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetPolicyIdResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetPolicyIdResponse copyWith(void Function(GetPolicyIdResponse) updates) =>
+      super.copyWith((message) => updates(message as GetPolicyIdResponse))
+          as GetPolicyIdResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetPolicyIdResponse create() => GetPolicyIdResponse._();
+  @$core.override
+  GetPolicyIdResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetPolicyIdResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetPolicyIdResponse>(create);
+  static GetPolicyIdResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get policyId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set policyId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPolicyId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPolicyId() => $_clearField(1);
 }
 
 const $core.bool _omitFieldNames =

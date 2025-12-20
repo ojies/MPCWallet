@@ -69,6 +69,43 @@ class MPCWalletClient extends $grpc.Client {
     return $createUnaryCall(_$signStep2, request, options: options);
   }
 
+  /// Refresh
+  $grpc.ResponseFuture<$0.RefreshStep1Response> refreshStep1(
+    $0.RefreshStep1Request request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$refreshStep1, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.RefreshStep2Response> refreshStep2(
+    $0.RefreshStep2Request request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$refreshStep2, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.RefreshStep3Response> refreshStep3(
+    $0.RefreshStep3Request request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$refreshStep3, request, options: options);
+  }
+
+  /// Policy
+  $grpc.ResponseFuture<$0.CreateSpendingPolicyResponse> createSpendingPolicy(
+    $0.CreateSpendingPolicyRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$createSpendingPolicy, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.GetPolicyIdResponse> getPolicyId(
+    $0.GetPolicyIdRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$getPolicyId, request, options: options);
+  }
+
   // method descriptors
 
   static final _$dKGStep1 =
@@ -96,6 +133,31 @@ class MPCWalletClient extends $grpc.Client {
           '/mpc_wallet.MPCWallet/SignStep2',
           ($0.SignStep2Request value) => value.writeToBuffer(),
           $0.SignStep2Response.fromBuffer);
+  static final _$refreshStep1 =
+      $grpc.ClientMethod<$0.RefreshStep1Request, $0.RefreshStep1Response>(
+          '/mpc_wallet.MPCWallet/RefreshStep1',
+          ($0.RefreshStep1Request value) => value.writeToBuffer(),
+          $0.RefreshStep1Response.fromBuffer);
+  static final _$refreshStep2 =
+      $grpc.ClientMethod<$0.RefreshStep2Request, $0.RefreshStep2Response>(
+          '/mpc_wallet.MPCWallet/RefreshStep2',
+          ($0.RefreshStep2Request value) => value.writeToBuffer(),
+          $0.RefreshStep2Response.fromBuffer);
+  static final _$refreshStep3 =
+      $grpc.ClientMethod<$0.RefreshStep3Request, $0.RefreshStep3Response>(
+          '/mpc_wallet.MPCWallet/RefreshStep3',
+          ($0.RefreshStep3Request value) => value.writeToBuffer(),
+          $0.RefreshStep3Response.fromBuffer);
+  static final _$createSpendingPolicy = $grpc.ClientMethod<
+          $0.CreateSpendingPolicyRequest, $0.CreateSpendingPolicyResponse>(
+      '/mpc_wallet.MPCWallet/CreateSpendingPolicy',
+      ($0.CreateSpendingPolicyRequest value) => value.writeToBuffer(),
+      $0.CreateSpendingPolicyResponse.fromBuffer);
+  static final _$getPolicyId =
+      $grpc.ClientMethod<$0.GetPolicyIdRequest, $0.GetPolicyIdResponse>(
+          '/mpc_wallet.MPCWallet/GetPolicyId',
+          ($0.GetPolicyIdRequest value) => value.writeToBuffer(),
+          $0.GetPolicyIdResponse.fromBuffer);
 }
 
 @$pb.GrpcServiceName('mpc_wallet.MPCWallet')
@@ -138,6 +200,51 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.SignStep2Request.fromBuffer(value),
         ($0.SignStep2Response value) => value.writeToBuffer()));
+    $addMethod(
+        $grpc.ServiceMethod<$0.RefreshStep1Request, $0.RefreshStep1Response>(
+            'RefreshStep1',
+            refreshStep1_Pre,
+            false,
+            false,
+            ($core.List<$core.int> value) =>
+                $0.RefreshStep1Request.fromBuffer(value),
+            ($0.RefreshStep1Response value) => value.writeToBuffer()));
+    $addMethod(
+        $grpc.ServiceMethod<$0.RefreshStep2Request, $0.RefreshStep2Response>(
+            'RefreshStep2',
+            refreshStep2_Pre,
+            false,
+            false,
+            ($core.List<$core.int> value) =>
+                $0.RefreshStep2Request.fromBuffer(value),
+            ($0.RefreshStep2Response value) => value.writeToBuffer()));
+    $addMethod(
+        $grpc.ServiceMethod<$0.RefreshStep3Request, $0.RefreshStep3Response>(
+            'RefreshStep3',
+            refreshStep3_Pre,
+            false,
+            false,
+            ($core.List<$core.int> value) =>
+                $0.RefreshStep3Request.fromBuffer(value),
+            ($0.RefreshStep3Response value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.CreateSpendingPolicyRequest,
+            $0.CreateSpendingPolicyResponse>(
+        'CreateSpendingPolicy',
+        createSpendingPolicy_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.CreateSpendingPolicyRequest.fromBuffer(value),
+        ($0.CreateSpendingPolicyResponse value) => value.writeToBuffer()));
+    $addMethod(
+        $grpc.ServiceMethod<$0.GetPolicyIdRequest, $0.GetPolicyIdResponse>(
+            'GetPolicyId',
+            getPolicyId_Pre,
+            false,
+            false,
+            ($core.List<$core.int> value) =>
+                $0.GetPolicyIdRequest.fromBuffer(value),
+            ($0.GetPolicyIdResponse value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.DKGStep1Response> dKGStep1_Pre($grpc.ServiceCall $call,
@@ -179,4 +286,48 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
 
   $async.Future<$0.SignStep2Response> signStep2(
       $grpc.ServiceCall call, $0.SignStep2Request request);
+
+  $async.Future<$0.RefreshStep1Response> refreshStep1_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.RefreshStep1Request> $request) async {
+    return refreshStep1($call, await $request);
+  }
+
+  $async.Future<$0.RefreshStep1Response> refreshStep1(
+      $grpc.ServiceCall call, $0.RefreshStep1Request request);
+
+  $async.Future<$0.RefreshStep2Response> refreshStep2_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.RefreshStep2Request> $request) async {
+    return refreshStep2($call, await $request);
+  }
+
+  $async.Future<$0.RefreshStep2Response> refreshStep2(
+      $grpc.ServiceCall call, $0.RefreshStep2Request request);
+
+  $async.Future<$0.RefreshStep3Response> refreshStep3_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.RefreshStep3Request> $request) async {
+    return refreshStep3($call, await $request);
+  }
+
+  $async.Future<$0.RefreshStep3Response> refreshStep3(
+      $grpc.ServiceCall call, $0.RefreshStep3Request request);
+
+  $async.Future<$0.CreateSpendingPolicyResponse> createSpendingPolicy_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.CreateSpendingPolicyRequest> $request) async {
+    return createSpendingPolicy($call, await $request);
+  }
+
+  $async.Future<$0.CreateSpendingPolicyResponse> createSpendingPolicy(
+      $grpc.ServiceCall call, $0.CreateSpendingPolicyRequest request);
+
+  $async.Future<$0.GetPolicyIdResponse> getPolicyId_Pre($grpc.ServiceCall $call,
+      $async.Future<$0.GetPolicyIdRequest> $request) async {
+    return getPolicyId($call, await $request);
+  }
+
+  $async.Future<$0.GetPolicyIdResponse> getPolicyId(
+      $grpc.ServiceCall call, $0.GetPolicyIdRequest request);
 }

@@ -10,6 +10,7 @@
         "bitcoin_base",
         "blockchain_utils",
         "convert",
+        "fixnum",
         "grpc",
         "hive",
         "protobuf",
@@ -56,6 +57,11 @@
         "webkit_inspection_protocol",
         "yaml"
       ]
+    },
+    {
+      "name": "fixnum",
+      "version": "1.1.1",
+      "dependencies": []
     },
     {
       "name": "blockchain_utils",
@@ -399,11 +405,6 @@
     {
       "name": "secp256k1",
       "version": "0.3.0",
-      "dependencies": []
-    },
-    {
-      "name": "fixnum",
-      "version": "1.1.1",
       "dependencies": []
     },
     {

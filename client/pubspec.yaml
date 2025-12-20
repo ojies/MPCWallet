@@ -17,6 +17,7 @@ dependencies:
   hive: ^2.2.3
   convert: ^3.1.2
   blockchain_utils: ^5.4.0
+  fixnum: ^1.1.1
 
 dev_dependencies:
   test: ^1.24.0

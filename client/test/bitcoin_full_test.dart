@@ -39,14 +39,9 @@ class MockMpcClient extends MpcClient {
   }
 
   @override
-  Future<threshold.Signature> sign(Uint8List message,
-      {bool useIdentity2 = true}) async {
-    // Return dummy signature
-    final domain = pc.ECDomainParameters('secp256k1');
-    return threshold.Signature(
-        domain.G, // R
-        BigInt.one // Z
-        );
+  Future<threshold.Signature> sign(Uint8List message, {String? pin}) async {
+    // Mock implementation
+    return threshold.Signature(BigInt.zero, BigInt.zero); // Dummy
   }
 
   @override
