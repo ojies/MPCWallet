@@ -565,3 +565,31 @@ const GetPolicyIdResponse$json = {
 final $typed_data.Uint8List getPolicyIdResponseDescriptor =
     $convert.base64Decode(
         'ChNHZXRQb2xpY3lJZFJlc3BvbnNlEhsKCXBvbGljeV9pZBgBIAEoCVIIcG9saWN5SWQ=');
+
+@$core.Deprecated('Use broadcastTransactionRequestDescriptor instead')
+const BroadcastTransactionRequest$json = {
+  '1': 'BroadcastTransactionRequest',
+  '2': [
+    {'1': 'device_id', '3': 1, '4': 1, '5': 9, '10': 'deviceId'},
+    {'1': 'tx_hex', '3': 2, '4': 1, '5': 9, '10': 'txHex'},
+  ],
+};
+
+/// Descriptor for `BroadcastTransactionRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List broadcastTransactionRequestDescriptor =
+    $convert.base64Decode(
+        'ChtCcm9hZGNhc3RUcmFuc2FjdGlvblJlcXVlc3QSGwoJZGV2aWNlX2lkGAEgASgJUghkZXZpY2'
+        'VJZBIVCgZ0eF9oZXgYAiABKAlSBXR4SGV4');
+
+@$core.Deprecated('Use broadcastTransactionResponseDescriptor instead')
+const BroadcastTransactionResponse$json = {
+  '1': 'BroadcastTransactionResponse',
+  '2': [
+    {'1': 'tx_id', '3': 1, '4': 1, '5': 9, '10': 'txId'},
+  ],
+};
+
+/// Descriptor for `BroadcastTransactionResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List broadcastTransactionResponseDescriptor =
+    $convert.base64Decode(
+        'ChxCcm9hZGNhc3RUcmFuc2FjdGlvblJlc3BvbnNlEhMKBXR4X2lkGAEgASgJUgR0eElk');

@@ -178,9 +178,9 @@ void main() {
           amount: BigInt.from(100000), // 0.001 BTC
           feeRate: 1);
 
-      // Broadcast
-      final sendTxId = await btc.sendRawTransaction(hexTx);
-      print('Sent TX: $sendTxId');
+      // Broadcast via Server (saving change autodetected)
+      final sendTxId = await wallet.broadcast(hexTx);
+      print('Sent TX via Server: $sendTxId');
 
       // 7. Verify
       await btc.generateToAddress(1, minerAddr);

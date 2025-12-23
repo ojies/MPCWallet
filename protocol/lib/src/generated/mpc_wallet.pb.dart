@@ -1661,6 +1661,132 @@ class GetPolicyIdResponse extends $pb.GeneratedMessage {
   void clearPolicyId() => $_clearField(1);
 }
 
+class BroadcastTransactionRequest extends $pb.GeneratedMessage {
+  factory BroadcastTransactionRequest({
+    $core.String? deviceId,
+    $core.String? txHex,
+  }) {
+    final result = create();
+    if (deviceId != null) result.deviceId = deviceId;
+    if (txHex != null) result.txHex = txHex;
+    return result;
+  }
+
+  BroadcastTransactionRequest._();
+
+  factory BroadcastTransactionRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory BroadcastTransactionRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'BroadcastTransactionRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'deviceId')
+    ..aOS(2, _omitFieldNames ? '' : 'txHex')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BroadcastTransactionRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BroadcastTransactionRequest copyWith(
+          void Function(BroadcastTransactionRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as BroadcastTransactionRequest))
+          as BroadcastTransactionRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static BroadcastTransactionRequest create() =>
+      BroadcastTransactionRequest._();
+  @$core.override
+  BroadcastTransactionRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static BroadcastTransactionRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BroadcastTransactionRequest>(create);
+  static BroadcastTransactionRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get deviceId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set deviceId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasDeviceId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDeviceId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get txHex => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set txHex($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTxHex() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTxHex() => $_clearField(2);
+}
+
+class BroadcastTransactionResponse extends $pb.GeneratedMessage {
+  factory BroadcastTransactionResponse({
+    $core.String? txId,
+  }) {
+    final result = create();
+    if (txId != null) result.txId = txId;
+    return result;
+  }
+
+  BroadcastTransactionResponse._();
+
+  factory BroadcastTransactionResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory BroadcastTransactionResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'BroadcastTransactionResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'txId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BroadcastTransactionResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BroadcastTransactionResponse copyWith(
+          void Function(BroadcastTransactionResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as BroadcastTransactionResponse))
+          as BroadcastTransactionResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static BroadcastTransactionResponse create() =>
+      BroadcastTransactionResponse._();
+  @$core.override
+  BroadcastTransactionResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static BroadcastTransactionResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BroadcastTransactionResponse>(create);
+  static BroadcastTransactionResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get txId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set txId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTxId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTxId() => $_clearField(1);
+}
+
 const $core.bool _omitFieldNames =
     $core.bool.fromEnvironment('protobuf.omit_field_names');
 const $core.bool _omitMessageNames =

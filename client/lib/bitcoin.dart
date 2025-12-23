@@ -8,6 +8,9 @@ import 'package:client/persistence/wallet_store.dart';
 import 'package:client/coin_selection.dart';
 import 'package:client/fees.dart';
 
+import 'package:protocol/protocol.dart';
+import 'package:fixnum/fixnum.dart';
+
 import 'package:threshold/threshold.dart' as threshold; // Access bigIntToBytes
 
 class MpcBitcoinWallet {
@@ -17,7 +20,7 @@ class MpcBitcoinWallet {
 
   late P2trAddress _address;
   P2trAddress get address {
-    if (client.publicKey == null) {
+    if (client.getTweakedPublicKeyPackage(null) == null) {
       throw StateError("Wallet not initialized. Call init() first.");
     }
     return _address;
@@ -34,7 +37,8 @@ class MpcBitcoinWallet {
     // Check if we have saved client state
     final clientState = await store.getClientState();
     if (clientState != null) {
-      await _restoreState(clientState);
+      // TODO (Joshua) : Fix Persistence
+      // await _restoreState(clientState);
     } else {
       await initializeNewWallet();
     }
@@ -54,34 +58,37 @@ class MpcBitcoinWallet {
     }
 
     print("Saving MPC Client state...");
-    await store.saveClientState(
-      deviceId: client.deviceId,
-      keyPackage1: client.keyPackage1!.toJson(),
-      keyPackage2: client.keyPackage2!.toJson(),
-      publicKeyPackage: client.getTweakedPublicKeyPackage(null).toJson(),
-    );
+    // TODO (Joshua) : Fix Persistence
+    // await store.saveClientState(
+    //   deviceId: client.deviceId,
+    //   keyPackage1: client.keyPackage1!.toJson(),
+    //   keyPackage2: client.keyPackage2!.toJson(),
+    //   publicKeyPackage: client.getTweakedPublicKeyPackage(null).toJson(),
+    // );
   }
 
-  Future<void> _restoreState(Map<dynamic, dynamic> clientState) async {
-    print("Restoring MPC Client state...");
-    client.restoreState(
-      clientState['deviceId'],
-      threshold.KeyPackage.fromJson(
-          Map<String, dynamic>.from(clientState['keyPackage1'])),
-      threshold.KeyPackage.fromJson(
-          Map<String, dynamic>.from(clientState['keyPackage2'])),
-      threshold.PublicKeyPackage.fromJson(
-          Map<String, dynamic>.from(clientState['publicKeyPackage'])),
-    );
-  }
+  // Future<void> _restoreState(Map<dynamic, dynamic> clientState) async {
+  //   print("Restoring MPC Client state...");
+  //   client.restoreState(
+  //     clientState['deviceId'],
+  //     threshold.KeyPackage.fromJson(
+  //         Map<String, dynamic>.from(clientState['keyPackage1'])),
+  //     threshold.KeyPackage.fromJson(
+  //         Map<String, dynamic>.from(clientState['keyPackage2'])),
+  //     threshold.PublicKeyPackage.fromJson(
+  //         Map<String, dynamic>.from(clientState['publicKeyPackage'])),
+  //   );
+  // }
 
   void _deriveAddress() {
-    final publicKey = client.getTweakedPublicKeyPackage(null);
-
-    final point = publicKey.verifyingKey.E;
+    final publicKeyPackage = client.getTweakedPublicKeyPackage(null);
+    if (publicKeyPackage == null) {
+      throw StateError("Wallet not initialized. Call init() first.");
+    }
+    final publicKey = publicKeyPackage.verifyingKey.E;
 
     // Serialize point to compressed hex
-    final pointBytes = threshold.elemSerializeCompressed(point);
+    final pointBytes = threshold.elemSerializeCompressed(publicKey);
     final pointHex = hex.encode(pointBytes);
 
     final ecPub = ECPublic.fromHex(pointHex);
@@ -279,6 +286,12 @@ class MpcBitcoinWallet {
       // If it's a strongly typed object: u.txHash
       // Let's assume typed object as per typical Dart libs.
 
+      final publicKeyPackage = client.getTweakedPublicKeyPackage(null);
+      if (publicKeyPackage == null) {
+        throw StateError("Wallet not initialized. Call init() first.");
+      }
+      final publicKey = publicKeyPackage.verifyingKey.E;
+
       return UtxoWithAddress(
         utxo: BitcoinUtxo(
           txHash: u.txHash,
@@ -288,8 +301,7 @@ class MpcBitcoinWallet {
         ),
         ownerDetails: UtxoAddressDetails(
           // Serialize verifying key to hex
-          publicKey: hex.encode(threshold
-              .elemSerializeCompressed(client.publicKey!.verifyingKey.E)),
+          publicKey: hex.encode(threshold.elemSerializeCompressed(publicKey)),
           address: address,
         ),
       );
@@ -297,6 +309,13 @@ class MpcBitcoinWallet {
 
     // 4. Save to Store
     await store.saveUtxos(newUtxos);
+    await store.saveUtxos(newUtxos);
     print("Synced ${newUtxos.length} UTXOs.");
+  }
+
+  /// Broadcasts a signed transaction hex to the network via the MPC Server.
+  Future<String> broadcast(String txHex) async {
+    print("Broadcasting transaction...");
+    return await client.broadcastTransaction(txHex);
   }
 }

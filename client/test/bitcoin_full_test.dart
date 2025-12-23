@@ -39,7 +39,8 @@ class MockMpcClient extends MpcClient {
   }
 
   @override
-  Future<threshold.Signature> sign(Uint8List message, {String? pin}) async {
+  Future<threshold.Signature> sign(Uint8List message,
+      {String? pin, String? policyId, List<int>? fullTransaction}) async {
     // Mock implementation
     return threshold.Signature(BigInt.zero, BigInt.zero); // Dummy
   }

@@ -165,9 +165,9 @@ class MpcClient {
   }
 
   // Note: PublicKey is the unifying key for all identities
-  PublicKeyPackage getTweakedPublicKeyPackage(List<int>? merkle_root) {
-    final publicKey = _spendingPolicies!.publicKeyPackage;
-    return publicKey.tweak(merkle_root);
+  PublicKeyPackage? getTweakedPublicKeyPackage(List<int>? merkle_root) {
+    final publicKeyPackage = _spendingPolicies?.publicKeyPackage;
+    return publicKeyPackage?.tweak(merkle_root);
   }
 
   // --- REFRESH ---
@@ -179,69 +179,76 @@ class MpcClient {
     }
 
     final seed = sha256.convert(utf8.encode(pin)).bytes;
+    print("DEBUG: Client Create Seed: ${seed.sublist(0, 5)}...");
 
     // Part 1: Generate Refresh Secrets
-    // We use 2-party refresh.
-    final totalParticipants = 2;
-    final thresholdCount = 2;
+    // We use 2-party refresh (Client + Server) for Policy Creation.
+    final refreshTotalParties = 2;
+    final refreshThreshold = 2; // 2-of-2
 
-    final (r1Sec, r1Pub) = threshold.dkgRefreshPart1(
-        _signingId, totalParticipants, thresholdCount,
+    final (r1Sec1, r1Pub1) = threshold.dkgRefreshPart1(
+        _signingId, refreshTotalParties, refreshThreshold,
         seed: seed);
 
     // Step 1: Exchange
-    final req = RefreshStep1Request()
+    final req1 = RefreshStep1Request()
       ..deviceId = _deviceId
       ..identifier = threshold.bigIntToBytes(_signingId.toScalar())
-      ..round1Package = jsonEncode(r1Pub.toJson())
+      ..round1Package = jsonEncode(r1Pub1.toJson())
       ..interval = Int64(interval.inSeconds)
       ..thresholdAmount = thresholdAmount;
 
-    final step1Futures = await Future.wait([_stub.refreshStep1(req)]);
-    final step1Resp = step1Futures[0];
+    final step1Resp = await _stub.refreshStep1(req1);
 
     // Step 2: Shares
-    await _stub.refreshStep2(RefreshStep2Request()
+    final req2_1 = RefreshStep2Request()
       ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(_signingId.toScalar()));
+      ..identifier = threshold.bigIntToBytes(_signingId.toScalar());
+
+    await _stub.refreshStep2(req2_1);
 
     // Parse R1 packages (includes server's)
-    final round1PkgsMap = <threshold.Identifier, threshold.Round1Package>{};
+    final round1PkgsMap1 = <threshold.Identifier, threshold.Round1Package>{};
 
     step1Resp.round1Packages.forEach((k, v) {
       final id_temp = threshold.Identifier(BigInt.parse(k, radix: 16));
       final pkg = threshold.Round1Package.fromJson(jsonDecode(v));
-
-      if (id_temp != _signingId) round1PkgsMap[id_temp] = pkg;
+      if (id_temp != _signingId) round1PkgsMap1[id_temp] = pkg;
     });
 
     // Compute shares
-    final (r2Sec, sharesFrom) = threshold.dkgRefreshPart2(r1Sec, round1PkgsMap);
+    final (r2Sec1, sharesFrom1) =
+        threshold.dkgRefreshPart2(r1Sec1, round1PkgsMap1);
 
     // Step 3: Finalize
-    final req3 = RefreshStep3Request()
+    final req3_1 = RefreshStep3Request()
       ..deviceId = _deviceId
       ..identifier = threshold.bigIntToBytes(_signingId.toScalar())
-      ..round2PackagesForOthers.addAll(_buildSharesMap(sharesFrom));
+      ..round2PackagesForOthers.addAll(_buildSharesMap(sharesFrom1));
 
-    final step3Futures = await Future.wait([_stub.refreshStep3(req3)]);
-    final step3Response = step3Futures[0];
-    final sharesForMe = _parseShares(step3Response.round2PackagesForMe);
+    final step3Resp1 = await _stub.refreshStep3(req3_1);
 
-    final normalKeyPackage = _spendingPolicies!.keyPackage;
+    final sharesForMe1 = _parseShares(step3Resp1.round2PackagesForMe);
+
+    final normalKeyPackage1 = _spendingPolicies!.keyPackage;
     final normalPubPackage = _spendingPolicies!.publicKeyPackage;
 
-    final (keyPkg1, pubKeyPkg1) = threshold.dkgRefreshPart3(
-        r2Sec, round1PkgsMap, sharesForMe, normalPubPackage, normalKeyPackage);
+    final (keyPkg1, pubKeyPkg1) = threshold.dkgRefreshPart3(r2Sec1,
+        round1PkgsMap1, sharesForMe1, normalPubPackage, normalKeyPackage1);
 
+    // Compute protected key for Identity 1
     // myUpdate is evaluatePolynomial(myId, coeffs)
     final myUpdate =
-        threshold.evaluatePolynomial(_signingId, r1Sec.coefficients);
+        threshold.evaluatePolynomial(_signingId, r1Sec1.coefficients);
     final newSecret = keyPkg1.secretShare;
 
-    final n = threshold.secp256k1Curve.n;
-    var diff = (newSecret - myUpdate) % n;
-    if (diff.isNegative) diff += n;
+    print("DEBUG: Refresh myUpdate: $myUpdate");
+
+    var diff = (newSecret - myUpdate);
+    print("DEBUG: Calculated diff: $diff");
+    final correctedShare = (diff + myUpdate);
+    print("DEBUG: Refresh new Share: $newSecret");
+    print("DEBUG: Corrected share: $correctedShare");
 
     final protectedKeyPkg = threshold.KeyPackage(
       keyPkg1.identifier,
@@ -251,9 +258,9 @@ class MpcClient {
       keyPkg1.minSigners,
     );
 
-    // TODO: Find a way to create protected policy ID, starting from the spending policy ID
+    print("DEBUG: Policy ID: ${step1Resp.policyId}");
 
-    _protectedPolicies[_spendingPolicies!.id] = ProtectedPolicy(
+    _protectedPolicies[step1Resp.policyId] = ProtectedPolicy(
       id: step1Resp.policyId,
       keyPackage: protectedKeyPkg,
       publicKeyPackage: pubKeyPkg1,
@@ -272,28 +279,33 @@ class MpcClient {
   }
 
   Future<threshold.Signature> sign(Uint8List message,
-      {String? pin, String? policyId}) async {
+      {String? pin, String? policyId, List<int>? fullTransaction}) async {
     var keyPackage = _spendingPolicies!.keyPackage;
+    var groupPubKey = _spendingPolicies!.publicKeyPackage;
 
     if (policyId != null &&
         _protectedPolicies.containsKey(policyId) &&
         pin != null) {
       final protectedPolicy = _protectedPolicies[policyId];
 
-      final minSigners = 2;
+      final minSigners = 2; // Matched with createSpendingPolicy
 
       final seed = sha256.convert(utf8.encode(pin)).bytes;
-      final coeffUpdate =
-          threshold.generateCoefficients(minSigners - 1, seed: seed);
+      print("DEBUG: Client Sign Seed: ${seed.sublist(0, 5)}...");
 
-      final coeffs = [BigInt.zero, ...coeffUpdate];
+      // Re-run part 1 logic to reliably recover the polynomial
+      final (r1Sec, _) = threshold
+          .dkgRefreshPart1(_signingId, minSigners, minSigners, seed: seed);
 
-      final myUpdate = threshold.evaluatePolynomial(_signingId, coeffs);
+      final myUpdate =
+          threshold.evaluatePolynomial(_signingId, r1Sec.coefficients);
 
       final partialShare = protectedPolicy!.keyPackage.secretShare;
+      final correctedShare = (partialShare + myUpdate);
 
-      final n = threshold.secp256k1Curve.n;
-      final correctedShare = (partialShare + myUpdate) % n;
+      print("DEBUG: Policy ID: ${protectedPolicy.id}");
+      print("DEBUG: Retrieved partialShare: $partialShare");
+      print("DEBUG: created corrected Share: $correctedShare");
 
       keyPackage = threshold.KeyPackage(
         protectedPolicy.keyPackage.identifier,
@@ -302,14 +314,15 @@ class MpcClient {
         protectedPolicy.keyPackage.verifyingKey,
         protectedPolicy.keyPackage.minSigners,
       );
+
+      groupPubKey = protectedPolicy.publicKeyPackage;
     }
-    final groupPubKey = _spendingPolicies!.publicKeyPackage;
 
     return signWithContext(
       message,
       keyPackage,
       groupPubKey,
-      null,
+      fullTransaction,
       null,
     );
   }
@@ -360,6 +373,11 @@ class MpcClient {
     // 3. Step 2: Sign
     // Use the SELECTED key
     final signingPkg = frost_comm.SigningPackage(commitmentsMap, message);
+
+    // Explicitly apply Taproot tweak (Key Path Spending)
+    // This matches the previous implicit behavior of frost.sign
+    keyPkg = keyPkg.tweak(null);
+
     final sigShare = frost.sign(signingPkg, nonce, keyPkg);
 
     // 4. Send Share & Get Result
@@ -374,17 +392,14 @@ class MpcClient {
     final z =
         threshold.bytesToBigInt(Uint8List.fromList(signStep2Resp.zScalar));
 
+    final signature = threshold.Signature(R, z);
     final tweakedGroupPubKey = groupPubKey.tweak(null);
-    final challenge =
-        frost_sig.computeChallenge(R, tweakedGroupPubKey.verifyingKey, message);
-    final zG = (threshold.secp256k1Curve.G * z)!;
-    final cY = (tweakedGroupPubKey.verifyingKey.E * challenge)!;
-    final R_plus_cY = (R + cY)!;
 
-    final isValid = threshold.pointsEqual(zG, R_plus_cY);
-    if (!isValid) throw Exception("Invalid signature produced by MPC group");
+    if (!signature.verify(tweakedGroupPubKey.verifyingKey, message)) {
+      throw Exception("Invalid signature produced by MPC group");
+    }
 
-    return threshold.Signature(R, z);
+    return signature;
   }
 
   // Helpers
@@ -408,5 +423,15 @@ class MpcClient {
           threshold.Round2Package.fromJson(jsonDecode(v));
     });
     return m;
+  }
+
+  // --- BROADCAST ---
+  Future<String> broadcastTransaction(String txHex) async {
+    final request = BroadcastTransactionRequest()
+      ..deviceId = _deviceId
+      ..txHex = txHex;
+
+    final response = await _stub.broadcastTransaction(request);
+    return response.txId;
   }
 }

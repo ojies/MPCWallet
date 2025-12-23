@@ -106,6 +106,14 @@ class MPCWalletClient extends $grpc.Client {
     return $createUnaryCall(_$getPolicyId, request, options: options);
   }
 
+  /// Broadcast
+  $grpc.ResponseFuture<$0.BroadcastTransactionResponse> broadcastTransaction(
+    $0.BroadcastTransactionRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$broadcastTransaction, request, options: options);
+  }
+
   // method descriptors
 
   static final _$dKGStep1 =
@@ -158,6 +166,11 @@ class MPCWalletClient extends $grpc.Client {
           '/mpc_wallet.MPCWallet/GetPolicyId',
           ($0.GetPolicyIdRequest value) => value.writeToBuffer(),
           $0.GetPolicyIdResponse.fromBuffer);
+  static final _$broadcastTransaction = $grpc.ClientMethod<
+          $0.BroadcastTransactionRequest, $0.BroadcastTransactionResponse>(
+      '/mpc_wallet.MPCWallet/BroadcastTransaction',
+      ($0.BroadcastTransactionRequest value) => value.writeToBuffer(),
+      $0.BroadcastTransactionResponse.fromBuffer);
 }
 
 @$pb.GrpcServiceName('mpc_wallet.MPCWallet')
@@ -245,6 +258,15 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
             ($core.List<$core.int> value) =>
                 $0.GetPolicyIdRequest.fromBuffer(value),
             ($0.GetPolicyIdResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.BroadcastTransactionRequest,
+            $0.BroadcastTransactionResponse>(
+        'BroadcastTransaction',
+        broadcastTransaction_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.BroadcastTransactionRequest.fromBuffer(value),
+        ($0.BroadcastTransactionResponse value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.DKGStep1Response> dKGStep1_Pre($grpc.ServiceCall $call,
@@ -330,4 +352,13 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
 
   $async.Future<$0.GetPolicyIdResponse> getPolicyId(
       $grpc.ServiceCall call, $0.GetPolicyIdRequest request);
+
+  $async.Future<$0.BroadcastTransactionResponse> broadcastTransaction_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.BroadcastTransactionRequest> $request) async {
+    return broadcastTransaction($call, await $request);
+  }
+
+  $async.Future<$0.BroadcastTransactionResponse> broadcastTransaction(
+      $grpc.ServiceCall call, $0.BroadcastTransactionRequest request);
 }
