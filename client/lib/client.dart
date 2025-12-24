@@ -9,7 +9,6 @@ import 'package:threshold/core/dkg.dart';
 import 'package:threshold/threshold.dart' as threshold;
 import 'package:threshold/frost/signing.dart' as frost;
 import 'package:threshold/frost/commitment.dart' as frost_comm;
-import 'package:threshold/frost/signature.dart' as frost_sig;
 import 'package:protocol/protocol.dart';
 import 'package:crypto/crypto.dart';
 import 'package:fixnum/fixnum.dart';
@@ -22,7 +21,7 @@ import 'package:client/persistence/wallet_store.dart';
 class MpcClient {
   final MPCWalletClient _stub;
   // Store
-  final WalletStore _store = WalletStore();
+  late final WalletStore _store;
 
   // Unique Session ID for this client instance (persisted or generated)
   String _deviceId;
@@ -38,7 +37,7 @@ class MpcClient {
   threshold.SecretKey? _signingSecret;
   threshold.SecretKey? _recoverySecret;
 
-  SpendingPolicy? _spendingPolicies;
+  SpendingPolicy? _normalPolicy;
   Map<String, ProtectedPolicy> _protectedPolicies;
 
   RecoveryPolicy? _recoveryPolicy;
@@ -49,12 +48,17 @@ class MpcClient {
   /// [id1] and [id2] are the identifiers for this client's two shares.
   /// [deviceId] identifies this DKG session. If null, a random one is generated.
   MpcClient(ClientChannel channel, this._signingId, this._recoveryId,
-      {int maxSigners = 3, int minSigners = 2, String? deviceId})
+      {int maxSigners = 3,
+      int minSigners = 2,
+      String? deviceId,
+      String? storageId})
       : _stub = MPCWalletClient(channel),
         _deviceId = deviceId ?? _generateDeviceId(),
         _maxSigners = maxSigners,
         _minSigners = minSigners,
-        _protectedPolicies = {};
+        _protectedPolicies = {} {
+    _store = WalletStore(boxName: storageId ?? 'mpc_wallet_state_$_deviceId');
+  }
 
   static String _generateDeviceId() {
     final r = Random();
@@ -81,8 +85,7 @@ class MpcClient {
     Hive.init(storePath);
   }
 
-  bool get isInitialized =>
-      _spendingPolicies != null && _recoveryPolicy != null;
+  bool get isInitialized => _normalPolicy != null && _recoveryPolicy != null;
 
   /// Restores client state from persistence.
   /// [debugState] can be provided to inject state for testing (bypassing store).
@@ -105,7 +108,7 @@ class MpcClient {
     _deviceId = state['deviceId'];
 
     if (state['spendingPolicies'] != null) {
-      _spendingPolicies = SpendingPolicy.fromJson(
+      _normalPolicy = SpendingPolicy.fromJson(
           Map<String, dynamic>.from(state['spendingPolicies']));
     }
 
@@ -129,8 +132,8 @@ class MpcClient {
     final state = <String, dynamic>{
       'deviceId': _deviceId,
     };
-    if (_spendingPolicies != null) {
-      state['spendingPolicies'] = _spendingPolicies!.toJson();
+    if (_normalPolicy != null) {
+      state['spendingPolicies'] = _normalPolicy!.toJson();
     }
     if (_recoveryPolicy != null) {
       state['recoveryPolicy'] = _recoveryPolicy!.toJson();
@@ -144,10 +147,9 @@ class MpcClient {
   }
 
   // Getters for testing
-  threshold.KeyPackage? get keyPackage1 => _spendingPolicies?.keyPackage;
+  threshold.KeyPackage? get keyPackage1 => _normalPolicy?.keyPackage;
   threshold.KeyPackage? get keyPackage2 => _recoveryPolicy?.keyPackage;
-  threshold.PublicKeyPackage? get publicKey =>
-      _spendingPolicies?.publicKeyPackage;
+  threshold.PublicKeyPackage? get publicKey => _normalPolicy?.publicKeyPackage;
 
   // --- DKG ---
 
@@ -226,7 +228,7 @@ class MpcClient {
     final (keyPkg2, pubKeyPkg2) =
         threshold.dkgPart3(r1Sec2, r2Sec2, round1PkgsMap2, sharesForMe2);
 
-    _spendingPolicies = SpendingPolicy(
+    _normalPolicy = SpendingPolicy(
         id: "normal_policy_id",
         keyPackage: keyPkg1,
         publicKeyPackage: pubKeyPkg1);
@@ -241,7 +243,7 @@ class MpcClient {
 
   // Note: PublicKey is the unifying key for all identities
   PublicKeyPackage? getTweakedPublicKeyPackage(List<int>? merkle_root) {
-    final publicKeyPackage = _spendingPolicies?.publicKeyPackage;
+    final publicKeyPackage = _normalPolicy?.publicKeyPackage;
     return publicKeyPackage?.tweak(merkle_root);
   }
 
@@ -305,8 +307,8 @@ class MpcClient {
 
     final sharesForMe1 = _parseShares(step3Resp1.round2PackagesForMe);
 
-    final normalKeyPackage1 = _spendingPolicies!.keyPackage;
-    final normalPubPackage = _spendingPolicies!.publicKeyPackage;
+    final normalKeyPackage1 = _normalPolicy!.keyPackage;
+    final normalPubPackage = _normalPolicy!.publicKeyPackage;
 
     final (keyPkg1, pubKeyPkg1) = threshold.dkgRefreshPart3(r2Sec1,
         round1PkgsMap1, sharesForMe1, normalPubPackage, normalKeyPackage1);
@@ -356,8 +358,8 @@ class MpcClient {
 
   Future<threshold.Signature> sign(Uint8List message,
       {String? pin, String? policyId, List<int>? fullTransaction}) async {
-    var keyPackage = _spendingPolicies!.keyPackage;
-    var groupPubKey = _spendingPolicies!.publicKeyPackage;
+    var keyPackage = _normalPolicy!.keyPackage;
+    var groupPubKey = _normalPolicy!.publicKeyPackage;
 
     if (policyId != null &&
         _protectedPolicies.containsKey(policyId) &&
@@ -367,7 +369,6 @@ class MpcClient {
       final minSigners = 2; // Matched with createSpendingPolicy
 
       final seed = sha256.convert(utf8.encode(pin)).bytes;
-      print("DEBUG: Client Sign Seed: ${seed.sublist(0, 5)}...");
 
       // Re-run part 1 logic to reliably recover the polynomial
       final (r1Sec, _) = threshold
@@ -378,10 +379,6 @@ class MpcClient {
 
       final partialShare = protectedPolicy!.keyPackage.secretShare;
       final correctedShare = (partialShare + myUpdate);
-
-      print("DEBUG: Policy ID: ${protectedPolicy.id}");
-      print("DEBUG: Retrieved partialShare: $partialShare");
-      print("DEBUG: created corrected Share: $correctedShare");
 
       keyPackage = threshold.KeyPackage(
         protectedPolicy.keyPackage.identifier,
@@ -410,9 +407,6 @@ class MpcClient {
     List<int>? fullTransaction,
     List<UtxoInfo>? inputUtxos,
   ) async {
-    // 1. Generate Nonce
-    // We use the default key (latest) to generate the nonce.
-    // Even if policy enforces a different key later, we reuse this nonce (allowed in FROST if nonce is fresh).
     final nonce = frost_comm.newNonce(keyPkg.secretShare);
 
     // 2. Step 1: Commitments
@@ -447,12 +441,11 @@ class MpcClient {
     });
 
     // 3. Step 2: Sign
-    // Use the SELECTED key
     final signingPkg = frost_comm.SigningPackage(commitmentsMap, message);
 
     // Explicitly apply Taproot tweak (Key Path Spending)
-    // This matches the previous implicit behavior of frost.sign
     keyPkg = keyPkg.tweak(null);
+    final pubPacakge = groupPubKey.tweak(null);
 
     final sigShare = frost.sign(signingPkg, nonce, keyPkg);
 
@@ -469,13 +462,8 @@ class MpcClient {
         threshold.bytesToBigInt(Uint8List.fromList(signStep2Resp.zScalar));
 
     final signature = threshold.Signature(R, z);
-    final tweakedGroupPubKey = groupPubKey.tweak(null);
 
-    if (!signature.verify(tweakedGroupPubKey.verifyingKey, message)) {
-      throw Exception("Invalid signature produced by MPC group");
-    }
-
-    return signature;
+    return signature.verify(pubPacakge.verifyingKey, message);
   }
 
   // Helpers

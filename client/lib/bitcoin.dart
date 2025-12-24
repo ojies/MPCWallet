@@ -7,10 +7,6 @@ import 'package:convert/convert.dart';
 import 'package:client/persistence/wallet_store.dart';
 import 'package:client/coin_selection.dart';
 import 'package:client/fees.dart';
-
-import 'package:protocol/protocol.dart';
-import 'package:fixnum/fixnum.dart';
-
 import 'package:threshold/threshold.dart' as threshold; // Access bigIntToBytes
 
 class UnsignedTransaction {
@@ -36,58 +32,36 @@ class MpcBitcoinWallet {
   MpcBitcoinWallet(this.client,
       {this.isTestnet = false, String? storageId, bool useIdentity2 = false})
       : store = WalletStore(
-            boxName: storageId ?? 'bitcoin_wallet_state_${client.deviceId}');
+            boxName: storageId ?? 'mpc_wallet_state_${client.deviceId}');
 
   Future<void> init() async {
     await store.init();
 
-    // Check if we have saved client state
-    final clientState = await store.getClientState();
-    if (clientState != null) {
-      // TODO (Joshua) : Fix Persistence
-      // await _restoreState(clientState);
-    } else {
+    // 1. Try to restore Client/Wallet state from persistence
+    final restored = await client.restoreState();
+
+    if (!restored || !client.isInitialized) {
+      // 2. If not found, run fresh DKG
       await initializeNewWallet();
     }
 
+    // 3. Setup derivates and sync
     _deriveAddress();
     await sync();
     subscribe();
   }
 
-  /// Explicitly runs the DKG protocol and saves the resulting shares.
+  /// Explicitly runs the DKG protocol.
   /// Call this when creating a fresh wallet or resetting.
   Future<void> initializeNewWallet() async {
-    print("No saved state found. Checking client initialization...");
+    print("Initializing new wallet...");
     if (!client.isInitialized) {
       print("Client not initialized. Running DKG...");
       await client.doDkg();
     } else {
       print("Client already initialized. Skipping DKG.");
     }
-
-    print("Saving MPC Client state...");
-    // TODO (Joshua) : Fix Persistence
-    // await store.saveClientState(
-    //   deviceId: client.deviceId,
-    //   keyPackage1: client.keyPackage1!.toJson(),
-    //   keyPackage2: client.keyPackage2!.toJson(),
-    //   publicKeyPackage: client.getTweakedPublicKeyPackage(null).toJson(),
-    // );
   }
-
-  // Future<void> _restoreState(Map<dynamic, dynamic> clientState) async {
-  //   print("Restoring MPC Client state...");
-  //   client.restoreState(
-  //     clientState['deviceId'],
-  //     threshold.KeyPackage.fromJson(
-  //         Map<String, dynamic>.from(clientState['keyPackage1'])),
-  //     threshold.KeyPackage.fromJson(
-  //         Map<String, dynamic>.from(clientState['keyPackage2'])),
-  //     threshold.PublicKeyPackage.fromJson(
-  //         Map<String, dynamic>.from(clientState['publicKeyPackage'])),
-  //   );
-  // }
 
   void _deriveAddress() {
     final publicKeyPackage = client.getTweakedPublicKeyPackage(null);

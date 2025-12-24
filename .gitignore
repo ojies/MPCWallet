@@ -1,3 +1,4 @@
 e2e/hive_db
 */.dart_tool
 */build
+*.log

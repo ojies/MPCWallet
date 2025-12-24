@@ -26,8 +26,6 @@ void main() {
     print('Starting Docker (Bitcoind)...');
     var dRes = await Process.run('docker', [
       'compose',
-      '-f',
-      'e2e/docker-compose.yml',
       'up',
       '-d',
       'bitcoind',
@@ -41,8 +39,6 @@ void main() {
     print('Starting Docker (Electrs)...');
     dRes = await Process.run('docker', [
       'compose',
-      '-f',
-      'e2e/docker-compose.yml',
       'up',
       '-d',
       'electrs',
@@ -74,7 +70,7 @@ void main() {
     serverProcess = await Process.start(
       'dart',
       ['bin/server.dart'],
-      workingDirectory: 'server',
+      workingDirectory: '../server',
       mode: ProcessStartMode.detachedWithStdio,
       environment: {
         'ELECTRUM_URL': '127.0.0.1',
