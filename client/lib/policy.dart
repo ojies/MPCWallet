@@ -11,6 +11,23 @@ class SpendingPolicy {
     required this.keyPackage,
     required this.publicKeyPackage,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'keyPackage': keyPackage.toJson(),
+      'publicKeyPackage': publicKeyPackage.toJson(),
+    };
+  }
+
+  static SpendingPolicy fromJson(Map<String, dynamic> json) {
+    return SpendingPolicy(
+      id: json['id'],
+      keyPackage: threshold.KeyPackage.fromJson(json['keyPackage']),
+      publicKeyPackage:
+          threshold.PublicKeyPackage.fromJson(json['publicKeyPackage']),
+    );
+  }
 }
 
 class ProtectedPolicy {
@@ -27,6 +44,27 @@ class ProtectedPolicy {
     required this.startTime,
     required this.interval,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'keyPackage': keyPackage.toJson(),
+      'publicKeyPackage': publicKeyPackage.toJson(),
+      'startTime': startTime.millisecondsSinceEpoch,
+      'interval': interval.inSeconds,
+    };
+  }
+
+  static ProtectedPolicy fromJson(Map<String, dynamic> json) {
+    return ProtectedPolicy(
+      id: json['id'],
+      keyPackage: threshold.KeyPackage.fromJson(json['keyPackage']),
+      publicKeyPackage:
+          threshold.PublicKeyPackage.fromJson(json['publicKeyPackage']),
+      startTime: DateTime.fromMillisecondsSinceEpoch(json['startTime']),
+      interval: Duration(seconds: json['interval']),
+    );
+  }
 }
 
 class RecoveryPolicy {
@@ -39,4 +77,21 @@ class RecoveryPolicy {
     required this.keyPackage,
     required this.publicKeyPackage,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'keyPackage': keyPackage.toJson(),
+      'publicKeyPackage': publicKeyPackage.toJson(),
+    };
+  }
+
+  static RecoveryPolicy fromJson(Map<String, dynamic> json) {
+    return RecoveryPolicy(
+      id: json['id'],
+      keyPackage: threshold.KeyPackage.fromJson(json['keyPackage']),
+      publicKeyPackage:
+          threshold.PublicKeyPackage.fromJson(json['publicKeyPackage']),
+    );
+  }
 }

@@ -4,6 +4,7 @@ import 'package:client/client.dart';
 import 'package:client/bitcoin.dart';
 import 'package:client/persistence/wallet_store.dart';
 import 'package:client/coin_selection.dart';
+import 'package:client/policy.dart';
 import 'package:test/test.dart';
 import 'package:hive/hive.dart';
 import 'package:bitcoin_base/bitcoin_base.dart';
@@ -42,7 +43,8 @@ class MockMpcClient extends MpcClient {
   Future<threshold.Signature> sign(Uint8List message,
       {String? pin, String? policyId, List<int>? fullTransaction}) async {
     // Mock implementation
-    return threshold.Signature(BigInt.zero, BigInt.zero); // Dummy
+    final domain = pc.ECDomainParameters('secp256k1');
+    return threshold.Signature(domain.G, BigInt.zero); // Dummy
   }
 
   @override
@@ -61,7 +63,18 @@ class MockMpcClient extends MpcClient {
       2,
     );
 
-    restoreState("mock_device", kp, kp, pk);
+    final sp =
+        SpendingPolicy(id: "mock_policy", keyPackage: kp, publicKeyPackage: pk);
+    final rp = RecoveryPolicy(
+        id: "mock_recovery", keyPackage: kp, publicKeyPackage: pk);
+
+    final state = {
+      'deviceId': "mock_device",
+      'spendingPolicies': sp.toJson(),
+      'recoveryPolicy': rp.toJson(),
+    };
+
+    await restoreState(debugState: state);
   }
 }
 

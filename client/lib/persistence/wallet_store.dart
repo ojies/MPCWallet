@@ -62,18 +62,7 @@ class WalletStore {
     }).toList();
   }
 
-  Future<void> saveClientState({
-    required String deviceId,
-    required Map<String, dynamic> keyPackage1,
-    required Map<String, dynamic> keyPackage2,
-    required Map<String, dynamic> publicKeyPackage,
-  }) async {
-    final state = {
-      'deviceId': deviceId,
-      'keyPackage1': keyPackage1,
-      'keyPackage2': keyPackage2,
-      'publicKeyPackage': publicKeyPackage,
-    };
+  Future<void> saveClientState(Map<String, dynamic> state) async {
     await _box.put('client_state', state);
   }
 

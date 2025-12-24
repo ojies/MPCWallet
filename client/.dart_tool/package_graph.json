@@ -13,6 +13,7 @@
         "fixnum",
         "grpc",
         "hive",
+        "path",
         "protobuf",
         "protocol",
         "threshold"
@@ -57,6 +58,11 @@
         "webkit_inspection_protocol",
         "yaml"
       ]
+    },
+    {
+      "name": "path",
+      "version": "1.9.1",
+      "dependencies": []
     },
     {
       "name": "fixnum",
@@ -280,11 +286,6 @@
         "async",
         "stack_trace"
       ]
-    },
-    {
-      "name": "path",
-      "version": "1.9.1",
-      "dependencies": []
     },
     {
       "name": "package_config",

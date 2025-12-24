@@ -13,9 +13,16 @@ import 'package:threshold/frost/signature.dart' as frost_sig;
 import 'package:protocol/protocol.dart';
 import 'package:crypto/crypto.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:hive/hive.dart';
+import 'dart:io';
+import 'package:path/path.dart' as p;
+
+import 'package:client/persistence/wallet_store.dart';
 
 class MpcClient {
   final MPCWalletClient _stub;
+  // Store
+  final WalletStore _store = WalletStore();
 
   // Unique Session ID for this client instance (persisted or generated)
   String _deviceId;
@@ -55,18 +62,86 @@ class MpcClient {
         16, (index) => r.nextInt(255).toRadixString(16).padLeft(2, '0')).join();
   }
 
+  /// Initializes persistence for the client.
+  /// [path] is the directory where client state will be stored.
+  /// If [path] is null, defaults to `$HOME/.mpc_wallet/client`.
+  static Future<void> initPersistence({String? path}) async {
+    String storePath;
+    if (path != null) {
+      storePath = path;
+    } else {
+      final home = Platform.environment['HOME'] ?? Directory.current.path;
+      storePath = p.join(home, '.mpc_wallet', 'client');
+    }
+
+    final dir = Directory(storePath);
+    if (!dir.existsSync()) {
+      dir.createSync(recursive: true);
+    }
+    Hive.init(storePath);
+  }
+
   bool get isInitialized =>
       _spendingPolicies != null && _recoveryPolicy != null;
 
-  // TODO (Joshua) Ensure that states are restored
-  // void restoreState(String deviceId, threshold.KeyPackage k1,
-  //     threshold.KeyPackage k2, threshold.PublicKeyPackage pk) {
-  //   _deviceId = deviceId;
-  //   _keyPackages1.add(k1);
-  //   _keyPackages2.add(k2);
-  //   _publicKeyPackages1.add(pk);
-  //   _publicKeyPackages2.add(pk);
-  // }
+  /// Restores client state from persistence.
+  /// [debugState] can be provided to inject state for testing (bypassing store).
+  /// Returns true if state was found and restored.
+  Future<bool> restoreState({Map<String, dynamic>? debugState}) async {
+    // Ensure persistence is initialized (via initPersistence or just ensure path)
+    // WalletStore relies on Hive.init being called previously.
+    // If not called, assume default? We rely on user calling initPersistence.
+    await _store.init();
+
+    Map<String, dynamic>? state;
+    if (debugState != null) {
+      state = debugState;
+    } else {
+      state = await _store.getClientState();
+    }
+
+    if (state == null) return false;
+
+    _deviceId = state['deviceId'];
+
+    if (state['spendingPolicies'] != null) {
+      _spendingPolicies = SpendingPolicy.fromJson(
+          Map<String, dynamic>.from(state['spendingPolicies']));
+    }
+
+    if (state['recoveryPolicy'] != null) {
+      _recoveryPolicy = RecoveryPolicy.fromJson(
+          Map<String, dynamic>.from(state['recoveryPolicy']));
+    }
+
+    if (state['protectedPolicies'] != null) {
+      final Map<String, dynamic> pp = state['protectedPolicies'];
+      pp.forEach((k, v) {
+        _protectedPolicies[k] = ProtectedPolicy.fromJson(v);
+      });
+    }
+
+    print("Restored state for device: $_deviceId");
+    return true;
+  }
+
+  Future<void> _saveState() async {
+    final state = <String, dynamic>{
+      'deviceId': _deviceId,
+    };
+    if (_spendingPolicies != null) {
+      state['spendingPolicies'] = _spendingPolicies!.toJson();
+    }
+    if (_recoveryPolicy != null) {
+      state['recoveryPolicy'] = _recoveryPolicy!.toJson();
+    }
+    if (_protectedPolicies.isNotEmpty) {
+      state['protectedPolicies'] =
+          _protectedPolicies.map((k, v) => MapEntry(k, v.toJson()));
+    }
+    await _store.saveClientState(state);
+    print("Saved client state.");
+  }
 
   // Getters for testing
   // threshold.KeyPackage? get keyPackage1 =>
@@ -80,6 +155,7 @@ class MpcClient {
   // --- DKG ---
 
   Future<void> doDkg() async {
+    await _store.init(); // Ensure store is ready
     // 1. Generate Secrets for both identities
     _signingSecret = threshold.SecretKey(threshold.modNRandom());
     final coeffs1 = threshold.generateCoefficients(_minSigners - 1);
@@ -162,6 +238,8 @@ class MpcClient {
         id: "recovery_policy_id",
         keyPackage: keyPkg2,
         publicKeyPackage: pubKeyPkg2);
+
+    await _saveState();
   }
 
   // Note: PublicKey is the unifying key for all identities
@@ -268,6 +346,7 @@ class MpcClient {
           DateTime.fromMillisecondsSinceEpoch(step1Resp.startTime.toInt()),
       interval: interval,
     );
+    await _saveState();
   }
 
   // --- SIGNING ---
