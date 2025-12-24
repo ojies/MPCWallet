@@ -1787,6 +1787,248 @@ class BroadcastTransactionResponse extends $pb.GeneratedMessage {
   void clearTxId() => $_clearField(1);
 }
 
+class FetchHistoryRequest extends $pb.GeneratedMessage {
+  factory FetchHistoryRequest({
+    $core.String? deviceId,
+  }) {
+    final result = create();
+    if (deviceId != null) result.deviceId = deviceId;
+    return result;
+  }
+
+  FetchHistoryRequest._();
+
+  factory FetchHistoryRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FetchHistoryRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FetchHistoryRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'deviceId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FetchHistoryRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FetchHistoryRequest copyWith(void Function(FetchHistoryRequest) updates) =>
+      super.copyWith((message) => updates(message as FetchHistoryRequest))
+          as FetchHistoryRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FetchHistoryRequest create() => FetchHistoryRequest._();
+  @$core.override
+  FetchHistoryRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FetchHistoryRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FetchHistoryRequest>(create);
+  static FetchHistoryRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get deviceId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set deviceId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasDeviceId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDeviceId() => $_clearField(1);
+}
+
+class FetchHistoryResponse extends $pb.GeneratedMessage {
+  factory FetchHistoryResponse({
+    $core.Iterable<UtxoInfo>? utxos,
+  }) {
+    final result = create();
+    if (utxos != null) result.utxos.addAll(utxos);
+    return result;
+  }
+
+  FetchHistoryResponse._();
+
+  factory FetchHistoryResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FetchHistoryResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FetchHistoryResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..pPM<UtxoInfo>(1, _omitFieldNames ? '' : 'utxos',
+        subBuilder: UtxoInfo.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FetchHistoryResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FetchHistoryResponse copyWith(void Function(FetchHistoryResponse) updates) =>
+      super.copyWith((message) => updates(message as FetchHistoryResponse))
+          as FetchHistoryResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FetchHistoryResponse create() => FetchHistoryResponse._();
+  @$core.override
+  FetchHistoryResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FetchHistoryResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FetchHistoryResponse>(create);
+  static FetchHistoryResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<UtxoInfo> get utxos => $_getList(0);
+}
+
+class SubscribeToHistoryRequest extends $pb.GeneratedMessage {
+  factory SubscribeToHistoryRequest({
+    $core.String? deviceId,
+  }) {
+    final result = create();
+    if (deviceId != null) result.deviceId = deviceId;
+    return result;
+  }
+
+  SubscribeToHistoryRequest._();
+
+  factory SubscribeToHistoryRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SubscribeToHistoryRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SubscribeToHistoryRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'deviceId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SubscribeToHistoryRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SubscribeToHistoryRequest copyWith(
+          void Function(SubscribeToHistoryRequest) updates) =>
+      super.copyWith((message) => updates(message as SubscribeToHistoryRequest))
+          as SubscribeToHistoryRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SubscribeToHistoryRequest create() => SubscribeToHistoryRequest._();
+  @$core.override
+  SubscribeToHistoryRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SubscribeToHistoryRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SubscribeToHistoryRequest>(create);
+  static SubscribeToHistoryRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get deviceId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set deviceId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasDeviceId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDeviceId() => $_clearField(1);
+}
+
+class TransactionNotification extends $pb.GeneratedMessage {
+  factory TransactionNotification({
+    $core.String? txHash,
+    $core.int? height,
+    $core.Iterable<UtxoInfo>? addedUtxos,
+    $core.Iterable<UtxoInfo>? spentUtxos,
+  }) {
+    final result = create();
+    if (txHash != null) result.txHash = txHash;
+    if (height != null) result.height = height;
+    if (addedUtxos != null) result.addedUtxos.addAll(addedUtxos);
+    if (spentUtxos != null) result.spentUtxos.addAll(spentUtxos);
+    return result;
+  }
+
+  TransactionNotification._();
+
+  factory TransactionNotification.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TransactionNotification.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TransactionNotification',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'txHash')
+    ..aI(2, _omitFieldNames ? '' : 'height')
+    ..pPM<UtxoInfo>(3, _omitFieldNames ? '' : 'addedUtxos',
+        subBuilder: UtxoInfo.create)
+    ..pPM<UtxoInfo>(4, _omitFieldNames ? '' : 'spentUtxos',
+        subBuilder: UtxoInfo.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TransactionNotification clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TransactionNotification copyWith(
+          void Function(TransactionNotification) updates) =>
+      super.copyWith((message) => updates(message as TransactionNotification))
+          as TransactionNotification;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TransactionNotification create() => TransactionNotification._();
+  @$core.override
+  TransactionNotification createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TransactionNotification getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TransactionNotification>(create);
+  static TransactionNotification? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get txHash => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set txHash($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTxHash() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTxHash() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get height => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set height($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasHeight() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearHeight() => $_clearField(2);
+
+  /// Using a simple notification that "something changed" or sending the full update?
+  /// User said "rely on server for maintaining state and updating it with latest transactions"
+  /// Sending the relevant UTXOs involved (newly created ones owned by wallet)
+  @$pb.TagNumber(3)
+  $pb.PbList<UtxoInfo> get addedUtxos => $_getList(2);
+
+  @$pb.TagNumber(4)
+  $pb.PbList<UtxoInfo> get spentUtxos => $_getList(3);
+}
+
 const $core.bool _omitFieldNames =
     $core.bool.fromEnvironment('protobuf.omit_field_names');
 const $core.bool _omitMessageNames =

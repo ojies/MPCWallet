@@ -11,9 +11,10 @@ import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:hive/hive.dart';
 
-import '../../server/lib/server.dart';
-import '../../server/lib/bitcoin.dart';
-import '../../server/lib/persistence/store.dart';
+import 'package:server/server.dart';
+import 'package:server/bitcoin.dart';
+import 'package:server/bitcoin_service.dart';
+import 'package:server/persistence/store.dart';
 
 // Mock Stores (same as refresh_flow_test)
 class MockStore implements DKGSessionStore {
@@ -104,7 +105,8 @@ void main() {
         policyStore: policyStore,
         utxoStore: utxoStore,
         bitcoinService: BitcoinService(utxoStore,
-            rpcUrl: "http://localhost:${mockBitcoind.port}"));
+            rpcUrl: "http://localhost:${mockBitcoind.port}"),
+        historyService: BitcoinHistoryService());
 
     server = Server.create(services: [service]);
     await server.serve(port: 0);

@@ -593,3 +593,82 @@ const BroadcastTransactionResponse$json = {
 final $typed_data.Uint8List broadcastTransactionResponseDescriptor =
     $convert.base64Decode(
         'ChxCcm9hZGNhc3RUcmFuc2FjdGlvblJlc3BvbnNlEhMKBXR4X2lkGAEgASgJUgR0eElk');
+
+@$core.Deprecated('Use fetchHistoryRequestDescriptor instead')
+const FetchHistoryRequest$json = {
+  '1': 'FetchHistoryRequest',
+  '2': [
+    {'1': 'device_id', '3': 1, '4': 1, '5': 9, '10': 'deviceId'},
+  ],
+};
+
+/// Descriptor for `FetchHistoryRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List fetchHistoryRequestDescriptor =
+    $convert.base64Decode(
+        'ChNGZXRjaEhpc3RvcnlSZXF1ZXN0EhsKCWRldmljZV9pZBgBIAEoCVIIZGV2aWNlSWQ=');
+
+@$core.Deprecated('Use fetchHistoryResponseDescriptor instead')
+const FetchHistoryResponse$json = {
+  '1': 'FetchHistoryResponse',
+  '2': [
+    {
+      '1': 'utxos',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.mpc_wallet.UtxoInfo',
+      '10': 'utxos'
+    },
+  ],
+};
+
+/// Descriptor for `FetchHistoryResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List fetchHistoryResponseDescriptor = $convert.base64Decode(
+    'ChRGZXRjaEhpc3RvcnlSZXNwb25zZRIqCgV1dHhvcxgBIAMoCzIULm1wY193YWxsZXQuVXR4b0'
+    'luZm9SBXV0eG9z');
+
+@$core.Deprecated('Use subscribeToHistoryRequestDescriptor instead')
+const SubscribeToHistoryRequest$json = {
+  '1': 'SubscribeToHistoryRequest',
+  '2': [
+    {'1': 'device_id', '3': 1, '4': 1, '5': 9, '10': 'deviceId'},
+  ],
+};
+
+/// Descriptor for `SubscribeToHistoryRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List subscribeToHistoryRequestDescriptor =
+    $convert.base64Decode(
+        'ChlTdWJzY3JpYmVUb0hpc3RvcnlSZXF1ZXN0EhsKCWRldmljZV9pZBgBIAEoCVIIZGV2aWNlSW'
+        'Q=');
+
+@$core.Deprecated('Use transactionNotificationDescriptor instead')
+const TransactionNotification$json = {
+  '1': 'TransactionNotification',
+  '2': [
+    {'1': 'tx_hash', '3': 1, '4': 1, '5': 9, '10': 'txHash'},
+    {'1': 'height', '3': 2, '4': 1, '5': 5, '10': 'height'},
+    {
+      '1': 'added_utxos',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.mpc_wallet.UtxoInfo',
+      '10': 'addedUtxos'
+    },
+    {
+      '1': 'spent_utxos',
+      '3': 4,
+      '4': 3,
+      '5': 11,
+      '6': '.mpc_wallet.UtxoInfo',
+      '10': 'spentUtxos'
+    },
+  ],
+};
+
+/// Descriptor for `TransactionNotification`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List transactionNotificationDescriptor = $convert.base64Decode(
+    'ChdUcmFuc2FjdGlvbk5vdGlmaWNhdGlvbhIXCgd0eF9oYXNoGAEgASgJUgZ0eEhhc2gSFgoGaG'
+    'VpZ2h0GAIgASgFUgZoZWlnaHQSNQoLYWRkZWRfdXR4b3MYAyADKAsyFC5tcGNfd2FsbGV0LlV0'
+    'eG9JbmZvUgphZGRlZFV0eG9zEjUKC3NwZW50X3V0eG9zGAQgAygLMhQubXBjX3dhbGxldC5VdH'
+    'hvSW5mb1IKc3BlbnRVdHhvcw==');

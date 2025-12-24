@@ -42,8 +42,8 @@ class RegtestHelper {
   }
 
   /// Generates a new address for the miner/admin wallet.
-  Future<String> getNewAddress() async {
-    return await _call('getnewaddress');
+  Future<String> getNewAddress({String addressType = 'bech32m'}) async {
+    return await _call('getnewaddress', ["", addressType]);
   }
 
   Future<double> getBalance() async {

@@ -50,7 +50,7 @@ services:
       - --daemon-dir
       - /config
       - --daemon-rpc-addr
-      - bitcoind:18443
+      - mpc_bitcoind:18443
       - --cookie
       - admin1:123
       - --http-addr

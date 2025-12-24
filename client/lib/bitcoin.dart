@@ -13,6 +13,13 @@ import 'package:fixnum/fixnum.dart';
 
 import 'package:threshold/threshold.dart' as threshold; // Access bigIntToBytes
 
+class UnsignedTransaction {
+  final BtcTransaction btcTransaction;
+  final List<List<int>> sighashes;
+
+  UnsignedTransaction(this.btcTransaction, this.sighashes);
+}
+
 class MpcBitcoinWallet {
   final MpcClient client;
   final WalletStore store;
@@ -44,6 +51,8 @@ class MpcBitcoinWallet {
     }
 
     _deriveAddress();
+    await sync();
+    subscribe();
   }
 
   /// Explicitly runs the DKG protocol and saves the resulting shares.
@@ -110,9 +119,9 @@ class MpcBitcoinWallet {
     return SegwitBech32Encoder.encode(hrp, version, program);
   }
 
-  /// Builds a transaction, hashes it, and returns the sighash to be signed by MPC.
+  /// Builds an unsigned transaction, hashes it, and returns the UnsignedTransaction object.
   /// [feeRate] is in sats/vbyte.
-  Future<String> createTransaction({
+  Future<UnsignedTransaction> createTransaction({
     required String destination,
     required BigInt amount,
     required int feeRate,
@@ -179,6 +188,8 @@ class MpcBitcoinWallet {
     final changeValue = inputsValue - amount - fee;
 
     BitcoinBaseAddress outputAddress; // Was BitcoinAddress
+
+    // TODO (Joshua) We are only concerned about taproot address for now
     if (destination.startsWith('bcrt')) {
       // Manual decoding for custom/Regtest HRP
       final decoded = SegwitBech32Decoder.decode("bcrt", destination);
@@ -224,19 +235,52 @@ class MpcBitcoinWallet {
           .join();
     });
 
-    // 4. Sign Asynchronously
-    final witnesses = <TxWitnessInput>[];
+    // 5. Return Unsigned Transaction
+    return UnsignedTransaction(txPointer, sighashes);
+  }
+
+  /// Retrieves the Policy ID for a given UnsignedTransaction by verifying/calculating spend amounts on the server.
+  Future<String> getPolicyId(UnsignedTransaction unsigned) async {
+    final txPointer = unsigned.btcTransaction;
+    final fullTxHex = txPointer.serialize();
+    final fullTxBytes = hex.decode(fullTxHex);
+    return await client.getPolicyId(Uint8List.fromList(fullTxBytes));
+  }
+
+  /// Signs an unsigned transaction using the MPC client.
+  /// If [pin] is provided, it attempts to resolve the Policy ID from the server
+  /// (unless [policyId] is explicitly provided) and sign using the protected policy flow.
+  Future<String> signTransaction(UnsignedTransaction unsigned,
+      {String? pin, String? policyId}) async {
+    final txPointer = unsigned.btcTransaction;
+    final sighashes = unsigned.sighashes;
+
     if (sighashes.length != txPointer.inputs.length) {
       throw StateError("Sighash count mismatch");
     }
+
+    String? resolvedPolicyId = policyId;
+    List<int>? fullTxBytes;
+
+    final fullTxHex = txPointer.serialize();
+    fullTxBytes = hex.decode(fullTxHex);
+
+    // 4. Sign Asynchronously
+    final witnesses = <TxWitnessInput>[];
 
     for (int i = 0; i < txPointer.inputs.length; i++) {
       final sighash = sighashes[i];
       final sighashUint8 = Uint8List.fromList(sighash);
 
-      final signature = await client.sign(sighashUint8);
+      final signature = await client.sign(
+        sighashUint8,
+        pin: pin,
+        policyId: resolvedPolicyId,
+        fullTransaction: fullTxBytes,
+      );
 
       final sigBytes = signature.serialize();
+
       final sigHex =
           sigBytes.map((e) => e.toRadixString(16).padLeft(2, '0')).join();
 
@@ -248,7 +292,6 @@ class MpcBitcoinWallet {
     }
 
     // 5. Reconstruct Transaction
-    // Use BtcTransaction constructor directly to include witnesses
     final signedTx = BtcTransaction(
       inputs: txPointer.inputs,
       outputs: txPointer.outputs,
@@ -259,18 +302,12 @@ class MpcBitcoinWallet {
     return signedTx.serialize();
   }
 
-  /// Syncs the wallet's UTXOs using the provided Electrum [provider].
-  /// [provider] should be an ElectrumProvider. Typed dynamic to bypass missing interface.
-  Future<void> sync(dynamic provider) async {
-    // 1. Get Script Hash for P2TR address
-    final scriptHash = address.pubKeyHash();
+  /// Syncs the wallet's UTXOs using the server.
+  Future<void> sync() async {
+    // 1. Fetch from Server
+    final utxoInfos = await client.fetchHistory();
 
-    // 2. Fetch Unspent Outputs
-    // Ensure we await the request.
-    final List<dynamic> unspent = await (provider as dynamic)
-        .request(ElectrumRequestScriptHashListUnspent(scriptHash: scriptHash));
-
-    // 3. Convert to UtxoWithAddress
+    // 2. Convert to UtxoWithAddress
     // Find P2TR type robustly
     final p2trType = BitcoinAddressType.values.firstWhere(
         (e) => e
@@ -279,38 +316,39 @@ class MpcBitcoinWallet {
             .contains('tr'), // matches p2tr or taproot
         orElse: () => BitcoinAddressType.values.last);
 
-    final newUtxos = unspent.map((u) {
-      // u is expected to differ based on library version, usually has tx_hash, tx_pos, value (sats)
-      // Inspecting user snippet implies direct access or Map.
-      // If it's a Map: u['tx_hash'], u['tx_pos']...
-      // If it's a strongly typed object: u.txHash
-      // Let's assume typed object as per typical Dart libs.
+    final publicKeyPackage = client.getTweakedPublicKeyPackage(null);
+    if (publicKeyPackage == null) {
+      throw StateError("Wallet not initialized. Call init() first.");
+    }
+    final publicKey = publicKeyPackage.verifyingKey.E;
+    final ownerDetails = UtxoAddressDetails(
+        publicKey: hex.encode(threshold.elemSerializeCompressed(publicKey)),
+        address: address);
 
-      final publicKeyPackage = client.getTweakedPublicKeyPackage(null);
-      if (publicKeyPackage == null) {
-        throw StateError("Wallet not initialized. Call init() first.");
-      }
-      final publicKey = publicKeyPackage.verifyingKey.E;
-
+    final newUtxos = utxoInfos.map((u) {
       return UtxoWithAddress(
         utxo: BitcoinUtxo(
           txHash: u.txHash,
-          vout: u.txPos,
-          value: BigInt.from(u.value),
+          vout: u.vout,
+          value: BigInt.parse(u.amount.toString()),
           scriptType: p2trType,
         ),
-        ownerDetails: UtxoAddressDetails(
-          // Serialize verifying key to hex
-          publicKey: hex.encode(threshold.elemSerializeCompressed(publicKey)),
-          address: address,
-        ),
+        ownerDetails: ownerDetails,
       );
     }).toList();
 
-    // 4. Save to Store
+    // 3. Save to Store
     await store.saveUtxos(newUtxos);
-    await store.saveUtxos(newUtxos);
-    print("Synced ${newUtxos.length} UTXOs.");
+    print("Synced ${newUtxos.length} UTXOs from server.");
+  }
+
+  void subscribe() {
+    client.subscribeToHistory().listen((notification) {
+      print("Received Transaction Notification. Refreshing history...");
+      sync();
+    }, onError: (e) {
+      print("History Subscription Error: $e");
+    });
   }
 
   /// Broadcasts a signed transaction hex to the network via the MPC Server.

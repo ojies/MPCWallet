@@ -144,13 +144,10 @@ class MpcClient {
   }
 
   // Getters for testing
-  // threshold.KeyPackage? get keyPackage1 =>
-  //     _keyPackages1.isEmpty ? null : _keyPackages1.last;
-  // threshold.KeyPackage? get keyPackage2 =>
-  //     _keyPackages2.isEmpty ? null : _keyPackages2.last;
-  // threshold.PublicKeyPackage? get publicKey => _useIdentity2
-  //     ? (_publicKeyPackages2.isEmpty ? null : _publicKeyPackages2.last)
-  //     : (_publicKeyPackages1.isEmpty ? null : _publicKeyPackages1.last);
+  threshold.KeyPackage? get keyPackage1 => _spendingPolicies?.keyPackage;
+  threshold.KeyPackage? get keyPackage2 => _recoveryPolicy?.keyPackage;
+  threshold.PublicKeyPackage? get publicKey =>
+      _spendingPolicies?.publicKeyPackage;
 
   // --- DKG ---
 
@@ -512,5 +509,17 @@ class MpcClient {
 
     final response = await _stub.broadcastTransaction(request);
     return response.txId;
+  }
+
+  // --- SYNC ---
+  Future<List<UtxoInfo>> fetchHistory() async {
+    final response =
+        await _stub.fetchHistory(FetchHistoryRequest()..deviceId = _deviceId);
+    return response.utxos;
+  }
+
+  Stream<TransactionNotification> subscribeToHistory() {
+    return _stub
+        .subscribeToHistory(SubscribeToHistoryRequest()..deviceId = _deviceId);
   }
 }
