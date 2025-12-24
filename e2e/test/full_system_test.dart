@@ -14,6 +14,24 @@ void main() {
   Process? serverProcess;
   late RegtestHelper btc;
   late Directory tempDir;
+  late Directory serverTempDir;
+  late int serverPort;
+
+  Future<void> waitForUtxoByTxId(MpcBitcoinWallet wallet, String expectedTxId,
+      {int retries = 30}) async {
+    while (retries > 0) {
+      await wallet.sync();
+      final utxos = await wallet.store.getUtxos();
+      final hasExpected = utxos.any((u) => u.utxo.txHash == expectedTxId);
+      if (hasExpected) return;
+      print("Waiting for change UTXO from $expectedTxId... ($retries left)");
+      retries--;
+      if (retries > 0) {
+        await Future.delayed(Duration(seconds: 2));
+      }
+    }
+    fail("Timed out waiting for change UTXO from $expectedTxId");
+  }
 
   setUpAll(() async {
     print('--- Setup ---');
@@ -67,31 +85,77 @@ void main() {
 
     // 2. Server
     print('Starting MPC Server...');
+    final portSocket = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+    serverPort = portSocket.port;
+    await portSocket.close();
+    serverTempDir = await Directory.systemTemp.createTemp('mpc_server_');
+    final serverReady = Completer<void>();
+    final serverFailed = Completer<void>();
     serverProcess = await Process.start(
       'dart',
       ['bin/server.dart'],
       workingDirectory: '../server',
-      mode: ProcessStartMode.detachedWithStdio,
+      mode: ProcessStartMode.normal,
       environment: {
         'ELECTRUM_URL': '127.0.0.1',
         'ELECTRUM_PORT': '50001',
+        'HOME': serverTempDir.path,
+        'PORT': serverPort.toString(),
       },
     );
+    final stdoutBuffer = StringBuffer();
     serverProcess!.stdout.transform(utf8.decoder).listen((data) {
+      stdoutBuffer.write(data);
       print('[Server]: $data');
+      if (!serverReady.isCompleted &&
+          stdoutBuffer.toString().contains('Server listening on port')) {
+        serverReady.complete();
+      }
+    }, onDone: () {
+      if (!serverReady.isCompleted && !serverFailed.isCompleted) {
+        serverFailed.complete();
+      }
     });
+    final stderrBuffer = StringBuffer();
     serverProcess!.stderr.transform(utf8.decoder).listen((data) {
+      stderrBuffer.write(data);
       print('[Server Error]: $data');
+      if (!serverFailed.isCompleted &&
+          stderrBuffer.toString().contains('Unhandled exception')) {
+        serverFailed.complete();
+      }
+    }, onDone: () {
+      if (!serverReady.isCompleted && !serverFailed.isCompleted) {
+        serverFailed.complete();
+      }
     });
 
-    await Future.delayed(Duration(seconds: 5));
+    try {
+      await Future.any([
+        serverReady.future,
+        serverFailed.future.then((_) {
+          throw Exception("MPC Server failed to start");
+        }),
+      ]).timeout(Duration(seconds: 15), onTimeout: () {
+        throw Exception("MPC Server did not become ready in time");
+      });
+    } catch (e) {
+      serverProcess?.kill();
+      try {
+        await serverTempDir.delete(recursive: true);
+      } catch (_) {}
+      rethrow;
+    }
     print('--- Setup Complete ---');
   });
 
-  tearDownAll(() {
+  tearDownAll(() async {
     serverProcess?.kill();
     try {
-      tempDir.deleteSync(recursive: true);
+      await serverTempDir.delete(recursive: true);
+    } catch (_) {}
+    try {
+      await tempDir.delete(recursive: true);
     } catch (_) {}
   });
 
@@ -100,7 +164,7 @@ void main() {
     print('1. MPC Setup');
     final channel = ClientChannel(
       '127.0.0.1',
-      port: 50051,
+      port: serverPort,
       options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
     );
     final id1 = threshold.Identifier(BigInt.from(1));
@@ -177,6 +241,7 @@ void main() {
     final tx1Id = await wallet.broadcast(hexTx1);
     print('Normal Spend Broadcast: $tx1Id');
     await btc.generateToAddress(1, minerAddr);
+    await waitForUtxoByTxId(wallet, tx1Id);
 
     // 6. Create Spending Policy (Threshold 50,000 sats)
     // History is now 10,000 sats spend.
@@ -211,7 +276,7 @@ void main() {
     // We need to manually construct the transaction and call client.sign with PIN.
 
     // a. Select Inputs
-    await wallet.sync(); // Refresh UTXOs (change from tx1)
+    await waitForUtxoByTxId(wallet, tx1Id);
 
     final dest3 = await btc.getNewAddress();
     final unsignedTx2 = await wallet.createTransaction(
@@ -226,8 +291,12 @@ void main() {
     // Verify Balance
     await Future.delayed(Duration(seconds: 2));
     await wallet.sync();
-    print(
-        'Final Balance: ${wallet.store.getUtxos().then((l) => l.fold(BigInt.zero, (s, u) => s + u.utxo.value))}');
+
+    final balance = await wallet.store
+        .getUtxos()
+        .then((l) => l.fold(BigInt.zero, (s, u) => s + u.utxo.value).toInt());
+
+    print('Final Balance: ${balance}');
     final res = await btc.getRawTransaction(tx2Id);
     expect(res['confirmations'], 1);
 

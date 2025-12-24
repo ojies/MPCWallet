@@ -290,7 +290,8 @@ class MpcBitcoinWallet {
             .contains('tr'), // matches p2tr or taproot
         orElse: () => BitcoinAddressType.values.last);
 
-    final publicKeyPackage = client.getTweakedPublicKeyPackage(null);
+    // TODO() : WARNING: This is critical, it helps avoid retweaking of Public Key
+    final publicKeyPackage = client.getPublicKeyPackage();
     if (publicKeyPackage == null) {
       throw StateError("Wallet not initialized. Call init() first.");
     }
@@ -312,8 +313,13 @@ class MpcBitcoinWallet {
     }).toList();
 
     // 3. Save to Store
-    await store.saveUtxos(newUtxos);
-    print("Synced ${newUtxos.length} UTXOs from server.");
+    final deduped = <String, UtxoWithAddress>{};
+    for (final utxo in newUtxos) {
+      deduped['${utxo.utxo.txHash}:${utxo.utxo.vout}'] = utxo;
+    }
+    final uniqueUtxos = deduped.values.toList();
+    await store.saveUtxos(uniqueUtxos);
+    print("Synced ${uniqueUtxos.length} UTXOs from server.");
   }
 
   void subscribe() {

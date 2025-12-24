@@ -247,6 +247,10 @@ class MpcClient {
     return publicKeyPackage?.tweak(merkle_root);
   }
 
+  PublicKeyPackage? getPublicKeyPackage() {
+    return _normalPolicy?.publicKeyPackage;
+  }
+
   // --- REFRESH ---
 
   Future<void> createSpendingPolicy(
