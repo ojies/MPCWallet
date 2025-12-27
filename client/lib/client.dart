@@ -118,9 +118,10 @@ class MpcClient {
     }
 
     if (state['protectedPolicies'] != null) {
-      final Map<String, dynamic> pp = state['protectedPolicies'];
+      final pp = Map<String, dynamic>.from(state['protectedPolicies'] as Map);
       pp.forEach((k, v) {
-        _protectedPolicies[k] = ProtectedPolicy.fromJson(v);
+        _protectedPolicies[k] =
+            ProtectedPolicy.fromJson(Map<String, dynamic>.from(v as Map));
       });
     }
 

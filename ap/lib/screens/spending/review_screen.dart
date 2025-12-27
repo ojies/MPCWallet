@@ -55,7 +55,7 @@ class ReviewScreen extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                context.push('/spending/signing');
+                context.push('/spending/signing', extra: extras);
               },
               child: const Text('Sign Transaction'),
             ),

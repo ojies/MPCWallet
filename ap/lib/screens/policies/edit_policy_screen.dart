@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:fixnum/fixnum.dart';
+import '../../services/mpc_service.dart';
 
 class EditPolicyScreen extends StatefulWidget {
   const EditPolicyScreen({super.key});
@@ -15,55 +18,92 @@ class _EditPolicyScreenState extends State<EditPolicyScreen> {
   String _interval = '24h';
 
   void _savePolicy() async {
-    // 1. Auth Recovery Key
-    bool authenticated = await _showRecoveryAuthDialog();
-    if (!authenticated) return;
+    // 1. Auth Recovery Key (Get PIN)
+    String? pin = await _showRecoveryAuthDialog();
+    if (pin == null || pin.isEmpty) return;
 
-    // 2. Sign Update
+    final mpcService = context.read<MpcService>();
+    if (mpcService.client == null) return; // Should notify user
+
     setState(() => _isSigning = true);
-    await Future.delayed(const Duration(seconds: 2));
 
-    if (mounted) {
-      setState(() => _isSigning = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Policy Updated Successfully!')),
-      );
-      context.pop();
+    try {
+      Duration duration;
+      switch (_interval) {
+        case '1h':
+          duration = const Duration(hours: 1);
+          break;
+        case '7d':
+          duration = const Duration(days: 7);
+          break;
+        case '24h':
+        default:
+          duration = const Duration(hours: 24);
+      }
+
+      final amount = Int64(_threshold.toInt());
+
+      await mpcService.client!.createSpendingPolicy(duration, amount, pin);
+
+      if (mounted) {
+        setState(() => _isSigning = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Policy Updated Successfully!')),
+        );
+        context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSigning = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
-  Future<bool> _showRecoveryAuthDialog() async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: Colors.grey[900],
-            title: Text('Authorize Recovery Key',
-                style: GoogleFonts.inter(color: Colors.white)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.fingerprint, size: 64, color: Colors.white),
-                const SizedBox(height: 16),
-                Text(
-                  'Authenticate to access your Recovery Key from secure storage.',
-                  style: GoogleFonts.inter(color: Colors.white70),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+  Future<String?> _showRecoveryAuthDialog() async {
+    String pin = '';
+    return await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: Text('Authorize Recovery Key',
+            style: GoogleFonts.inter(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.lock, size: 48, color: Colors.blueAccent),
+            const SizedBox(height: 16),
+            Text(
+              'Enter your PIN to sign this policy with your recovery key.',
+              style: GoogleFonts.inter(color: Colors.white70),
+              textAlign: TextAlign.center,
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
+            const SizedBox(height: 16),
+            TextField(
+              obscureText: true,
+              onChanged: (v) => pin = v,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                labelText: 'PIN',
+                border: OutlineInputBorder(),
               ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Authenticate'),
-              ),
-            ],
+            )
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(null),
+            child: const Text('Cancel'),
           ),
-        ) ??
-        false;
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(pin),
+            child: const Text('Sign'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

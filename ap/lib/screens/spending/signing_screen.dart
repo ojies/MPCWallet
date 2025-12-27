@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/stepper_widget.dart';
+import 'package:provider/provider.dart';
+import '../../services/mpc_service.dart';
 
 class SigningScreen extends StatefulWidget {
-  const SigningScreen({super.key});
+  final Map<String, dynamic> extras;
+  const SigningScreen({super.key, this.extras = const {}});
 
   @override
   State<SigningScreen> createState() => _SigningScreenState();
@@ -20,25 +23,88 @@ class _SigningScreenState extends State<SigningScreen> {
   }
 
   void _startSigning() async {
-    // Step 1: Client Sign
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() => _currentStep = 0);
+    final mpcService = context.read<MpcService>();
+    final wallet = mpcService.wallet;
 
-    // Step 2: Request Co-Sign
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() => _currentStep = 1);
-
-    // Step 3: Verify & Broadcast
-    await Future.delayed(const Duration(seconds: 2));
-    setState(() => _currentStep = 2);
-
-    // Done
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) {
+    if (wallet == null || !mpcService.isInitialized) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Transaction Broadcasted Successfully!')),
+        const SnackBar(content: Text('Wallet not initialized!')),
       );
-      context.go('/');
+      return;
+    }
+
+    try {
+      // Step 1: Build
+      setState(() => _currentStep = 0);
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final destination = widget.extras['address'] as String?;
+      final amountStr = widget.extras['amount'] as String?;
+      final isBtc = widget.extras['isBtc'] as bool? ?? true;
+
+      if (destination == null || amountStr == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invalid transaction details!')),
+          );
+          context.pop();
+        }
+        return;
+      }
+
+      BigInt amount;
+      try {
+        if (isBtc) {
+          amount = BigInt.from(double.parse(amountStr).round());
+        } else {
+          // Placeholder: USD conversion would go here
+          amount = BigInt.from(1000);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invalid amount format!')),
+          );
+          context.pop();
+        }
+        return;
+      }
+
+      // Creating transaction (Syncs UTXOs first implicitly via init, but maybe ensure sync?)
+      await wallet.sync();
+
+      final unsigned = await wallet.createTransaction(
+        destination: destination,
+        amount: amount,
+        feeRate: 1,
+      );
+
+      // Step 2: Sign
+      setState(() => _currentStep = 1);
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final txHex = await wallet.signTransaction(unsigned);
+
+      // Step 3: Broadcast
+      setState(() => _currentStep = 2);
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final txId = await wallet.broadcast(txHex);
+
+      // Done
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Success! TxId: ${txId.substring(0, 10)}...')),
+        );
+        context.go('/');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+        // Navigate back or stay? Stay to show error.
+      }
     }
   }
 

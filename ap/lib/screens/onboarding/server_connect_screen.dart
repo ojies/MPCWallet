@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../services/mpc_service.dart';
 
 class ServerConnectionScreen extends StatefulWidget {
   const ServerConnectionScreen({super.key});
@@ -11,7 +13,7 @@ class ServerConnectionScreen extends StatefulWidget {
 
 class _ServerConnectionScreenState extends State<ServerConnectionScreen> {
   final TextEditingController _urlController = TextEditingController(
-    text: 'https://mpc.merlin.io', // Default or placeholder
+    text: '10.0.2.2', // Default localized for Android Emulator
   );
   bool _isChecking = false;
 
@@ -20,7 +22,13 @@ class _ServerConnectionScreenState extends State<ServerConnectionScreen> {
       _isChecking = true;
     });
 
-    // Simulate network check
+    final host = _urlController.text.trim();
+    if (host.isNotEmpty) {
+      // Update the host in the service
+      await context.read<MpcService>().setHost(host);
+    }
+
+    // Simulate network check (or in real app, we might check connectivity here)
     await Future.delayed(const Duration(seconds: 1));
 
     if (mounted) {
@@ -54,10 +62,11 @@ class _ServerConnectionScreenState extends State<ServerConnectionScreen> {
             TextField(
               controller: _urlController,
               decoration: const InputDecoration(
-                labelText: 'Server URL',
+                labelText: 'Server Host / IP',
                 prefixIcon: Icon(Icons.dns),
+                hintText: 'e.g. 10.0.2.2 or 192.168.1.x',
               ),
-              style: GoogleFonts.inter(),
+              style: GoogleFonts.inter(color: Colors.white),
             ),
             const SizedBox(height: 16),
             // Environment selector could go here

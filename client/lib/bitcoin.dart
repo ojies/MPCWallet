@@ -47,8 +47,10 @@ class MpcBitcoinWallet {
 
     // 3. Setup derivates and sync
     _deriveAddress();
-    await sync();
-    subscribe();
+
+    // TODO (Joshua): Fix this
+    // wait sync();
+    // subscribe();
   }
 
   /// Explicitly runs the DKG protocol.

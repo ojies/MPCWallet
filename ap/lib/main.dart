@@ -13,8 +13,18 @@ import 'screens/spending/signing_screen.dart';
 import 'screens/policies/policies_screen.dart';
 import 'screens/policies/edit_policy_screen.dart';
 
+import 'package:provider/provider.dart';
+import 'services/mpc_service.dart';
+
 void main() {
-  runApp(const MerlinWalletApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => MpcService()..init()),
+      ],
+      child: const MerlinWalletApp(),
+    ),
+  );
 }
 
 class MerlinWalletApp extends StatelessWidget {
@@ -71,7 +81,10 @@ final GoRouter _router = GoRouter(
     ),
     GoRoute(
       path: '/spending/signing',
-      builder: (context, state) => const SigningScreen(),
+      builder: (context, state) {
+        final extras = state.extra as Map<String, dynamic>? ?? {};
+        return SigningScreen(extras: extras);
+      },
     ),
     GoRoute(
       path: '/policies',

@@ -21,11 +21,15 @@ class SpendingPolicy {
   }
 
   static SpendingPolicy fromJson(Map<String, dynamic> json) {
+    final keyPackageJson =
+        Map<String, dynamic>.from(json['keyPackage'] as Map);
+    final publicKeyPackageJson =
+        Map<String, dynamic>.from(json['publicKeyPackage'] as Map);
     return SpendingPolicy(
       id: json['id'],
-      keyPackage: threshold.KeyPackage.fromJson(json['keyPackage']),
-      publicKeyPackage:
-          threshold.PublicKeyPackage.fromJson(json['publicKeyPackage']),
+      keyPackage: threshold.KeyPackage.fromJson(keyPackageJson),
+      publicKeyPackage: threshold.PublicKeyPackage.fromJson(
+          publicKeyPackageJson),
     );
   }
 }
@@ -56,11 +60,15 @@ class ProtectedPolicy {
   }
 
   static ProtectedPolicy fromJson(Map<String, dynamic> json) {
+    final keyPackageJson =
+        Map<String, dynamic>.from(json['keyPackage'] as Map);
+    final publicKeyPackageJson =
+        Map<String, dynamic>.from(json['publicKeyPackage'] as Map);
     return ProtectedPolicy(
       id: json['id'],
-      keyPackage: threshold.KeyPackage.fromJson(json['keyPackage']),
-      publicKeyPackage:
-          threshold.PublicKeyPackage.fromJson(json['publicKeyPackage']),
+      keyPackage: threshold.KeyPackage.fromJson(keyPackageJson),
+      publicKeyPackage: threshold.PublicKeyPackage.fromJson(
+          publicKeyPackageJson),
       startTime: DateTime.fromMillisecondsSinceEpoch(json['startTime']),
       interval: Duration(seconds: json['interval']),
     );
@@ -87,11 +95,15 @@ class RecoveryPolicy {
   }
 
   static RecoveryPolicy fromJson(Map<String, dynamic> json) {
+    final keyPackageJson =
+        Map<String, dynamic>.from(json['keyPackage'] as Map);
+    final publicKeyPackageJson =
+        Map<String, dynamic>.from(json['publicKeyPackage'] as Map);
     return RecoveryPolicy(
       id: json['id'],
-      keyPackage: threshold.KeyPackage.fromJson(json['keyPackage']),
-      publicKeyPackage:
-          threshold.PublicKeyPackage.fromJson(json['publicKeyPackage']),
+      keyPackage: threshold.KeyPackage.fromJson(keyPackageJson),
+      publicKeyPackage: threshold.PublicKeyPackage.fromJson(
+          publicKeyPackageJson),
     );
   }
 }

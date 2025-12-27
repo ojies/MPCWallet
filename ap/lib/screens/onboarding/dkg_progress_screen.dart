@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../services/mpc_service.dart';
 import '../../widgets/stepper_widget.dart';
 
 class DkgProgressScreen extends StatefulWidget {
@@ -22,26 +24,46 @@ class _DkgProgressScreenState extends State<DkgProgressScreen> {
   }
 
   void _startDkg() async {
-    // Simulate DKG steps
-    await _addLog('Connecting to server...');
-    await Future.delayed(const Duration(seconds: 1));
+    final mpcService = context.read<MpcService>();
+
+    // Wait for Init
+    if (!mpcService.isInitialized) {
+      await _addLog('Initializing client...');
+      // It should be initialized by main, but maybe async race.
+      // In a real app we might want a splash screen or wait logic.
+      // For now, let's poll or just wait a bit?
+      // Better: check provider.
+      await Future.delayed(const Duration(seconds: 1));
+      if (!mpcService.isInitialized) {
+        await _addLog('Client init failed or slow. Retrying...');
+        await mpcService.init();
+      }
+    }
+
+    await _addLog('Connected to server.');
     setState(() => _currentStep = 0);
 
-    await _addLog('Establishing secure session...');
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() => _currentStep = 1);
+    try {
+      await _addLog('Starting Distributed Key Generation...');
+      setState(() => _currentStep = 1);
 
-    await _addLog('Generating secret shares...');
-    await Future.delayed(const Duration(seconds: 1));
-    await _addLog('Verifying shares with server...');
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() => _currentStep = 2);
+      // Perform DKG
+      await Future.delayed(const Duration(milliseconds: 500)); // UI pacing
+      await _addLog('Generating secrets and exchanging round 1 packages...');
 
-    await _addLog('Finalizing wallet creation...');
-    await Future.delayed(const Duration(seconds: 1));
+      await mpcService.client!.doDkg();
+      await mpcService.completeDkg();
 
-    if (mounted) {
-      context.push('/onboarding/secure_storage');
+      await _addLog('DKG Finalized successfully.');
+      setState(() => _currentStep = 2);
+      await Future.delayed(const Duration(seconds: 1));
+
+      if (mounted) {
+        context.push('/onboarding/secure_storage');
+      }
+    } catch (e) {
+      await _addLog('Error during DKG: $e');
+      // In real app, offer retry button.
     }
   }
 
