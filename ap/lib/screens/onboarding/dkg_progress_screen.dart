@@ -49,7 +49,7 @@ class _DkgProgressScreenState extends State<DkgProgressScreen> {
 
       // Perform DKG
       await Future.delayed(const Duration(milliseconds: 500)); // UI pacing
-      await _addLog('Generating secrets and exchanging round 1 packages...');
+      await _addLog('Generating secrets and exchanging packages...');
 
       await mpcService.client!.doDkg();
       await mpcService.completeDkg();

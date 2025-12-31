@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:blockchain_utils/blockchain_utils.dart'
     hide hex; // For Regtest address encoding
@@ -48,9 +49,17 @@ class MpcBitcoinWallet {
     // 3. Setup derivates and sync
     _deriveAddress();
 
-    // TODO (Joshua): Fix this
-    // wait sync();
-    // subscribe();
+    // Start sync and subscribe in background
+    unawaited(_startBackgroundSync());
+  }
+
+  Future<void> _startBackgroundSync() async {
+    try {
+      await sync();
+    } catch (e) {
+      print("Error during initial sync: $e");
+    }
+    subscribe();
   }
 
   /// Explicitly runs the DKG protocol.
