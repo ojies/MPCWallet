@@ -79,47 +79,27 @@ class MpcService extends ChangeNotifier {
         _recoveryId = threshold.Identifier(threshold.modNRandom());
       }
 
-      await _connectAndInitializeClient(_signingId!, _recoveryId!, _deviceId!,
-          initializeWallet: _dkgComplete);
+      // Create channel
+      final channel = ClientChannel(
+        _host,
+        port: _port,
+        options:
+            const ChannelOptions(credentials: ChannelCredentials.insecure()),
+      );
+
+      _client =
+          MpcClient(channel, _signingId!, _recoveryId!, deviceId: _deviceId!);
+
+      _wallet = MpcBitcoinWallet(_client!,
+          isTestnet: true, storageId: 'mpc_wallet_state_${_client!.deviceId}');
+
+      await _wallet!.init();
 
       _isInitialized = true;
       notifyListeners();
     } catch (e) {
       print("MPC Service Error: $e");
       rethrow;
-    }
-  }
-
-  Future<void> _connectAndInitializeClient(threshold.Identifier signingId,
-      threshold.Identifier recoveryId, String deviceId,
-      {bool initializeWallet = true}) async {
-    // Create channel
-    final channel = ClientChannel(
-      _host,
-      port: _port,
-      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
-    );
-
-    _client = MpcClient(channel, signingId, recoveryId, deviceId: deviceId);
-
-    // Restore client state (policies, etc.)
-    await _client!.restoreState();
-
-    if (initializeWallet) {
-      // Initialize Bitcoin Wallet Wrapper
-      // Note: isTestnet true for Regtest usually
-      _wallet = MpcBitcoinWallet(_client!,
-          isTestnet: true, storageId: 'mpc_wallet_state_${_client!.deviceId}');
-      await _wallet!.init();
-
-      if (_wallet?.address != null) {
-        try {
-          print(
-              "MPC Service: Initialized. Address: ${_wallet!.address.toAddress(BitcoinNetwork.testnet)}");
-        } catch (_) {
-          print("MPC Service: Initialized but address pending DKG.");
-        }
-      }
     }
   }
 
@@ -152,8 +132,8 @@ class MpcService extends ChangeNotifier {
             threshold.Identifier(BigInt.parse(signingIdHex, radix: 16));
         final recoveryId =
             threshold.Identifier(BigInt.parse(recoveryIdHex, radix: 16));
-        await _connectAndInitializeClient(signingId, recoveryId, deviceId,
-            initializeWallet: _dkgComplete);
+        // await _connectAndInitializeClient(signingId, recoveryId, deviceId,
+        //     initializeWallet: _dkgComplete);
         notifyListeners();
       }
     }

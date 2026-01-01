@@ -3,7 +3,7 @@
 # Start Docker environment (Bitcoind + Electrs)
 regtest-up:
 	@echo "Starting Regtest environment..."
-	cd e2e && docker compose up -d
+	docker compose up -d
 	@echo "Waiting for services to stabilize..."
 	@sleep 5
 
