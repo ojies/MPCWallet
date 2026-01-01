@@ -28,16 +28,8 @@ class _DkgProgressScreenState extends State<DkgProgressScreen> {
 
     // Wait for Init
     if (!mpcService.isInitialized) {
-      await _addLog('Initializing client...');
-      // It should be initialized by main, but maybe async race.
-      // In a real app we might want a splash screen or wait logic.
-      // For now, let's poll or just wait a bit?
-      // Better: check provider.
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mpcService.isInitialized) {
-        await _addLog('Client init failed or slow. Retrying...');
-        await mpcService.init();
-      }
+      await _addLog('Client init failed or slow. Retrying...');
+      // TODO: (Joshua) Ensure retrying works. await mpcService.init();
     }
 
     await _addLog('Connected to server.');
@@ -51,7 +43,7 @@ class _DkgProgressScreenState extends State<DkgProgressScreen> {
       await Future.delayed(const Duration(milliseconds: 500)); // UI pacing
       await _addLog('Generating secrets and exchanging packages...');
 
-      await mpcService.client!.doDkg();
+      await mpcService.doDkg();
       await mpcService.completeDkg();
 
       await _addLog('DKG Finalized successfully.');

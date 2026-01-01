@@ -69,14 +69,55 @@ class _SendScreenState extends State<SendScreen> {
             const Spacer(),
             ElevatedButton(
               onPressed: () {
-                // Simple validation
-                if (_addressController.text.isNotEmpty &&
-                    _amountController.text.isNotEmpty) {
-                  context.push('/spending/review', extra: {
-                    'address': _addressController.text,
-                    'amount': _amountController.text,
-                    'isBtc': _isBtc,
-                  });
+                final address = _addressController.text.trim();
+                final amountText = _amountController.text.trim();
+
+                if (address.isEmpty || amountText.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please fill all fields')));
+                  return;
+                }
+
+                // Basic address validation (Bech32/Segwit)
+                // Accepts bc1, tb1, bcrt1
+                if (!RegExp(r'^(bc1|tb1|bcrt1)[a-zA-Z0-9]{25,60}$')
+                    .hasMatch(address)) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('Invalid Bitcoin address format')));
+                  return;
+                }
+
+                try {
+                  // If _isBtc is true, the label is 'Sats', so we expect an Integer.
+                  // If we were supporting BTC unit, we'd multiply by 1e8.
+                  // Current UI: suffixText: _isBtc ? 'Sats' : 'USD'
+
+                  if (_isBtc) {
+                    // Validating SATS (must be integer-like, but user might type 100.0)
+                    final amountDouble = double.parse(amountText);
+                    if (amountDouble <= 0) throw Exception();
+
+                    // Allow 100.0 but not 100.5 for Sats
+                    if (amountDouble % 1 != 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Sats must be an integer')));
+                      return;
+                    }
+
+                    // Pass strict clean string to next screen
+                    context.push('/spending/review', extra: {
+                      'address': address,
+                      'amount': amountDouble.toInt().toString(),
+                      'isBtc': true, // Treating as Sats
+                    });
+                  } else {
+                    // USD Logic (Placeholder)
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('USD mode not supported yet')));
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Invalid amount')));
                 }
               },
               child: const Text('Review Transaction'),

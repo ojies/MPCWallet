@@ -54,12 +54,8 @@ class _SigningScreenState extends State<SigningScreen> {
 
       BigInt amount;
       try {
-        if (isBtc) {
-          amount = BigInt.from(double.parse(amountStr).round());
-        } else {
-          // Placeholder: USD conversion would go here
-          amount = BigInt.from(1000);
-        }
+        // We receiving 'amount' as String representing Sats (integer) from SendScreen
+        amount = BigInt.parse(amountStr);
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -70,13 +66,36 @@ class _SigningScreenState extends State<SigningScreen> {
         return;
       }
 
-      // Creating transaction (Syncs UTXOs first implicitly via init, but maybe ensure sync?)
-      await wallet.sync();
+      // Step 0: Sync and Balance Check
+      // Providing feedback to user
+      // We rely on background sync mostly, but let's do a quick sync or at least refresh from store?
+      // wallet.sync() does network calls.
+      try {
+        await wallet.sync();
+      } catch (e) {
+        print("Sync failed before sign: $e");
+        // Continue? Yes, maybe we have UTXOs cached.
+      }
 
+      final balance = wallet.balance;
+      // Estimate fee (e.g. 500 sats) just for check
+      if (amount + BigInt.from(500) > balance) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Insufficient funds! Balance: $balance sats')),
+          );
+          context.pop();
+        }
+        return;
+      }
+
+      // Creating transaction
+      // Note: createTransaction does internal coin selection and fee estimation
       final unsigned = await wallet.createTransaction(
         destination: destination,
         amount: amount,
-        feeRate: 1,
+        feeRate: 1, // 1 sat/vbyte for Testnet/Regtest
       );
 
       // Step 2: Sign
@@ -94,16 +113,29 @@ class _SigningScreenState extends State<SigningScreen> {
       // Done
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Success! TxId: ${txId.substring(0, 10)}...')),
+          SnackBar(
+            content: Text('Success! Tx Sent.'),
+            action: SnackBarAction(
+              label: 'View',
+              onPressed: () {
+                // TODO: Show Tx details dialog
+              },
+            ),
+            backgroundColor: Colors.green,
+          ),
         );
+        // Go home and refresh
+        context.read<MpcService>().refreshHistory();
         context.go('/');
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Transaction Failed: $e'),
+              backgroundColor: Colors.red),
         );
-        // Navigate back or stay? Stay to show error.
+        // Don't pop, let user retry or see error
       }
     }
   }

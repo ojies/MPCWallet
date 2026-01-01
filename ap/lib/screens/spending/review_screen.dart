@@ -22,12 +22,12 @@ class ReviewScreen extends StatelessWidget {
           children: [
             _buildDetailRow('Recipient', address),
             const Divider(color: Colors.white24, height: 32),
-            _buildDetailRow('Amount', '$amount ${isBtc ? "Sats" : "USD"}'),
+            _buildDetailRow('Amount', '$amount Sats'),
             const SizedBox(height: 16),
-            _buildDetailRow('Network Fee', '~1,000 Sats'), // Mock
+            _buildDetailRow(
+                'Network Fee', 'Calculated at signing'), // Dynamic fee
             const Divider(color: Colors.white24, height: 32),
-            _buildDetailRow('Total', '$amount ${isBtc ? "Sats" : "USD"}',
-                isTotal: true),
+            _buildDetailRow('Total', '$amount + Fee', isTotal: true),
 
             const Spacer(),
 

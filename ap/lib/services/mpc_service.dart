@@ -20,6 +20,10 @@ class MpcService extends ChangeNotifier {
   threshold.Identifier? _signingId;
   threshold.Identifier? _recoveryId;
 
+  String? _storedDeviceId;
+  String? _storedSigningIdHex;
+  String? _storedRecoveryIdHex;
+
   MpcClient? get client => _client;
   bool get isInitialized => _isInitialized;
 
@@ -56,8 +60,6 @@ class MpcService extends ChangeNotifier {
   }
 
   Future<void> init() async {
-    if (_isInitialized) return;
-
     try {
       // 1. Initialize Hive for MpcClient (and us)
       await _ensurePersistenceInitialized();
@@ -70,50 +72,11 @@ class MpcService extends ChangeNotifier {
 
       _dkgComplete = identityBox.get('dkgComplete', defaultValue: false);
 
-      final storedDeviceId = identityBox.get('deviceId') as String?;
-      final storedSigningIdHex = identityBox.get('signingId') as String?;
-      final storedRecoveryIdHex = identityBox.get('recoveryId') as String?;
-
-      if (_dkgComplete &&
-          storedDeviceId != null &&
-          storedSigningIdHex != null &&
-          storedRecoveryIdHex != null) {
-        print("MPC Service: Restoring local identities...");
-        _deviceId = storedDeviceId;
-        _signingId =
-            threshold.Identifier(BigInt.parse(storedSigningIdHex, radix: 16));
-        _recoveryId =
-            threshold.Identifier(BigInt.parse(storedRecoveryIdHex, radix: 16));
-      } else {
-        print("MPC Service: Starting fresh (DKG incomplete)...");
-        await identityBox.delete('deviceId');
-        await identityBox.delete('signingId');
-        await identityBox.delete('recoveryId');
-        await identityBox.put('dkgComplete', false);
-
-        _deviceId = _generateDeviceId();
-        _signingId = threshold.Identifier(threshold.modNRandom());
-        _recoveryId = threshold.Identifier(threshold.modNRandom());
-      }
-
-      // Create channel
-      final channel = ClientChannel(
-        _host,
-        port: _port,
-        options:
-            const ChannelOptions(credentials: ChannelCredentials.insecure()),
-      );
-
-      _client =
-          MpcClient(channel, _signingId!, _recoveryId!, deviceId: _deviceId!);
-
-      _wallet = MpcBitcoinWallet(_client!,
-          isTestnet: true, storageId: 'mpc_wallet_state_${_client!.deviceId}');
-
-      await _wallet!.init();
+      _storedDeviceId = identityBox.get('deviceId') as String?;
+      _storedSigningIdHex = identityBox.get('signingId') as String?;
+      _storedRecoveryIdHex = identityBox.get('recoveryId') as String?;
 
       _isInitialized = true;
-      notifyListeners();
     } catch (e) {
       print("MPC Service Error: $e");
       rethrow;
@@ -129,31 +92,45 @@ class MpcService extends ChangeNotifier {
     await _ensurePersistenceInitialized();
     final identityBox = await Hive.openBox('mpc_service_identity');
     await identityBox.put('serverHost', host);
+  }
 
-    // If we are already initialized, we need to re-connect
-    if (_isInitialized && _client != null) {
-      // We can reuse the existing identities
-      // But we need to recreate the channel and client.
-      // Ideally we should close the old channel if possible, but grpc-dart channels are lazy?
-      // Let's just re-run the connection part.
+  Future<void> doDkg() async {
+    if (!_isInitialized) throw StateError("MPC Service not initialized");
 
-      // Note: Private fields from client like identities are not directly exposed but we saved them in Hive.
-      final deviceId = _deviceId ?? identityBox.get('deviceId');
-      final signingIdHex = _signingId?.toScalar().toRadixString(16) ??
-          identityBox.get('signingId');
-      final recoveryIdHex = _recoveryId?.toScalar().toRadixString(16) ??
-          identityBox.get('recoveryId');
+    if (_dkgComplete &&
+        _storedDeviceId != null &&
+        _storedSigningIdHex != null &&
+        _storedRecoveryIdHex != null) {
+      print("MPC Service: Restoring local identities...");
+      _deviceId = _storedDeviceId;
+      _signingId =
+          threshold.Identifier(BigInt.parse(_storedSigningIdHex!, radix: 16));
+      _recoveryId =
+          threshold.Identifier(BigInt.parse(_storedRecoveryIdHex!, radix: 16));
+    } else {
+      print("MPC Service: Starting fresh (DKG incomplete)...");
 
-      if (deviceId != null && signingIdHex != null && recoveryIdHex != null) {
-        final signingId =
-            threshold.Identifier(BigInt.parse(signingIdHex, radix: 16));
-        final recoveryId =
-            threshold.Identifier(BigInt.parse(recoveryIdHex, radix: 16));
-        // await _connectAndInitializeClient(signingId, recoveryId, deviceId,
-        //     initializeWallet: _dkgComplete);
-        notifyListeners();
-      }
+      _deviceId = _generateDeviceId();
+      _signingId = threshold.Identifier(threshold.modNRandom());
+      _recoveryId = threshold.Identifier(threshold.modNRandom());
     }
+
+    // Create channel
+    final channel = ClientChannel(
+      _host,
+      port: _port,
+      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
+    );
+
+    _client =
+        MpcClient(channel, _signingId!, _recoveryId!, deviceId: _deviceId!);
+
+    _wallet = MpcBitcoinWallet(_client!,
+        isTestnet: true, storageId: 'mpc_wallet_state_${_client!.deviceId}');
+
+    await _wallet!.init();
+
+    notifyListeners();
   }
 
   Future<void> completeDkg() async {
@@ -174,11 +151,7 @@ class MpcService extends ChangeNotifier {
     await identityBox.put('dkgComplete', true);
     _dkgComplete = true;
 
-    if (_wallet == null) {
-      _wallet = MpcBitcoinWallet(_client!,
-          isTestnet: true, storageId: 'mpc_wallet_state_${_client!.deviceId}');
-      await _wallet!.init();
-    }
+    notifyListeners();
   }
 
   String _generateDeviceId() {

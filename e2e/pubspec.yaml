@@ -15,8 +15,8 @@ dependencies:
     path: ../threshold
   protocol:
     path: ../protocol
-  grpc: ^5.1.0
-  protobuf: ^6.0.0
+  grpc: ^3.2.4
+  protobuf: ^3.1.0
   http: ^1.2.0
   bitcoin_base: ^7.0.0
   blockchain_utils: ^5.4.0
