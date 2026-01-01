@@ -515,6 +515,49 @@ final $typed_data.Uint8List fetchHistoryResponseDescriptor = $convert.base64Deco
     'ChRGZXRjaEhpc3RvcnlSZXNwb25zZRIqCgV1dHhvcxgBIAMoCzIULm1wY193YWxsZXQuVXR4b0'
     'luZm9SBXV0eG9z');
 
+@$core.Deprecated('Use fetchRecentTransactionsRequestDescriptor instead')
+const FetchRecentTransactionsRequest$json = {
+  '1': 'FetchRecentTransactionsRequest',
+  '2': [
+    {'1': 'device_id', '3': 1, '4': 1, '5': 9, '10': 'deviceId'},
+  ],
+};
+
+/// Descriptor for `FetchRecentTransactionsRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List fetchRecentTransactionsRequestDescriptor = $convert.base64Decode(
+    'Ch5GZXRjaFJlY2VudFRyYW5zYWN0aW9uc1JlcXVlc3QSGwoJZGV2aWNlX2lkGAEgASgJUghkZX'
+    'ZpY2VJZA==');
+
+@$core.Deprecated('Use fetchRecentTransactionsResponseDescriptor instead')
+const FetchRecentTransactionsResponse$json = {
+  '1': 'FetchRecentTransactionsResponse',
+  '2': [
+    {'1': 'transactions', '3': 1, '4': 3, '5': 11, '6': '.mpc_wallet.TransactionSummary', '10': 'transactions'},
+  ],
+};
+
+/// Descriptor for `FetchRecentTransactionsResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List fetchRecentTransactionsResponseDescriptor = $convert.base64Decode(
+    'Ch9GZXRjaFJlY2VudFRyYW5zYWN0aW9uc1Jlc3BvbnNlEkIKDHRyYW5zYWN0aW9ucxgBIAMoCz'
+    'IeLm1wY193YWxsZXQuVHJhbnNhY3Rpb25TdW1tYXJ5Ugx0cmFuc2FjdGlvbnM=');
+
+@$core.Deprecated('Use transactionSummaryDescriptor instead')
+const TransactionSummary$json = {
+  '1': 'TransactionSummary',
+  '2': [
+    {'1': 'tx_hash', '3': 1, '4': 1, '5': 9, '10': 'txHash'},
+    {'1': 'amount_sats', '3': 2, '4': 1, '5': 3, '10': 'amountSats'},
+    {'1': 'timestamp', '3': 3, '4': 1, '5': 3, '10': 'timestamp'},
+    {'1': 'is_pending', '3': 4, '4': 1, '5': 8, '10': 'isPending'},
+  ],
+};
+
+/// Descriptor for `TransactionSummary`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List transactionSummaryDescriptor = $convert.base64Decode(
+    'ChJUcmFuc2FjdGlvblN1bW1hcnkSFwoHdHhfaGFzaBgBIAEoCVIGdHhIYXNoEh8KC2Ftb3VudF'
+    '9zYXRzGAIgASgDUgphbW91bnRTYXRzEhwKCXRpbWVzdGFtcBgDIAEoA1IJdGltZXN0YW1wEh0K'
+    'CmlzX3BlbmRpbmcYBCABKAhSCWlzUGVuZGluZw==');
+
 @$core.Deprecated('Use subscribeToHistoryRequestDescriptor instead')
 const SubscribeToHistoryRequest$json = {
   '1': 'SubscribeToHistoryRequest',

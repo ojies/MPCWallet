@@ -12,6 +12,7 @@ import 'screens/spending/review_screen.dart';
 import 'screens/spending/signing_screen.dart';
 import 'screens/policies/policies_screen.dart';
 import 'screens/policies/edit_policy_screen.dart';
+import 'screens/receive_screen.dart';
 
 import 'package:provider/provider.dart';
 import 'services/mpc_service.dart';
@@ -71,6 +72,10 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/spending/send',
       builder: (context, state) => const SendScreen(),
+    ),
+    GoRoute(
+      path: '/receive',
+      builder: (context, state) => const ReceiveScreen(),
     ),
     GoRoute(
       path: '/spending/review',

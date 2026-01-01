@@ -8,6 +8,7 @@ import 'package:client/client.dart';
 import 'package:hive/hive.dart';
 import 'dart:math';
 import 'package:threshold/threshold.dart' as threshold;
+import 'package:protocol/protocol.dart';
 
 class MpcService extends ChangeNotifier {
   MpcClient? _client;
@@ -24,6 +25,22 @@ class MpcService extends ChangeNotifier {
 
   MpcBitcoinWallet? _wallet;
   MpcBitcoinWallet? get wallet => _wallet;
+
+  BigInt get balance => _wallet?.balance ?? BigInt.zero;
+  List<TransactionSummary> get transactions => _wallet?.transactions ?? [];
+
+  String? get receiveAddress {
+    if (_wallet == null) return null;
+    // Force Regtest format for this environment
+    return _wallet!.toAddressCustom(hrp: 'bcrt');
+  }
+
+  Future<void> refreshHistory() async {
+    if (_wallet != null) {
+      await _wallet!.sync();
+      notifyListeners();
+    }
+  }
 
   // Hardcoded for now, could be configurable
   String _host = '10.0.2.2'; // Default, will be overwritten by persistence

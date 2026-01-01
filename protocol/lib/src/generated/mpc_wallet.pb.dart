@@ -1757,6 +1757,192 @@ class FetchHistoryResponse extends $pb.GeneratedMessage {
   $core.List<UtxoInfo> get utxos => $_getList(0);
 }
 
+class FetchRecentTransactionsRequest extends $pb.GeneratedMessage {
+  factory FetchRecentTransactionsRequest({
+    $core.String? deviceId,
+  }) {
+    final $result = create();
+    if (deviceId != null) {
+      $result.deviceId = deviceId;
+    }
+    return $result;
+  }
+  FetchRecentTransactionsRequest._() : super();
+  factory FetchRecentTransactionsRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory FetchRecentTransactionsRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FetchRecentTransactionsRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'deviceId')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  FetchRecentTransactionsRequest clone() => FetchRecentTransactionsRequest()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  FetchRecentTransactionsRequest copyWith(void Function(FetchRecentTransactionsRequest) updates) => super.copyWith((message) => updates(message as FetchRecentTransactionsRequest)) as FetchRecentTransactionsRequest;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FetchRecentTransactionsRequest create() => FetchRecentTransactionsRequest._();
+  FetchRecentTransactionsRequest createEmptyInstance() => create();
+  static $pb.PbList<FetchRecentTransactionsRequest> createRepeated() => $pb.PbList<FetchRecentTransactionsRequest>();
+  @$core.pragma('dart2js:noInline')
+  static FetchRecentTransactionsRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FetchRecentTransactionsRequest>(create);
+  static FetchRecentTransactionsRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get deviceId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set deviceId($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasDeviceId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDeviceId() => clearField(1);
+}
+
+class FetchRecentTransactionsResponse extends $pb.GeneratedMessage {
+  factory FetchRecentTransactionsResponse({
+    $core.Iterable<TransactionSummary>? transactions,
+  }) {
+    final $result = create();
+    if (transactions != null) {
+      $result.transactions.addAll(transactions);
+    }
+    return $result;
+  }
+  FetchRecentTransactionsResponse._() : super();
+  factory FetchRecentTransactionsResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory FetchRecentTransactionsResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FetchRecentTransactionsResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..pc<TransactionSummary>(1, _omitFieldNames ? '' : 'transactions', $pb.PbFieldType.PM, subBuilder: TransactionSummary.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  FetchRecentTransactionsResponse clone() => FetchRecentTransactionsResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  FetchRecentTransactionsResponse copyWith(void Function(FetchRecentTransactionsResponse) updates) => super.copyWith((message) => updates(message as FetchRecentTransactionsResponse)) as FetchRecentTransactionsResponse;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FetchRecentTransactionsResponse create() => FetchRecentTransactionsResponse._();
+  FetchRecentTransactionsResponse createEmptyInstance() => create();
+  static $pb.PbList<FetchRecentTransactionsResponse> createRepeated() => $pb.PbList<FetchRecentTransactionsResponse>();
+  @$core.pragma('dart2js:noInline')
+  static FetchRecentTransactionsResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FetchRecentTransactionsResponse>(create);
+  static FetchRecentTransactionsResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<TransactionSummary> get transactions => $_getList(0);
+}
+
+class TransactionSummary extends $pb.GeneratedMessage {
+  factory TransactionSummary({
+    $core.String? txHash,
+    $fixnum.Int64? amountSats,
+    $fixnum.Int64? timestamp,
+    $core.bool? isPending,
+  }) {
+    final $result = create();
+    if (txHash != null) {
+      $result.txHash = txHash;
+    }
+    if (amountSats != null) {
+      $result.amountSats = amountSats;
+    }
+    if (timestamp != null) {
+      $result.timestamp = timestamp;
+    }
+    if (isPending != null) {
+      $result.isPending = isPending;
+    }
+    return $result;
+  }
+  TransactionSummary._() : super();
+  factory TransactionSummary.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory TransactionSummary.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionSummary', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'txHash')
+    ..aInt64(2, _omitFieldNames ? '' : 'amountSats')
+    ..aInt64(3, _omitFieldNames ? '' : 'timestamp')
+    ..aOB(4, _omitFieldNames ? '' : 'isPending')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  TransactionSummary clone() => TransactionSummary()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  TransactionSummary copyWith(void Function(TransactionSummary) updates) => super.copyWith((message) => updates(message as TransactionSummary)) as TransactionSummary;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TransactionSummary create() => TransactionSummary._();
+  TransactionSummary createEmptyInstance() => create();
+  static $pb.PbList<TransactionSummary> createRepeated() => $pb.PbList<TransactionSummary>();
+  @$core.pragma('dart2js:noInline')
+  static TransactionSummary getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<TransactionSummary>(create);
+  static TransactionSummary? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get txHash => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set txHash($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasTxHash() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTxHash() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get amountSats => $_getI64(1);
+  @$pb.TagNumber(2)
+  set amountSats($fixnum.Int64 v) { $_setInt64(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasAmountSats() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAmountSats() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get timestamp => $_getI64(2);
+  @$pb.TagNumber(3)
+  set timestamp($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasTimestamp() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTimestamp() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.bool get isPending => $_getBF(3);
+  @$pb.TagNumber(4)
+  set isPending($core.bool v) { $_setBool(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasIsPending() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearIsPending() => clearField(4);
+}
+
 class SubscribeToHistoryRequest extends $pb.GeneratedMessage {
   factory SubscribeToHistoryRequest({
     $core.String? deviceId,

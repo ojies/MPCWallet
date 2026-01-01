@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:ap/services/mpc_service.dart';
+import 'package:intl/intl.dart';
+import 'package:protocol/protocol.dart' as proto;
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final mpcService = context.watch<MpcService>();
+    final balance = mpcService.balance;
+    final transactions = mpcService.transactions;
+
+    final balanceBtc = balance.toDouble() / 100000000;
+    final balanceUsd = balanceBtc * 65000; // Mock exchange rate for now
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -15,6 +26,12 @@ class HomeScreen extends StatelessWidget {
         ),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              mpcService.refreshHistory();
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.notifications_none),
             onPressed: () {},
@@ -26,7 +43,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 24),
             // Balance Card
-            _buildBalanceCard(context),
+            _buildBalanceCard(context, balance, balanceUsd),
             const SizedBox(height: 32),
             // Recent Transactions Title
             Padding(
@@ -54,43 +71,37 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            // Fake Transactions List
+            // Transactions List
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _buildTransactionItem(
-                    title: 'Received Bitcoin',
-                    amount: '+500,000 Sats',
-                    date: 'Today, 10:30 AM',
-                    isIncoming: true,
-                  ),
-                  _buildTransactionItem(
-                    title: 'Starbucks Coffee',
-                    amount: '-12,000 Sats',
-                    date: 'Yesterday, 2:15 PM',
-                    isIncoming: false,
-                  ),
-                  _buildTransactionItem(
-                    title: 'Transfer to Cold Storage',
-                    amount: '-5,000,000 Sats',
-                    date: 'Dec 24, 9:00 AM',
-                    isIncoming: false,
-                  ),
-                  _buildTransactionItem(
-                    title: 'Received from Alice',
-                    amount: '+15,000,000 Sats',
-                    date: 'Dec 20, 4:45 PM',
-                    isIncoming: true,
-                  ),
-                  _buildTransactionItem(
-                    title: 'Netflix Subscription',
-                    amount: '-5,000 Sats',
-                    date: 'Dec 18, 11:00 AM',
-                    isIncoming: false,
-                  ),
-                ],
-              ),
+              child: transactions.isEmpty
+                  ? Center(
+                      child: Text(
+                        "No transactions yet",
+                        style: GoogleFonts.inter(color: Colors.white38),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: transactions.length,
+                      itemBuilder: (context, index) {
+                        final tx = transactions[index];
+                        final isIncoming = tx.amountSats >= 0;
+                        final amount = tx.amountSats.toInt().abs();
+                        // Format date
+                        final date = DateTime.fromMillisecondsSinceEpoch(
+                            tx.timestamp.toInt() * 1000);
+                        final dateStr =
+                            DateFormat.yMMMd().add_jm().format(date);
+
+                        return _buildTransactionItem(
+                          title: isIncoming ? 'Received' : 'Sent',
+                          amount: '${isIncoming ? '+' : '-'}$amount Sats',
+                          date: dateStr,
+                          isIncoming: isIncoming,
+                          isPending: tx.isPending,
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -132,7 +143,11 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBalanceCard(BuildContext context) {
+  Widget _buildBalanceCard(
+      BuildContext context, BigInt balance, double usdValue) {
+    final balanceFormatter = NumberFormat("#,##0", "en_US");
+    final usdFormatter = NumberFormat.currency(symbol: "\$");
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(24),
@@ -176,7 +191,7 @@ class HomeScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '+2.4%',
+                  '+2.4%', // Mock percentage
                   style: GoogleFonts.inter(
                     color: Colors.greenAccent,
                     fontSize: 12,
@@ -188,7 +203,7 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '124,503,211 Sats',
+            '${balanceFormatter.format(balance.toInt())} Sats',
             style: GoogleFonts.inter(
               fontSize: 32,
               fontWeight: FontWeight.bold,
@@ -197,7 +212,7 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '\$52,431.20 USD',
+            usdFormatter.format(usdValue),
             style: GoogleFonts.inter(
               fontSize: 16,
               color: Colors.white38,
@@ -222,7 +237,7 @@ class HomeScreen extends StatelessWidget {
                   context,
                   icon: Icons.arrow_downward,
                   label: 'Receive',
-                  onTap: () {}, // TODO: Implement Receive
+                  onTap: () => context.push('/receive'),
                   isPrimary: false,
                 ),
               ),
@@ -275,6 +290,7 @@ class HomeScreen extends StatelessWidget {
     required String amount,
     required String date,
     required bool isIncoming,
+    bool isPending = false,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -304,12 +320,25 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    if (isPending)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Text(
+                          "(Pending)",
+                          style: GoogleFonts.inter(
+                              color: Colors.orangeAccent, fontSize: 10),
+                        ),
+                      ),
+                  ],
                 ),
                 Text(
                   date,

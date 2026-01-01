@@ -29,6 +29,10 @@ class WalletStore {
   }
 
   Future<List<UtxoWithAddress>> getUtxos() async {
+    return getUtxosSync();
+  }
+
+  List<UtxoWithAddress> getUtxosSync() {
     final raw = _box.get('utxos');
     if (raw == null) return [];
 

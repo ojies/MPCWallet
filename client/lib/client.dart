@@ -515,4 +515,10 @@ class MpcClient {
     return _stub
         .subscribeToHistory(SubscribeToHistoryRequest()..deviceId = _deviceId);
   }
+
+  Future<List<TransactionSummary>> fetchRecentTransactions() async {
+    final response = await _stub.fetchRecentTransactions(
+        FetchRecentTransactionsRequest()..deviceId = _deviceId);
+    return response.transactions;
+  }
 }

@@ -9,6 +9,7 @@ import 'package:client/persistence/wallet_store.dart';
 import 'package:client/coin_selection.dart';
 import 'package:client/fees.dart';
 import 'package:threshold/threshold.dart' as threshold; // Access bigIntToBytes
+import 'package:protocol/protocol.dart';
 
 class UnsignedTransaction {
   final BtcTransaction btcTransaction;
@@ -28,6 +29,15 @@ class MpcBitcoinWallet {
       throw StateError("Wallet not initialized. Call init() first.");
     }
     return _address;
+  }
+
+  List<TransactionSummary> _transactions = [];
+  List<TransactionSummary> get transactions => List.unmodifiable(_transactions);
+
+  BigInt get balance {
+    return store
+        .getUtxosSync()
+        .fold(BigInt.zero, (sum, u) => sum + u.utxo.value);
   }
 
   MpcBitcoinWallet(this.client,
@@ -287,10 +297,16 @@ class MpcBitcoinWallet {
     return signedTx.serialize();
   }
 
-  /// Syncs the wallet's UTXOs using the server.
+  /// Syncs the wallet's UTXOs and History using the server.
   Future<void> sync() async {
     // 1. Fetch from Server
     final utxoInfos = await client.fetchHistory();
+    try {
+      _transactions = await client.fetchRecentTransactions();
+      print("Synced ${_transactions.length} recent transactions.");
+    } catch (e) {
+      print("Error fetching recent transactions: $e");
+    }
 
     // 2. Convert to UtxoWithAddress
     // Find P2TR type robustly

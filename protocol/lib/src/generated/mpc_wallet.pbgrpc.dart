@@ -69,6 +69,10 @@ class MPCWalletClient extends $grpc.Client {
       '/mpc_wallet.MPCWallet/FetchHistory',
       ($0.FetchHistoryRequest value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.FetchHistoryResponse.fromBuffer(value));
+  static final _$fetchRecentTransactions = $grpc.ClientMethod<$0.FetchRecentTransactionsRequest, $0.FetchRecentTransactionsResponse>(
+      '/mpc_wallet.MPCWallet/FetchRecentTransactions',
+      ($0.FetchRecentTransactionsRequest value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.FetchRecentTransactionsResponse.fromBuffer(value));
   static final _$subscribeToHistory = $grpc.ClientMethod<$0.SubscribeToHistoryRequest, $0.TransactionNotification>(
       '/mpc_wallet.MPCWallet/SubscribeToHistory',
       ($0.SubscribeToHistoryRequest value) => value.writeToBuffer(),
@@ -126,6 +130,10 @@ class MPCWalletClient extends $grpc.Client {
 
   $grpc.ResponseFuture<$0.FetchHistoryResponse> fetchHistory($0.FetchHistoryRequest request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$fetchHistory, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.FetchRecentTransactionsResponse> fetchRecentTransactions($0.FetchRecentTransactionsRequest request, {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$fetchRecentTransactions, request, options: options);
   }
 
   $grpc.ResponseStream<$0.TransactionNotification> subscribeToHistory($0.SubscribeToHistoryRequest request, {$grpc.CallOptions? options}) {
@@ -222,6 +230,13 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.FetchHistoryRequest.fromBuffer(value),
         ($0.FetchHistoryResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.FetchRecentTransactionsRequest, $0.FetchRecentTransactionsResponse>(
+        'FetchRecentTransactions',
+        fetchRecentTransactions_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.FetchRecentTransactionsRequest.fromBuffer(value),
+        ($0.FetchRecentTransactionsResponse value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.SubscribeToHistoryRequest, $0.TransactionNotification>(
         'SubscribeToHistory',
         subscribeToHistory_Pre,
@@ -279,6 +294,10 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
     return fetchHistory(call, await request);
   }
 
+  $async.Future<$0.FetchRecentTransactionsResponse> fetchRecentTransactions_Pre($grpc.ServiceCall call, $async.Future<$0.FetchRecentTransactionsRequest> request) async {
+    return fetchRecentTransactions(call, await request);
+  }
+
   $async.Stream<$0.TransactionNotification> subscribeToHistory_Pre($grpc.ServiceCall call, $async.Future<$0.SubscribeToHistoryRequest> request) async* {
     yield* subscribeToHistory(call, await request);
   }
@@ -295,5 +314,6 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
   $async.Future<$0.GetPolicyIdResponse> getPolicyId($grpc.ServiceCall call, $0.GetPolicyIdRequest request);
   $async.Future<$0.BroadcastTransactionResponse> broadcastTransaction($grpc.ServiceCall call, $0.BroadcastTransactionRequest request);
   $async.Future<$0.FetchHistoryResponse> fetchHistory($grpc.ServiceCall call, $0.FetchHistoryRequest request);
+  $async.Future<$0.FetchRecentTransactionsResponse> fetchRecentTransactions($grpc.ServiceCall call, $0.FetchRecentTransactionsRequest request);
   $async.Stream<$0.TransactionNotification> subscribeToHistory($grpc.ServiceCall call, $0.SubscribeToHistoryRequest request);
 }
