@@ -61,9 +61,9 @@ class MpcClient {
   }
 
   static String _generateDeviceId() {
-    final r = Random();
+    final r = Random.secure();
     return List.generate(
-        16, (index) => r.nextInt(255).toRadixString(16).padLeft(2, '0')).join();
+        16, (index) => r.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
   }
 
   /// Initializes persistence for the client.
@@ -261,7 +261,6 @@ class MpcClient {
     }
 
     final seed = sha256.convert(utf8.encode(pin)).bytes;
-    print("DEBUG: Client Create Seed: ${seed.sublist(0, 5)}...");
 
     // Part 1: Generate Refresh Secrets
     // We use 2-party refresh (Client + Server) for Policy Creation.
@@ -324,13 +323,7 @@ class MpcClient {
         threshold.evaluatePolynomial(_signingId, r1Sec1.coefficients);
     final newSecret = keyPkg1.secretShare;
 
-    print("DEBUG: Refresh myUpdate: $myUpdate");
-
     var diff = (newSecret - myUpdate);
-    print("DEBUG: Calculated diff: $diff");
-    final correctedShare = (diff + myUpdate);
-    print("DEBUG: Refresh new Share: $newSecret");
-    print("DEBUG: Corrected share: $correctedShare");
 
     final protectedKeyPkg = threshold.KeyPackage(
       keyPkg1.identifier,
@@ -339,8 +332,6 @@ class MpcClient {
       keyPkg1.verifyingKey,
       keyPkg1.minSigners,
     );
-
-    print("DEBUG: Policy ID: ${step1Resp.policyId}");
 
     _protectedPolicies[step1Resp.policyId] = ProtectedPolicy(
       id: step1Resp.policyId,
@@ -450,7 +441,7 @@ class MpcClient {
 
     // Explicitly apply Taproot tweak (Key Path Spending)
     keyPkg = keyPkg.tweak(null);
-    final pubPacakge = groupPubKey.tweak(null);
+    final pubPackage = groupPubKey.tweak(null);
 
     final sigShare = frost.sign(signingPkg, nonce, keyPkg);
 
@@ -468,7 +459,7 @@ class MpcClient {
 
     final signature = threshold.Signature(R, z);
 
-    return signature.verify(pubPacakge.verifyingKey, message);
+    return signature.verify(pubPackage.verifyingKey, message);
   }
 
   // Helpers

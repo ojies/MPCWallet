@@ -15,6 +15,7 @@ class MpcService extends ChangeNotifier {
   bool _isInitialized = false;
   Future<void>? _persistenceInitFuture;
   bool _dkgComplete = false;
+  Box? _identityBox;
 
   String? _deviceId;
   threshold.Identifier? _signingId;
@@ -65,22 +66,34 @@ class MpcService extends ChangeNotifier {
       await _ensurePersistenceInitialized();
 
       // 2. Open our own box for identity persistence
-      final identityBox = await Hive.openBox('mpc_service_identity');
+      _identityBox = await Hive.openBox('mpc_service_identity');
 
-      _host = identityBox.get('serverHost', defaultValue: '10.0.2.2');
+      _host = _identityBox!.get('serverHost', defaultValue: '10.0.2.2');
       print("MPC Service: Using host: $_host");
 
-      _dkgComplete = identityBox.get('dkgComplete', defaultValue: false);
+      _dkgComplete = _identityBox!.get('dkgComplete', defaultValue: false);
 
-      _storedDeviceId = identityBox.get('deviceId') as String?;
-      _storedSigningIdHex = identityBox.get('signingId') as String?;
-      _storedRecoveryIdHex = identityBox.get('recoveryId') as String?;
+      _storedDeviceId = _identityBox!.get('deviceId') as String?;
+      _storedSigningIdHex = _identityBox!.get('signingId') as String?;
+      _storedRecoveryIdHex = _identityBox!.get('recoveryId') as String?;
 
       _isInitialized = true;
     } catch (e) {
       print("MPC Service Error: $e");
       rethrow;
     }
+  }
+
+  /// Closes all resources. Call this when the app is shutting down.
+  @override
+  Future<void> dispose() async {
+    try {
+      await _identityBox?.close();
+      _identityBox = null;
+    } catch (e) {
+      print("MPC Service: Error closing identity box: $e");
+    }
+    super.dispose();
   }
 
   Future<void> setHost(String host) async {
@@ -90,8 +103,10 @@ class MpcService extends ChangeNotifier {
     _host = host;
 
     await _ensurePersistenceInitialized();
-    final identityBox = await Hive.openBox('mpc_service_identity');
-    await identityBox.put('serverHost', host);
+    if (_identityBox == null || !_identityBox!.isOpen) {
+      _identityBox = await Hive.openBox('mpc_service_identity');
+    }
+    await _identityBox!.put('serverHost', host);
   }
 
   Future<void> doDkg() async {
@@ -142,21 +157,23 @@ class MpcService extends ChangeNotifier {
     }
 
     await _ensurePersistenceInitialized();
-    final identityBox = await Hive.openBox('mpc_service_identity');
-    await identityBox.put('deviceId', _deviceId);
-    await identityBox.put(
-        'signingId', _signingId!.toScalar().toRadixString(16));
-    await identityBox.put(
-        'recoveryId', _recoveryId!.toScalar().toRadixString(16));
-    await identityBox.put('dkgComplete', true);
+    if (_identityBox == null || !_identityBox!.isOpen) {
+      _identityBox = await Hive.openBox('mpc_service_identity');
+    }
+    await _identityBox!.put('deviceId', _deviceId);
+    await _identityBox!
+        .put('signingId', _signingId!.toScalar().toRadixString(16));
+    await _identityBox!
+        .put('recoveryId', _recoveryId!.toScalar().toRadixString(16));
+    await _identityBox!.put('dkgComplete', true);
     _dkgComplete = true;
 
     notifyListeners();
   }
 
   String _generateDeviceId() {
-    final r = Random();
+    final r = Random.secure();
     return List.generate(
-        16, (index) => r.nextInt(255).toRadixString(16).padLeft(2, '0')).join();
+        16, (index) => r.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
   }
 }
