@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:client/policy.dart';
@@ -15,6 +14,7 @@ import 'package:fixnum/fixnum.dart';
 import 'package:hive/hive.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
+import 'package:convert/convert.dart';
 
 import 'package:client/persistence/wallet_store.dart';
 
@@ -23,13 +23,13 @@ class MpcClient {
   // Store
   late final WalletStore _store;
 
-  // Unique Session ID for this client instance (persisted or generated)
-  String _deviceId;
-  String get deviceId => _deviceId;
+  // User ID for this client instance (persisted or derived after DKG)
+  List<int>? _userId;
+  String? get userId => _userId == null ? null : hex.encode(_userId!);
 
-  // Two identities
-  final threshold.Identifier _signingId;
-  final threshold.Identifier _recoveryId;
+  // Recovey Id
+  List<int>? _recoveryId;
+  List<int>? get recoveryId => _recoveryId;
 
   final int _maxSigners;
   final int _minSigners;
@@ -46,24 +46,14 @@ class MpcClient {
 
   /// Creates a client that manages two shares (identities).
   /// [id1] and [id2] are the identifiers for this client's two shares.
-  /// [deviceId] identifies this DKG session. If null, a random one is generated.
-  MpcClient(ClientChannel channel, this._signingId, this._recoveryId,
-      {int maxSigners = 3,
-      int minSigners = 2,
-      String? deviceId,
-      String? storageId})
+  /// [userId] identifies this DKG session until replaced by the group VerifyingKey.
+  MpcClient(ClientChannel channel,
+      {int maxSigners = 3, int minSigners = 2, String? storageId})
       : _stub = MPCWalletClient(channel),
-        _deviceId = deviceId ?? _generateDeviceId(),
         _maxSigners = maxSigners,
         _minSigners = minSigners,
         _protectedPolicies = {} {
-    _store = WalletStore(boxName: storageId ?? 'mpc_wallet_state_$_deviceId');
-  }
-
-  static String _generateDeviceId() {
-    final r = Random.secure();
-    return List.generate(
-        16, (index) => r.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+    _store = WalletStore(boxName: storageId ?? 'mpc_wallet_state_default');
   }
 
   /// Initializes persistence for the client.
@@ -105,7 +95,11 @@ class MpcClient {
 
     if (state == null) return false;
 
-    _deviceId = state['deviceId'];
+    final storedUserId = state['userId'];
+    if (storedUserId is! String || storedUserId.isEmpty) {
+      return false;
+    }
+    _userId = hex.decode(storedUserId);
 
     if (state['spendingPolicies'] != null) {
       _normalPolicy = SpendingPolicy.fromJson(
@@ -125,13 +119,12 @@ class MpcClient {
       });
     }
 
-    print("Restored state for device: $_deviceId");
     return true;
   }
 
   Future<void> _saveState() async {
     final state = <String, dynamic>{
-      'deviceId': _deviceId,
+      'userId': hex.encode(_userId!),
     };
     if (_normalPolicy != null) {
       state['spendingPolicies'] = _normalPolicy!.toJson();
@@ -158,24 +151,35 @@ class MpcClient {
     await _store.init(); // Ensure store is ready
     // 1. Generate Secrets for both identities
     _signingSecret = threshold.SecretKey(threshold.modNRandom());
+
     final coeffs1 = threshold.generateCoefficients(_minSigners - 1);
-    final (r1Sec1, r1Pub1) = threshold.dkgPart1(
-        _signingId, _maxSigners, _minSigners, _signingSecret!, coeffs1);
+    final (r1Sec1, r1Pub1) =
+        threshold.dkgPart1(_maxSigners, _minSigners, _signingSecret!, coeffs1);
 
     _recoverySecret = threshold.SecretKey(threshold.modNRandom());
     final coeffs2 = threshold.generateCoefficients(_minSigners - 1);
-    final (r1Sec2, r1Pub2) = threshold.dkgPart1(
-        _recoveryId, _maxSigners, _minSigners, _recoverySecret!, coeffs2);
+    final (r1Sec2, r1Pub2) =
+        threshold.dkgPart1(_maxSigners, _minSigners, _recoverySecret!, coeffs2);
+
+    final userId = threshold.elemSerializeCompressed(r1Pub1.verifyingKey.E);
+    final recoveryId = threshold.elemSerializeCompressed(r1Pub2.verifyingKey.E);
+
+    //save userId
+    _userId = userId;
+    _recoveryId = recoveryId;
+
+    final signingIdThresholdId = threshold.Identifier.derive(userId);
+    final recoveryIdThresholdId = threshold.Identifier.derive(recoveryId);
 
     // 2. Step 1: Exchange Round 1 Packages for both
     final req1 = DKGStep1Request()
-      ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(_signingId.toScalar())
+      ..userId = userId
+      ..identifier = signingIdThresholdId.serialize()
       ..round1Package = jsonEncode(r1Pub1.toJson());
 
     final req2 = DKGStep1Request()
-      ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(_recoveryId.toScalar())
+      ..userId = userId
+      ..identifier = recoveryIdThresholdId.serialize()
       ..round1Package = jsonEncode(r1Pub2.toJson());
 
     final step1Futures =
@@ -185,9 +189,7 @@ class MpcClient {
 
     // 3. Step 2: Compute Shares
     // Trigger Step 2 on server for this session
-    await _stub.dKGStep2(DKGStep2Request()
-      ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(_signingId.toScalar()));
+    await _stub.dKGStep2(DKGStep2Request()..userId = userId);
 
     // Parse R1 packages for Identity 1
     final round1PkgsMap1 = <threshold.Identifier, threshold.Round1Package>{};
@@ -198,8 +200,8 @@ class MpcClient {
       final id = threshold.Identifier(BigInt.parse(k, radix: 16));
       final pkg = threshold.Round1Package.fromJson(jsonDecode(v));
 
-      if (id != _signingId) round1PkgsMap1[id] = pkg;
-      if (id != _recoveryId) round1PkgsMap2[id] = pkg;
+      if (id != signingIdThresholdId) round1PkgsMap1[id] = pkg;
+      if (id != recoveryIdThresholdId) round1PkgsMap2[id] = pkg;
     });
 
     // Compute shares
@@ -208,13 +210,13 @@ class MpcClient {
 
     // 4. Step 3: Exchange Shares
     final req3_1 = DKGStep3Request()
-      ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(_signingId.toScalar())
+      ..userId = userId
+      ..identifier = threshold.bigIntToBytes(signingIdThresholdId.toScalar())
       ..round2PackagesForOthers.addAll(_buildSharesMap(sharesFrom1));
 
     final req3_2 = DKGStep3Request()
-      ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(_recoveryId.toScalar())
+      ..userId = userId
+      ..identifier = threshold.bigIntToBytes(recoveryIdThresholdId.toScalar())
       ..round2PackagesForOthers.addAll(_buildSharesMap(sharesFrom2));
 
     final step3Futures =
@@ -238,6 +240,8 @@ class MpcClient {
         id: "recovery_policy_id",
         keyPackage: keyPkg2,
         publicKeyPackage: pubKeyPkg2);
+
+    _userId = userId.toList();
 
     await _saveState();
   }
@@ -267,14 +271,24 @@ class MpcClient {
     final refreshTotalParties = 2;
     final refreshThreshold = 2; // 2-of-2
 
+    if (_userId == null) {
+      throw StateError("Signing secret is null, cannot proceed with refresh.");
+    }
+
+    final signingIdentifier =
+        threshold.Identifier.derive(Uint8List.fromList(_userId!));
+
     final (r1Sec1, r1Pub1) = threshold.dkgRefreshPart1(
-        _signingId, refreshTotalParties, refreshThreshold,
+        signingIdentifier, refreshTotalParties, refreshThreshold,
         seed: seed);
+
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot proceed with refresh.");
+    }
 
     // Step 1: Exchange
     final req1 = RefreshStep1Request()
-      ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(_signingId.toScalar())
+      ..userId = _userId!
       ..round1Package = jsonEncode(r1Pub1.toJson())
       ..interval = Int64(interval.inSeconds)
       ..thresholdAmount = thresholdAmount;
@@ -282,9 +296,7 @@ class MpcClient {
     final step1Resp = await _stub.refreshStep1(req1);
 
     // Step 2: Shares
-    final req2_1 = RefreshStep2Request()
-      ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(_signingId.toScalar());
+    final req2_1 = RefreshStep2Request()..userId = _userId!;
 
     await _stub.refreshStep2(req2_1);
 
@@ -294,7 +306,7 @@ class MpcClient {
     step1Resp.round1Packages.forEach((k, v) {
       final id_temp = threshold.Identifier(BigInt.parse(k, radix: 16));
       final pkg = threshold.Round1Package.fromJson(jsonDecode(v));
-      if (id_temp != _signingId) round1PkgsMap1[id_temp] = pkg;
+      if (id_temp != signingIdentifier) round1PkgsMap1[id_temp] = pkg;
     });
 
     // Compute shares
@@ -303,8 +315,7 @@ class MpcClient {
 
     // Step 3: Finalize
     final req3_1 = RefreshStep3Request()
-      ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(_signingId.toScalar())
+      ..userId = _userId!
       ..round2PackagesForOthers.addAll(_buildSharesMap(sharesFrom1));
 
     final step3Resp1 = await _stub.refreshStep3(req3_1);
@@ -320,7 +331,7 @@ class MpcClient {
     // Compute protected key for Identity 1
     // myUpdate is evaluatePolynomial(myId, coeffs)
     final myUpdate =
-        threshold.evaluatePolynomial(_signingId, r1Sec1.coefficients);
+        threshold.evaluatePolynomial(signingIdentifier, r1Sec1.coefficients);
     final newSecret = keyPkg1.secretShare;
 
     var diff = (newSecret - myUpdate);
@@ -346,8 +357,12 @@ class MpcClient {
 
   // --- SIGNING ---
   Future<String> getPolicyId(Uint8List message) async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot get Policy ID.");
+    }
+
     final response = await _stub.getPolicyId(GetPolicyIdRequest()
-      ..deviceId = _deviceId
+      ..userId = _userId!
       ..txMessage = message);
     return response.policyId;
   }
@@ -356,6 +371,13 @@ class MpcClient {
       {String? pin, String? policyId, List<int>? fullTransaction}) async {
     var keyPackage = _normalPolicy!.keyPackage;
     var groupPubKey = _normalPolicy!.publicKeyPackage;
+
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot proceed with signing.");
+    }
+
+    final signingIdentifier =
+        threshold.Identifier.derive(Uint8List.fromList(_userId!));
 
     if (policyId != null &&
         _protectedPolicies.containsKey(policyId) &&
@@ -367,11 +389,12 @@ class MpcClient {
       final seed = sha256.convert(utf8.encode(pin)).bytes;
 
       // Re-run part 1 logic to reliably recover the polynomial
-      final (r1Sec, _) = threshold
-          .dkgRefreshPart1(_signingId, minSigners, minSigners, seed: seed);
+      final (r1Sec, _) = threshold.dkgRefreshPart1(
+          signingIdentifier, minSigners, minSigners,
+          seed: seed);
 
       final myUpdate =
-          threshold.evaluatePolynomial(_signingId, r1Sec.coefficients);
+          threshold.evaluatePolynomial(signingIdentifier, r1Sec.coefficients);
 
       final partialShare = protectedPolicy!.keyPackage.secretShare;
       final correctedShare = (partialShare + myUpdate);
@@ -392,7 +415,6 @@ class MpcClient {
       keyPackage,
       groupPubKey,
       fullTransaction,
-      null,
     );
   }
 
@@ -401,14 +423,16 @@ class MpcClient {
     threshold.KeyPackage keyPkg,
     threshold.PublicKeyPackage groupPubKey,
     List<int>? fullTransaction,
-    List<UtxoInfo>? inputUtxos,
   ) async {
     final nonce = frost_comm.newNonce(keyPkg.secretShare);
 
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot proceed with signing.");
+    }
+
     // 2. Step 1: Commitments
     final req = SignStep1Request()
-      ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(_signingId.toScalar())
+      ..userId = _userId!
       ..hidingCommitment =
           threshold.elemSerializeCompressed(nonce.commitments.hiding)
       ..bindingCommitment =
@@ -417,9 +441,6 @@ class MpcClient {
 
     if (fullTransaction != null) {
       req.fullTransaction = fullTransaction;
-    }
-    if (inputUtxos != null) {
-      req.inputUtxos.addAll(inputUtxos);
     }
 
     final signStep1Resp = await _stub.signStep1(req);
@@ -447,8 +468,7 @@ class MpcClient {
 
     // 4. Send Share & Get Result
     final signStep2Resp = await _stub.signStep2(SignStep2Request()
-      ..deviceId = _deviceId
-      ..identifier = threshold.bigIntToBytes(_signingId.toScalar())
+      ..userId = _userId!
       ..signatureShare = threshold.bigIntToBytes(sigShare.s));
 
     // 5. Verify
@@ -487,8 +507,12 @@ class MpcClient {
 
   // --- BROADCAST ---
   Future<String> broadcastTransaction(String txHex) async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot broadcast transaction.");
+    }
+
     final request = BroadcastTransactionRequest()
-      ..deviceId = _deviceId
+      ..userId = _userId!
       ..txHex = txHex;
 
     final response = await _stub.broadcastTransaction(request);
@@ -497,19 +521,31 @@ class MpcClient {
 
   // --- SYNC ---
   Future<List<UtxoInfo>> fetchHistory() async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot fetch history.");
+    }
+
     final response =
-        await _stub.fetchHistory(FetchHistoryRequest()..deviceId = _deviceId);
+        await _stub.fetchHistory(FetchHistoryRequest()..userId = _userId!);
     return response.utxos;
   }
 
   Stream<TransactionNotification> subscribeToHistory() {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot subscribe to history.");
+    }
+
     return _stub
-        .subscribeToHistory(SubscribeToHistoryRequest()..deviceId = _deviceId);
+        .subscribeToHistory(SubscribeToHistoryRequest()..userId = _userId!);
   }
 
   Future<List<TransactionSummary>> fetchRecentTransactions() async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot fetch recent transactions.");
+    }
+
     final response = await _stub.fetchRecentTransactions(
-        FetchRecentTransactionsRequest()..deviceId = _deviceId);
+        FetchRecentTransactionsRequest()..userId = _userId!);
     return response.transactions;
   }
 }

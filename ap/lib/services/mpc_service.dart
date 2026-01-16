@@ -1,13 +1,10 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:grpc/grpc.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:client/bitcoin.dart';
-import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:client/client.dart';
 import 'package:hive/hive.dart';
 import 'dart:math';
-import 'package:threshold/threshold.dart' as threshold;
 import 'package:protocol/protocol.dart';
 
 class MpcService extends ChangeNotifier {
@@ -17,13 +14,7 @@ class MpcService extends ChangeNotifier {
   bool _dkgComplete = false;
   Box? _identityBox;
 
-  String? _deviceId;
-  threshold.Identifier? _signingId;
-  threshold.Identifier? _recoveryId;
-
-  String? _storedDeviceId;
-  String? _storedSigningIdHex;
-  String? _storedRecoveryIdHex;
+  String? _storageId;
 
   MpcClient? get client => _client;
   bool get isInitialized => _isInitialized;
@@ -72,10 +63,11 @@ class MpcService extends ChangeNotifier {
       print("MPC Service: Using host: $_host");
 
       _dkgComplete = _identityBox!.get('dkgComplete', defaultValue: false);
-
-      _storedDeviceId = _identityBox!.get('deviceId') as String?;
-      _storedSigningIdHex = _identityBox!.get('signingId') as String?;
-      _storedRecoveryIdHex = _identityBox!.get('recoveryId') as String?;
+      _storageId = _identityBox!.get('storageId') as String?;
+      if (_storageId == null || _storageId!.isEmpty) {
+        _storageId = 'mpc_wallet_state_${_generateSessionId()}';
+        await _identityBox!.put('storageId', _storageId);
+      }
 
       _isInitialized = true;
     } catch (e) {
@@ -112,23 +104,11 @@ class MpcService extends ChangeNotifier {
   Future<void> doDkg() async {
     if (!_isInitialized) throw StateError("MPC Service not initialized");
 
-    if (_dkgComplete &&
-        _storedDeviceId != null &&
-        _storedSigningIdHex != null &&
-        _storedRecoveryIdHex != null) {
-      print("MPC Service: Restoring local identities...");
-      _deviceId = _storedDeviceId;
-      _signingId =
-          threshold.Identifier(BigInt.parse(_storedSigningIdHex!, radix: 16));
-      _recoveryId =
-          threshold.Identifier(BigInt.parse(_storedRecoveryIdHex!, radix: 16));
-    } else {
-      print("MPC Service: Starting fresh (DKG incomplete)...");
-
-      _deviceId = _generateDeviceId();
-      _signingId = threshold.Identifier(threshold.modNRandom());
-      _recoveryId = threshold.Identifier(threshold.modNRandom());
+    if (_dkgComplete) {
+      throw StateError("DKG already completed for this user.");
     }
+
+    final storageId = _storageId ?? 'mpc_wallet_state_default';
 
     // Create channel
     final channel = ClientChannel(
@@ -137,41 +117,18 @@ class MpcService extends ChangeNotifier {
       options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
     );
 
-    _client =
-        MpcClient(channel, _signingId!, _recoveryId!, deviceId: _deviceId!);
+    _client = MpcClient(channel, storageId: storageId);
 
-    _wallet = MpcBitcoinWallet(_client!,
-        isTestnet: true, storageId: 'mpc_wallet_state_${_client!.deviceId}');
+    _wallet = MpcBitcoinWallet(_client!, isTestnet: true, storageId: storageId);
 
     await _wallet!.init();
 
-    notifyListeners();
-  }
-
-  Future<void> completeDkg() async {
-    if (_client == null ||
-        _deviceId == null ||
-        _signingId == null ||
-        _recoveryId == null) {
-      throw StateError("Missing identities; cannot finalize DKG.");
-    }
-
-    await _ensurePersistenceInitialized();
-    if (_identityBox == null || !_identityBox!.isOpen) {
-      _identityBox = await Hive.openBox('mpc_service_identity');
-    }
-    await _identityBox!.put('deviceId', _deviceId);
-    await _identityBox!
-        .put('signingId', _signingId!.toScalar().toRadixString(16));
-    await _identityBox!
-        .put('recoveryId', _recoveryId!.toScalar().toRadixString(16));
-    await _identityBox!.put('dkgComplete', true);
     _dkgComplete = true;
 
     notifyListeners();
   }
 
-  String _generateDeviceId() {
+  String _generateSessionId() {
     final r = Random.secure();
     return List.generate(
         16, (index) => r.nextInt(256).toRadixString(16).padLeft(2, '0')).join();

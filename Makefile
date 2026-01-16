@@ -1,4 +1,4 @@
-.PHONY: regtest-up regtest-down server-run regtest
+.PHONY: regtest-up regtest-down server-run regtest proto
 
 # Start Docker environment (Bitcoind + Electrs)
 regtest-up:
@@ -23,3 +23,8 @@ server-run:
 
 # Helper to start everything
 regtest: regtest-up server-run
+
+# Generate Dart gRPC stubs from protos
+proto:
+	@echo "Generating Dart gRPC stubs..."
+	protoc -I protos --dart_out=grpc:protocol/lib/src/generated protos/mpc_wallet.proto

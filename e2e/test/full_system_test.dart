@@ -6,7 +6,6 @@ import 'package:client/client.dart';
 import 'package:client/bitcoin.dart';
 import 'package:e2e/regtest_helper.dart';
 import 'package:grpc/grpc.dart';
-import 'package:threshold/threshold.dart' as threshold;
 import 'package:hive/hive.dart';
 import 'package:fixnum/fixnum.dart';
 
@@ -167,11 +166,7 @@ void main() {
       port: serverPort,
       options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
     );
-    final id1 = threshold.Identifier(BigInt.from(1));
-    final id2 = threshold.Identifier(BigInt.from(2));
-
-    final randomId = DateTime.now().millisecondsSinceEpoch.toString();
-    final client1 = MpcClient(channel, id1, id2, deviceId: "user_$randomId");
+    final client1 = MpcClient(channel);
 
     await client1.doDkg();
     print('DKG Complete');

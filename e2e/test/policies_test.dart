@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:grpc/grpc.dart';
-import 'package:protocol/protocol.dart';
 import 'package:threshold/threshold.dart' as threshold;
 import 'package:client/client.dart';
 import 'package:bitcoin_base/bitcoin_base.dart';
@@ -15,37 +14,6 @@ import 'package:server/server.dart';
 import 'package:server/bitcoin.dart';
 import 'package:server/bitcoin_service.dart';
 import 'package:server/persistence/store.dart';
-
-// Mock Stores (same as refresh_flow_test)
-class MockStore implements DKGSessionStore {
-  final Map<String, String> _data = {};
-  @override
-  Future<void> init() async {}
-  @override
-  Future<void> saveSession(String deviceId, String data) async {
-    _data[deviceId] = data;
-  }
-
-  @override
-  String? getSession(String deviceId) => _data[deviceId];
-  @override
-  Future<void> close() async {}
-}
-
-class MockUtxoStore implements UtxoStore {
-  final Map<String, String> _data = {};
-  @override
-  Future<void> init() async {}
-  @override
-  Future<void> saveUtxo(String deviceId, String data) async {
-    _data[deviceId] = data;
-  }
-
-  @override
-  String? getUtxo(String deviceId) => _data[deviceId];
-  @override
-  Future<void> close() async {}
-}
 
 void main() {
   late Server server;
@@ -80,17 +48,11 @@ void main() {
         ..close();
     });
 
-    final dkgStore =
-        DKGSessionStore(); // Using implicit memory store from class if not overriden? No, used real class in previous tests.
-    // Wait, DKGSessionStore in server/lib/persistence/store.dart might be abstract or real.
-    // In refresh_flow_test it used "DKGSessionStore()".
-    // Assuming standard in-memory or we can use our MockStore if needed.
-    // Ideally use real store logic if possible to test integration.
+    final dkgStore = DKGSessionStore();
     final policyStore = PolicyStore();
     final refreshStore = RefreshSessionStore();
     final signingStore = SigningSessionStore();
-    // Use MockUtxoStore to inspect/debug if needed, or real one.
-    final utxoStore = MockUtxoStore();
+    final utxoStore = UtxoStore();
 
     await dkgStore.init();
     await policyStore.init();
@@ -129,9 +91,7 @@ void main() {
 
   test('E2E Policies Flow', () async {
     // 1. DKG
-    final id1 = threshold.Identifier(BigInt.from(1));
-    final id2 = threshold.Identifier(BigInt.from(2));
-    final client = MpcClient(channel, id1, id2, minSigners: 2, maxSigners: 3);
+    final client = MpcClient(channel, minSigners: 2, maxSigners: 3);
     await client.doDkg();
     expect(client.isInitialized, isTrue);
 

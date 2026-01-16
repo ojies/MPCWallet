@@ -43,7 +43,7 @@ class MpcBitcoinWallet {
   MpcBitcoinWallet(this.client,
       {this.isTestnet = false, String? storageId, bool useIdentity2 = false})
       : store = WalletStore(
-            boxName: storageId ?? 'mpc_wallet_state_${client.deviceId}');
+            boxName: storageId ?? 'mpc_wallet_state_default');
 
   Future<void> init() async {
     await store.init();

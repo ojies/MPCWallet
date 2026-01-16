@@ -44,7 +44,6 @@ class _DkgProgressScreenState extends State<DkgProgressScreen> {
       await _addLog('Generating secrets and exchanging packages...');
 
       await mpcService.doDkg();
-      await mpcService.completeDkg();
 
       await _addLog('DKG Finalized successfully.');
       setState(() => _currentStep = 2);

@@ -2,7 +2,7 @@
 //  Generated code. Do not modify.
 //  source: mpc_wallet.proto
 //
-// @dart = 2.12
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
 // ignore_for_file: constant_identifier_names, library_prefixes
@@ -78,11 +78,7 @@ class MPCWalletClient extends $grpc.Client {
       ($0.SubscribeToHistoryRequest value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.TransactionNotification.fromBuffer(value));
 
-  MPCWalletClient($grpc.ClientChannel channel,
-      {$grpc.CallOptions? options,
-      $core.Iterable<$grpc.ClientInterceptor>? interceptors})
-      : super(channel, options: options,
-        interceptors: interceptors);
+  MPCWalletClient(super.channel, {super.options, super.interceptors});
 
   $grpc.ResponseFuture<$0.DKGStep1Response> dKGStep1($0.DKGStep1Request request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$dKGStep1, request, options: options);
@@ -246,60 +242,60 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
         ($0.TransactionNotification value) => value.writeToBuffer()));
   }
 
-  $async.Future<$0.DKGStep1Response> dKGStep1_Pre($grpc.ServiceCall call, $async.Future<$0.DKGStep1Request> request) async {
-    return dKGStep1(call, await request);
+  $async.Future<$0.DKGStep1Response> dKGStep1_Pre($grpc.ServiceCall $call, $async.Future<$0.DKGStep1Request> $request) async {
+    return dKGStep1($call, await $request);
   }
 
-  $async.Future<$0.DKGStep2Response> dKGStep2_Pre($grpc.ServiceCall call, $async.Future<$0.DKGStep2Request> request) async {
-    return dKGStep2(call, await request);
+  $async.Future<$0.DKGStep2Response> dKGStep2_Pre($grpc.ServiceCall $call, $async.Future<$0.DKGStep2Request> $request) async {
+    return dKGStep2($call, await $request);
   }
 
-  $async.Future<$0.DKGStep3Response> dKGStep3_Pre($grpc.ServiceCall call, $async.Future<$0.DKGStep3Request> request) async {
-    return dKGStep3(call, await request);
+  $async.Future<$0.DKGStep3Response> dKGStep3_Pre($grpc.ServiceCall $call, $async.Future<$0.DKGStep3Request> $request) async {
+    return dKGStep3($call, await $request);
   }
 
-  $async.Future<$0.SignStep1Response> signStep1_Pre($grpc.ServiceCall call, $async.Future<$0.SignStep1Request> request) async {
-    return signStep1(call, await request);
+  $async.Future<$0.SignStep1Response> signStep1_Pre($grpc.ServiceCall $call, $async.Future<$0.SignStep1Request> $request) async {
+    return signStep1($call, await $request);
   }
 
-  $async.Future<$0.SignStep2Response> signStep2_Pre($grpc.ServiceCall call, $async.Future<$0.SignStep2Request> request) async {
-    return signStep2(call, await request);
+  $async.Future<$0.SignStep2Response> signStep2_Pre($grpc.ServiceCall $call, $async.Future<$0.SignStep2Request> $request) async {
+    return signStep2($call, await $request);
   }
 
-  $async.Future<$0.RefreshStep1Response> refreshStep1_Pre($grpc.ServiceCall call, $async.Future<$0.RefreshStep1Request> request) async {
-    return refreshStep1(call, await request);
+  $async.Future<$0.RefreshStep1Response> refreshStep1_Pre($grpc.ServiceCall $call, $async.Future<$0.RefreshStep1Request> $request) async {
+    return refreshStep1($call, await $request);
   }
 
-  $async.Future<$0.RefreshStep2Response> refreshStep2_Pre($grpc.ServiceCall call, $async.Future<$0.RefreshStep2Request> request) async {
-    return refreshStep2(call, await request);
+  $async.Future<$0.RefreshStep2Response> refreshStep2_Pre($grpc.ServiceCall $call, $async.Future<$0.RefreshStep2Request> $request) async {
+    return refreshStep2($call, await $request);
   }
 
-  $async.Future<$0.RefreshStep3Response> refreshStep3_Pre($grpc.ServiceCall call, $async.Future<$0.RefreshStep3Request> request) async {
-    return refreshStep3(call, await request);
+  $async.Future<$0.RefreshStep3Response> refreshStep3_Pre($grpc.ServiceCall $call, $async.Future<$0.RefreshStep3Request> $request) async {
+    return refreshStep3($call, await $request);
   }
 
-  $async.Future<$0.CreateSpendingPolicyResponse> createSpendingPolicy_Pre($grpc.ServiceCall call, $async.Future<$0.CreateSpendingPolicyRequest> request) async {
-    return createSpendingPolicy(call, await request);
+  $async.Future<$0.CreateSpendingPolicyResponse> createSpendingPolicy_Pre($grpc.ServiceCall $call, $async.Future<$0.CreateSpendingPolicyRequest> $request) async {
+    return createSpendingPolicy($call, await $request);
   }
 
-  $async.Future<$0.GetPolicyIdResponse> getPolicyId_Pre($grpc.ServiceCall call, $async.Future<$0.GetPolicyIdRequest> request) async {
-    return getPolicyId(call, await request);
+  $async.Future<$0.GetPolicyIdResponse> getPolicyId_Pre($grpc.ServiceCall $call, $async.Future<$0.GetPolicyIdRequest> $request) async {
+    return getPolicyId($call, await $request);
   }
 
-  $async.Future<$0.BroadcastTransactionResponse> broadcastTransaction_Pre($grpc.ServiceCall call, $async.Future<$0.BroadcastTransactionRequest> request) async {
-    return broadcastTransaction(call, await request);
+  $async.Future<$0.BroadcastTransactionResponse> broadcastTransaction_Pre($grpc.ServiceCall $call, $async.Future<$0.BroadcastTransactionRequest> $request) async {
+    return broadcastTransaction($call, await $request);
   }
 
-  $async.Future<$0.FetchHistoryResponse> fetchHistory_Pre($grpc.ServiceCall call, $async.Future<$0.FetchHistoryRequest> request) async {
-    return fetchHistory(call, await request);
+  $async.Future<$0.FetchHistoryResponse> fetchHistory_Pre($grpc.ServiceCall $call, $async.Future<$0.FetchHistoryRequest> $request) async {
+    return fetchHistory($call, await $request);
   }
 
-  $async.Future<$0.FetchRecentTransactionsResponse> fetchRecentTransactions_Pre($grpc.ServiceCall call, $async.Future<$0.FetchRecentTransactionsRequest> request) async {
-    return fetchRecentTransactions(call, await request);
+  $async.Future<$0.FetchRecentTransactionsResponse> fetchRecentTransactions_Pre($grpc.ServiceCall $call, $async.Future<$0.FetchRecentTransactionsRequest> $request) async {
+    return fetchRecentTransactions($call, await $request);
   }
 
-  $async.Stream<$0.TransactionNotification> subscribeToHistory_Pre($grpc.ServiceCall call, $async.Future<$0.SubscribeToHistoryRequest> request) async* {
-    yield* subscribeToHistory(call, await request);
+  $async.Stream<$0.TransactionNotification> subscribeToHistory_Pre($grpc.ServiceCall $call, $async.Future<$0.SubscribeToHistoryRequest> $request) async* {
+    yield* subscribeToHistory($call, await $request);
   }
 
   $async.Future<$0.DKGStep1Response> dKGStep1($grpc.ServiceCall call, $0.DKGStep1Request request);
