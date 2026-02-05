@@ -162,6 +162,7 @@ const SignStep1Request$json = {
     {'1': 'message_to_sign', '3': 4, '4': 1, '5': 12, '10': 'messageToSign'},
     {'1': 'signature', '3': 5, '4': 1, '5': 12, '10': 'signature'},
     {'1': 'full_transaction', '3': 6, '4': 1, '5': 12, '10': 'fullTransaction'},
+    {'1': 'timestamp_ms', '3': 7, '4': 1, '5': 3, '10': 'timestampMs'},
   ],
 };
 
@@ -171,7 +172,8 @@ final $typed_data.Uint8List signStep1RequestDescriptor = $convert.base64Decode(
     '9tbWl0bWVudBgCIAEoDFIQaGlkaW5nQ29tbWl0bWVudBItChJiaW5kaW5nX2NvbW1pdG1lbnQY'
     'AyABKAxSEWJpbmRpbmdDb21taXRtZW50EiYKD21lc3NhZ2VfdG9fc2lnbhgEIAEoDFINbWVzc2'
     'FnZVRvU2lnbhIcCglzaWduYXR1cmUYBSABKAxSCXNpZ25hdHVyZRIpChBmdWxsX3RyYW5zYWN0'
-    'aW9uGAYgASgMUg9mdWxsVHJhbnNhY3Rpb24=');
+    'aW9uGAYgASgMUg9mdWxsVHJhbnNhY3Rpb24SIQoMdGltZXN0YW1wX21zGAcgASgDUgt0aW1lc3'
+    'RhbXBNcw==');
 
 @$core.Deprecated('Use signStep1ResponseDescriptor instead')
 const SignStep1Response$json = {
@@ -220,6 +222,7 @@ const SignStep2Request$json = {
     {'1': 'user_id', '3': 1, '4': 1, '5': 12, '10': 'userId'},
     {'1': 'signature_share', '3': 3, '4': 1, '5': 12, '10': 'signatureShare'},
     {'1': 'signature', '3': 4, '4': 1, '5': 12, '10': 'signature'},
+    {'1': 'timestamp_ms', '3': 5, '4': 1, '5': 3, '10': 'timestampMs'},
   ],
 };
 
@@ -227,7 +230,7 @@ const SignStep2Request$json = {
 final $typed_data.Uint8List signStep2RequestDescriptor = $convert.base64Decode(
     'ChBTaWduU3RlcDJSZXF1ZXN0EhcKB3VzZXJfaWQYASABKAxSBnVzZXJJZBInCg9zaWduYXR1cm'
     'Vfc2hhcmUYAyABKAxSDnNpZ25hdHVyZVNoYXJlEhwKCXNpZ25hdHVyZRgEIAEoDFIJc2lnbmF0'
-    'dXJl');
+    'dXJlEiEKDHRpbWVzdGFtcF9tcxgFIAEoA1ILdGltZXN0YW1wTXM=');
 
 @$core.Deprecated('Use utxoInfoDescriptor instead')
 const UtxoInfo$json = {
@@ -267,6 +270,7 @@ const RefreshStep1Request$json = {
     {'1': 'threshold_amount', '3': 4, '4': 1, '5': 3, '10': 'thresholdAmount'},
     {'1': 'interval', '3': 5, '4': 1, '5': 3, '10': 'interval'},
     {'1': 'signature', '3': 6, '4': 1, '5': 12, '10': 'signature'},
+    {'1': 'timestamp_ms', '3': 7, '4': 1, '5': 3, '10': 'timestampMs'},
   ],
 };
 
@@ -275,7 +279,7 @@ final $typed_data.Uint8List refreshStep1RequestDescriptor = $convert.base64Decod
     'ChNSZWZyZXNoU3RlcDFSZXF1ZXN0EhcKB3VzZXJfaWQYASABKAxSBnVzZXJJZBIlCg5yb3VuZD'
     'FfcGFja2FnZRgDIAEoCVINcm91bmQxUGFja2FnZRIpChB0aHJlc2hvbGRfYW1vdW50GAQgASgD'
     'Ug90aHJlc2hvbGRBbW91bnQSGgoIaW50ZXJ2YWwYBSABKANSCGludGVydmFsEhwKCXNpZ25hdH'
-    'VyZRgGIAEoDFIJc2lnbmF0dXJl');
+    'VyZRgGIAEoDFIJc2lnbmF0dXJlEiEKDHRpbWVzdGFtcF9tcxgHIAEoA1ILdGltZXN0YW1wTXM=');
 
 @$core.Deprecated('Use refreshStep1ResponseDescriptor instead')
 const RefreshStep1Response$json = {
@@ -313,6 +317,7 @@ const RefreshStep2Request$json = {
     {'1': 'user_id', '3': 1, '4': 1, '5': 12, '10': 'userId'},
     {'1': 'round1_package', '3': 3, '4': 1, '5': 9, '10': 'round1Package'},
     {'1': 'signature', '3': 4, '4': 1, '5': 12, '10': 'signature'},
+    {'1': 'timestamp_ms', '3': 5, '4': 1, '5': 3, '10': 'timestampMs'},
   ],
 };
 
@@ -320,7 +325,7 @@ const RefreshStep2Request$json = {
 final $typed_data.Uint8List refreshStep2RequestDescriptor = $convert.base64Decode(
     'ChNSZWZyZXNoU3RlcDJSZXF1ZXN0EhcKB3VzZXJfaWQYASABKAxSBnVzZXJJZBIlCg5yb3VuZD'
     'FfcGFja2FnZRgDIAEoCVINcm91bmQxUGFja2FnZRIcCglzaWduYXR1cmUYBCABKAxSCXNpZ25h'
-    'dHVyZQ==');
+    'dHVyZRIhCgx0aW1lc3RhbXBfbXMYBSABKANSC3RpbWVzdGFtcE1z');
 
 @$core.Deprecated('Use refreshStep2ResponseDescriptor instead')
 const RefreshStep2Response$json = {
@@ -355,6 +360,7 @@ const RefreshStep3Request$json = {
     {'1': 'user_id', '3': 1, '4': 1, '5': 12, '10': 'userId'},
     {'1': 'round2_packages_for_others', '3': 3, '4': 3, '5': 11, '6': '.mpc_wallet.RefreshStep3Request.Round2PackagesForOthersEntry', '10': 'round2PackagesForOthers'},
     {'1': 'signature', '3': 4, '4': 1, '5': 12, '10': 'signature'},
+    {'1': 'timestamp_ms', '3': 5, '4': 1, '5': 3, '10': 'timestampMs'},
   ],
   '3': [RefreshStep3Request_Round2PackagesForOthersEntry$json],
 };
@@ -374,8 +380,9 @@ final $typed_data.Uint8List refreshStep3RequestDescriptor = $convert.base64Decod
     'ChNSZWZyZXNoU3RlcDNSZXF1ZXN0EhcKB3VzZXJfaWQYASABKAxSBnVzZXJJZBJ5Chpyb3VuZD'
     'JfcGFja2FnZXNfZm9yX290aGVycxgDIAMoCzI8Lm1wY193YWxsZXQuUmVmcmVzaFN0ZXAzUmVx'
     'dWVzdC5Sb3VuZDJQYWNrYWdlc0Zvck90aGVyc0VudHJ5Uhdyb3VuZDJQYWNrYWdlc0Zvck90aG'
-    'VycxIcCglzaWduYXR1cmUYBCABKAxSCXNpZ25hdHVyZRpKChxSb3VuZDJQYWNrYWdlc0Zvck90'
-    'aGVyc0VudHJ5EhAKA2tleRgBIAEoCVIDa2V5EhQKBXZhbHVlGAIgASgJUgV2YWx1ZToCOAE=');
+    'VycxIcCglzaWduYXR1cmUYBCABKAxSCXNpZ25hdHVyZRIhCgx0aW1lc3RhbXBfbXMYBSABKANS'
+    'C3RpbWVzdGFtcE1zGkoKHFJvdW5kMlBhY2thZ2VzRm9yT3RoZXJzRW50cnkSEAoDa2V5GAEgAS'
+    'gJUgNrZXkSFAoFdmFsdWUYAiABKAlSBXZhbHVlOgI4AQ==');
 
 @$core.Deprecated('Use refreshStep3ResponseDescriptor instead')
 const RefreshStep3Response$json = {
@@ -412,6 +419,7 @@ const CreateSpendingPolicyRequest$json = {
     {'1': 'start_time', '3': 3, '4': 1, '5': 3, '10': 'startTime'},
     {'1': 'interval_seconds', '3': 4, '4': 1, '5': 3, '10': 'intervalSeconds'},
     {'1': 'signature', '3': 5, '4': 1, '5': 12, '10': 'signature'},
+    {'1': 'timestamp_ms', '3': 6, '4': 1, '5': 3, '10': 'timestampMs'},
   ],
 };
 
@@ -420,7 +428,8 @@ final $typed_data.Uint8List createSpendingPolicyRequestDescriptor = $convert.bas
     'ChtDcmVhdGVTcGVuZGluZ1BvbGljeVJlcXVlc3QSFwoHdXNlcl9pZBgBIAEoDFIGdXNlcklkEi'
     'UKDnRocmVzaG9sZF9zYXRzGAIgASgDUg10aHJlc2hvbGRTYXRzEh0KCnN0YXJ0X3RpbWUYAyAB'
     'KANSCXN0YXJ0VGltZRIpChBpbnRlcnZhbF9zZWNvbmRzGAQgASgDUg9pbnRlcnZhbFNlY29uZH'
-    'MSHAoJc2lnbmF0dXJlGAUgASgMUglzaWduYXR1cmU=');
+    'MSHAoJc2lnbmF0dXJlGAUgASgMUglzaWduYXR1cmUSIQoMdGltZXN0YW1wX21zGAYgASgDUgt0'
+    'aW1lc3RhbXBNcw==');
 
 @$core.Deprecated('Use createSpendingPolicyResponseDescriptor instead')
 const CreateSpendingPolicyResponse$json = {
@@ -443,13 +452,15 @@ const GetPolicyIdRequest$json = {
     {'1': 'user_id', '3': 1, '4': 1, '5': 12, '10': 'userId'},
     {'1': 'tx_message', '3': 2, '4': 1, '5': 12, '10': 'txMessage'},
     {'1': 'signature', '3': 3, '4': 1, '5': 12, '10': 'signature'},
+    {'1': 'timestamp_ms', '3': 4, '4': 1, '5': 3, '10': 'timestampMs'},
   ],
 };
 
 /// Descriptor for `GetPolicyIdRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getPolicyIdRequestDescriptor = $convert.base64Decode(
     'ChJHZXRQb2xpY3lJZFJlcXVlc3QSFwoHdXNlcl9pZBgBIAEoDFIGdXNlcklkEh0KCnR4X21lc3'
-    'NhZ2UYAiABKAxSCXR4TWVzc2FnZRIcCglzaWduYXR1cmUYAyABKAxSCXNpZ25hdHVyZQ==');
+    'NhZ2UYAiABKAxSCXR4TWVzc2FnZRIcCglzaWduYXR1cmUYAyABKAxSCXNpZ25hdHVyZRIhCgx0'
+    'aW1lc3RhbXBfbXMYBCABKANSC3RpbWVzdGFtcE1z');
 
 @$core.Deprecated('Use getPolicyIdResponseDescriptor instead')
 const GetPolicyIdResponse$json = {
@@ -495,13 +506,14 @@ const FetchHistoryRequest$json = {
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 12, '10': 'userId'},
     {'1': 'signature', '3': 2, '4': 1, '5': 12, '10': 'signature'},
+    {'1': 'timestamp_ms', '3': 3, '4': 1, '5': 3, '10': 'timestampMs'},
   ],
 };
 
 /// Descriptor for `FetchHistoryRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List fetchHistoryRequestDescriptor = $convert.base64Decode(
     'ChNGZXRjaEhpc3RvcnlSZXF1ZXN0EhcKB3VzZXJfaWQYASABKAxSBnVzZXJJZBIcCglzaWduYX'
-    'R1cmUYAiABKAxSCXNpZ25hdHVyZQ==');
+    'R1cmUYAiABKAxSCXNpZ25hdHVyZRIhCgx0aW1lc3RhbXBfbXMYAyABKANSC3RpbWVzdGFtcE1z');
 
 @$core.Deprecated('Use fetchHistoryResponseDescriptor instead')
 const FetchHistoryResponse$json = {
@@ -522,13 +534,15 @@ const FetchRecentTransactionsRequest$json = {
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 12, '10': 'userId'},
     {'1': 'signature', '3': 2, '4': 1, '5': 12, '10': 'signature'},
+    {'1': 'timestamp_ms', '3': 3, '4': 1, '5': 3, '10': 'timestampMs'},
   ],
 };
 
 /// Descriptor for `FetchRecentTransactionsRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List fetchRecentTransactionsRequestDescriptor = $convert.base64Decode(
     'Ch5GZXRjaFJlY2VudFRyYW5zYWN0aW9uc1JlcXVlc3QSFwoHdXNlcl9pZBgBIAEoDFIGdXNlck'
-    'lkEhwKCXNpZ25hdHVyZRgCIAEoDFIJc2lnbmF0dXJl');
+    'lkEhwKCXNpZ25hdHVyZRgCIAEoDFIJc2lnbmF0dXJlEiEKDHRpbWVzdGFtcF9tcxgDIAEoA1IL'
+    'dGltZXN0YW1wTXM=');
 
 @$core.Deprecated('Use fetchRecentTransactionsResponseDescriptor instead')
 const FetchRecentTransactionsResponse$json = {
@@ -566,13 +580,15 @@ const SubscribeToHistoryRequest$json = {
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 12, '10': 'userId'},
     {'1': 'signature', '3': 2, '4': 1, '5': 12, '10': 'signature'},
+    {'1': 'timestamp_ms', '3': 3, '4': 1, '5': 3, '10': 'timestampMs'},
   ],
 };
 
 /// Descriptor for `SubscribeToHistoryRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List subscribeToHistoryRequestDescriptor = $convert.base64Decode(
     'ChlTdWJzY3JpYmVUb0hpc3RvcnlSZXF1ZXN0EhcKB3VzZXJfaWQYASABKAxSBnVzZXJJZBIcCg'
-    'lzaWduYXR1cmUYAiABKAxSCXNpZ25hdHVyZQ==');
+    'lzaWduYXR1cmUYAiABKAxSCXNpZ25hdHVyZRIhCgx0aW1lc3RhbXBfbXMYAyABKANSC3RpbWVz'
+    'dGFtcE1z');
 
 @$core.Deprecated('Use transactionNotificationDescriptor instead')
 const TransactionNotification$json = {

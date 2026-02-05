@@ -384,6 +384,7 @@ class SignStep1Request extends $pb.GeneratedMessage {
     $core.List<$core.int>? messageToSign,
     $core.List<$core.int>? signature,
     $core.List<$core.int>? fullTransaction,
+    $fixnum.Int64? timestampMs,
   }) {
     final $result = create();
     if (userId != null) {
@@ -404,6 +405,9 @@ class SignStep1Request extends $pb.GeneratedMessage {
     if (fullTransaction != null) {
       $result.fullTransaction = fullTransaction;
     }
+    if (timestampMs != null) {
+      $result.timestampMs = timestampMs;
+    }
     return $result;
   }
   SignStep1Request._() : super();
@@ -417,6 +421,7 @@ class SignStep1Request extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'messageToSign', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(5, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(6, _omitFieldNames ? '' : 'fullTransaction', $pb.PbFieldType.OY)
+    ..aInt64(7, _omitFieldNames ? '' : 'timestampMs')
     ..hasRequiredFields = false
   ;
 
@@ -494,6 +499,15 @@ class SignStep1Request extends $pb.GeneratedMessage {
   $core.bool hasFullTransaction() => $_has(5);
   @$pb.TagNumber(6)
   void clearFullTransaction() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get timestampMs => $_getI64(6);
+  @$pb.TagNumber(7)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(6, v); }
+  @$pb.TagNumber(7)
+  $core.bool hasTimestampMs() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearTimestampMs() => $_clearField(7);
 }
 
 class SignStep1Response_Commitment extends $pb.GeneratedMessage {
@@ -637,6 +651,7 @@ class SignStep2Request extends $pb.GeneratedMessage {
     $core.List<$core.int>? userId,
     $core.List<$core.int>? signatureShare,
     $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
   }) {
     final $result = create();
     if (userId != null) {
@@ -648,6 +663,9 @@ class SignStep2Request extends $pb.GeneratedMessage {
     if (signature != null) {
       $result.signature = signature;
     }
+    if (timestampMs != null) {
+      $result.timestampMs = timestampMs;
+    }
     return $result;
   }
   SignStep2Request._() : super();
@@ -658,6 +676,7 @@ class SignStep2Request extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'signatureShare', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(5, _omitFieldNames ? '' : 'timestampMs')
     ..hasRequiredFields = false
   ;
 
@@ -708,6 +727,15 @@ class SignStep2Request extends $pb.GeneratedMessage {
   $core.bool hasSignature() => $_has(2);
   @$pb.TagNumber(4)
   void clearSignature() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get timestampMs => $_getI64(3);
+  @$pb.TagNumber(5)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(3, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasTimestampMs() => $_has(3);
+  @$pb.TagNumber(5)
+  void clearTimestampMs() => $_clearField(5);
 }
 
 class UtxoInfo extends $pb.GeneratedMessage {
@@ -861,6 +889,7 @@ class RefreshStep1Request extends $pb.GeneratedMessage {
     $fixnum.Int64? thresholdAmount,
     $fixnum.Int64? interval,
     $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
   }) {
     final $result = create();
     if (userId != null) {
@@ -878,6 +907,9 @@ class RefreshStep1Request extends $pb.GeneratedMessage {
     if (signature != null) {
       $result.signature = signature;
     }
+    if (timestampMs != null) {
+      $result.timestampMs = timestampMs;
+    }
     return $result;
   }
   RefreshStep1Request._() : super();
@@ -890,6 +922,7 @@ class RefreshStep1Request extends $pb.GeneratedMessage {
     ..aInt64(4, _omitFieldNames ? '' : 'thresholdAmount')
     ..aInt64(5, _omitFieldNames ? '' : 'interval')
     ..a<$core.List<$core.int>>(6, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(7, _omitFieldNames ? '' : 'timestampMs')
     ..hasRequiredFields = false
   ;
 
@@ -958,6 +991,15 @@ class RefreshStep1Request extends $pb.GeneratedMessage {
   $core.bool hasSignature() => $_has(4);
   @$pb.TagNumber(6)
   void clearSignature() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get timestampMs => $_getI64(5);
+  @$pb.TagNumber(7)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(5, v); }
+  @$pb.TagNumber(7)
+  $core.bool hasTimestampMs() => $_has(5);
+  @$pb.TagNumber(7)
+  void clearTimestampMs() => $_clearField(7);
 }
 
 class RefreshStep1Response extends $pb.GeneratedMessage {
@@ -1037,6 +1079,7 @@ class RefreshStep2Request extends $pb.GeneratedMessage {
     $core.List<$core.int>? userId,
     $core.String? round1Package,
     $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
   }) {
     final $result = create();
     if (userId != null) {
@@ -1048,6 +1091,9 @@ class RefreshStep2Request extends $pb.GeneratedMessage {
     if (signature != null) {
       $result.signature = signature;
     }
+    if (timestampMs != null) {
+      $result.timestampMs = timestampMs;
+    }
     return $result;
   }
   RefreshStep2Request._() : super();
@@ -1058,6 +1104,7 @@ class RefreshStep2Request extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
     ..aOS(3, _omitFieldNames ? '' : 'round1Package')
     ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(5, _omitFieldNames ? '' : 'timestampMs')
     ..hasRequiredFields = false
   ;
 
@@ -1110,6 +1157,15 @@ class RefreshStep2Request extends $pb.GeneratedMessage {
   $core.bool hasSignature() => $_has(2);
   @$pb.TagNumber(4)
   void clearSignature() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get timestampMs => $_getI64(3);
+  @$pb.TagNumber(5)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(3, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasTimestampMs() => $_has(3);
+  @$pb.TagNumber(5)
+  void clearTimestampMs() => $_clearField(5);
 }
 
 class RefreshStep2Response extends $pb.GeneratedMessage {
@@ -1161,6 +1217,7 @@ class RefreshStep3Request extends $pb.GeneratedMessage {
     $core.List<$core.int>? userId,
     $core.Iterable<$core.MapEntry<$core.String, $core.String>>? round2PackagesForOthers,
     $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
   }) {
     final $result = create();
     if (userId != null) {
@@ -1172,6 +1229,9 @@ class RefreshStep3Request extends $pb.GeneratedMessage {
     if (signature != null) {
       $result.signature = signature;
     }
+    if (timestampMs != null) {
+      $result.timestampMs = timestampMs;
+    }
     return $result;
   }
   RefreshStep3Request._() : super();
@@ -1182,6 +1242,7 @@ class RefreshStep3Request extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
     ..m<$core.String, $core.String>(3, _omitFieldNames ? '' : 'round2PackagesForOthers', entryClassName: 'RefreshStep3Request.Round2PackagesForOthersEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
     ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(5, _omitFieldNames ? '' : 'timestampMs')
     ..hasRequiredFields = false
   ;
 
@@ -1226,6 +1287,15 @@ class RefreshStep3Request extends $pb.GeneratedMessage {
   $core.bool hasSignature() => $_has(2);
   @$pb.TagNumber(4)
   void clearSignature() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get timestampMs => $_getI64(3);
+  @$pb.TagNumber(5)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(3, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasTimestampMs() => $_has(3);
+  @$pb.TagNumber(5)
+  void clearTimestampMs() => $_clearField(5);
 }
 
 class RefreshStep3Response extends $pb.GeneratedMessage {
@@ -1279,6 +1349,7 @@ class CreateSpendingPolicyRequest extends $pb.GeneratedMessage {
     $fixnum.Int64? startTime,
     $fixnum.Int64? intervalSeconds,
     $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
   }) {
     final $result = create();
     if (userId != null) {
@@ -1296,6 +1367,9 @@ class CreateSpendingPolicyRequest extends $pb.GeneratedMessage {
     if (signature != null) {
       $result.signature = signature;
     }
+    if (timestampMs != null) {
+      $result.timestampMs = timestampMs;
+    }
     return $result;
   }
   CreateSpendingPolicyRequest._() : super();
@@ -1308,6 +1382,7 @@ class CreateSpendingPolicyRequest extends $pb.GeneratedMessage {
     ..aInt64(3, _omitFieldNames ? '' : 'startTime')
     ..aInt64(4, _omitFieldNames ? '' : 'intervalSeconds')
     ..a<$core.List<$core.int>>(5, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(6, _omitFieldNames ? '' : 'timestampMs')
     ..hasRequiredFields = false
   ;
 
@@ -1376,6 +1451,15 @@ class CreateSpendingPolicyRequest extends $pb.GeneratedMessage {
   $core.bool hasSignature() => $_has(4);
   @$pb.TagNumber(5)
   void clearSignature() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get timestampMs => $_getI64(5);
+  @$pb.TagNumber(6)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(5, v); }
+  @$pb.TagNumber(6)
+  $core.bool hasTimestampMs() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearTimestampMs() => $_clearField(6);
 }
 
 class CreateSpendingPolicyResponse extends $pb.GeneratedMessage {
@@ -1447,6 +1531,7 @@ class GetPolicyIdRequest extends $pb.GeneratedMessage {
     $core.List<$core.int>? userId,
     $core.List<$core.int>? txMessage,
     $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
   }) {
     final $result = create();
     if (userId != null) {
@@ -1458,6 +1543,9 @@ class GetPolicyIdRequest extends $pb.GeneratedMessage {
     if (signature != null) {
       $result.signature = signature;
     }
+    if (timestampMs != null) {
+      $result.timestampMs = timestampMs;
+    }
     return $result;
   }
   GetPolicyIdRequest._() : super();
@@ -1468,6 +1556,7 @@ class GetPolicyIdRequest extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'txMessage', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(4, _omitFieldNames ? '' : 'timestampMs')
     ..hasRequiredFields = false
   ;
 
@@ -1518,6 +1607,15 @@ class GetPolicyIdRequest extends $pb.GeneratedMessage {
   $core.bool hasSignature() => $_has(2);
   @$pb.TagNumber(3)
   void clearSignature() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get timestampMs => $_getI64(3);
+  @$pb.TagNumber(4)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasTimestampMs() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearTimestampMs() => $_clearField(4);
 }
 
 class GetPolicyIdResponse extends $pb.GeneratedMessage {
@@ -1688,6 +1786,7 @@ class FetchHistoryRequest extends $pb.GeneratedMessage {
   factory FetchHistoryRequest({
     $core.List<$core.int>? userId,
     $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
   }) {
     final $result = create();
     if (userId != null) {
@@ -1695,6 +1794,9 @@ class FetchHistoryRequest extends $pb.GeneratedMessage {
     }
     if (signature != null) {
       $result.signature = signature;
+    }
+    if (timestampMs != null) {
+      $result.timestampMs = timestampMs;
     }
     return $result;
   }
@@ -1705,6 +1807,7 @@ class FetchHistoryRequest extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FetchHistoryRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(3, _omitFieldNames ? '' : 'timestampMs')
     ..hasRequiredFields = false
   ;
 
@@ -1746,6 +1849,15 @@ class FetchHistoryRequest extends $pb.GeneratedMessage {
   $core.bool hasSignature() => $_has(1);
   @$pb.TagNumber(2)
   void clearSignature() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get timestampMs => $_getI64(2);
+  @$pb.TagNumber(3)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasTimestampMs() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTimestampMs() => $_clearField(3);
 }
 
 class FetchHistoryResponse extends $pb.GeneratedMessage {
@@ -1796,6 +1908,7 @@ class FetchRecentTransactionsRequest extends $pb.GeneratedMessage {
   factory FetchRecentTransactionsRequest({
     $core.List<$core.int>? userId,
     $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
   }) {
     final $result = create();
     if (userId != null) {
@@ -1803,6 +1916,9 @@ class FetchRecentTransactionsRequest extends $pb.GeneratedMessage {
     }
     if (signature != null) {
       $result.signature = signature;
+    }
+    if (timestampMs != null) {
+      $result.timestampMs = timestampMs;
     }
     return $result;
   }
@@ -1813,6 +1929,7 @@ class FetchRecentTransactionsRequest extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FetchRecentTransactionsRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(3, _omitFieldNames ? '' : 'timestampMs')
     ..hasRequiredFields = false
   ;
 
@@ -1854,6 +1971,15 @@ class FetchRecentTransactionsRequest extends $pb.GeneratedMessage {
   $core.bool hasSignature() => $_has(1);
   @$pb.TagNumber(2)
   void clearSignature() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get timestampMs => $_getI64(2);
+  @$pb.TagNumber(3)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasTimestampMs() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTimestampMs() => $_clearField(3);
 }
 
 class FetchRecentTransactionsResponse extends $pb.GeneratedMessage {
@@ -1996,6 +2122,7 @@ class SubscribeToHistoryRequest extends $pb.GeneratedMessage {
   factory SubscribeToHistoryRequest({
     $core.List<$core.int>? userId,
     $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
   }) {
     final $result = create();
     if (userId != null) {
@@ -2003,6 +2130,9 @@ class SubscribeToHistoryRequest extends $pb.GeneratedMessage {
     }
     if (signature != null) {
       $result.signature = signature;
+    }
+    if (timestampMs != null) {
+      $result.timestampMs = timestampMs;
     }
     return $result;
   }
@@ -2013,6 +2143,7 @@ class SubscribeToHistoryRequest extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SubscribeToHistoryRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(3, _omitFieldNames ? '' : 'timestampMs')
     ..hasRequiredFields = false
   ;
 
@@ -2054,6 +2185,15 @@ class SubscribeToHistoryRequest extends $pb.GeneratedMessage {
   $core.bool hasSignature() => $_has(1);
   @$pb.TagNumber(2)
   void clearSignature() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get timestampMs => $_getI64(2);
+  @$pb.TagNumber(3)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasTimestampMs() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTimestampMs() => $_clearField(3);
 }
 
 class TransactionNotification extends $pb.GeneratedMessage {

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:client/policy.dart';
+import 'package:client/auth_helper.dart';
 import 'package:grpc/grpc.dart';
 import 'package:threshold/core/dkg.dart';
 import 'package:threshold/threshold.dart' as threshold;
@@ -36,6 +37,9 @@ class MpcClient {
 
   threshold.SecretKey? _signingSecret;
   threshold.SecretKey? _recoverySecret;
+
+  // Auth helper for signing requests (initialized after DKG or restore)
+  ClientAuthHelper? _authHelper;
 
   SpendingPolicy? _normalPolicy;
   Map<String, ProtectedPolicy> _protectedPolicies;
@@ -101,6 +105,16 @@ class MpcClient {
     }
     _userId = hex.decode(storedUserId);
 
+    // Restore signing secret for authentication
+    if (state['signingSecret'] != null) {
+      final secretHex = state['signingSecret'] as String;
+      final secretBytes = Uint8List.fromList(hex.decode(secretHex));
+      _signingSecret =
+          threshold.SecretKey(threshold.bytesToBigInt(secretBytes));
+      _authHelper =
+          ClientAuthHelper.fromSigningSecret(_signingSecret!, _userId!);
+    }
+
     if (state['spendingPolicies'] != null) {
       _normalPolicy = SpendingPolicy.fromJson(
           Map<String, dynamic>.from(state['spendingPolicies']));
@@ -126,6 +140,10 @@ class MpcClient {
     final state = <String, dynamic>{
       'userId': hex.encode(_userId!),
     };
+    if (_signingSecret != null) {
+      state['signingSecret'] =
+          hex.encode(threshold.bigIntToBytes(_signingSecret!.scalar));
+    }
     if (_normalPolicy != null) {
       state['spendingPolicies'] = _normalPolicy!.toJson();
     }
@@ -243,6 +261,9 @@ class MpcClient {
 
     _userId = userId.toList();
 
+    // Initialize auth helper for signing authenticated requests
+    _authHelper = ClientAuthHelper.fromSigningSecret(_signingSecret!, _userId!);
+
     await _saveState();
   }
 
@@ -287,16 +308,23 @@ class MpcClient {
     }
 
     // Step 1: Exchange
+    final auth1 = _authHelper!.signForRefreshStep1();
     final req1 = RefreshStep1Request()
       ..userId = _userId!
       ..round1Package = jsonEncode(r1Pub1.toJson())
       ..interval = Int64(interval.inSeconds)
-      ..thresholdAmount = thresholdAmount;
+      ..thresholdAmount = thresholdAmount
+      ..signature = auth1.signature
+      ..timestampMs = auth1.timestampMs;
 
     final step1Resp = await _stub.refreshStep1(req1);
 
     // Step 2: Shares
-    final req2_1 = RefreshStep2Request()..userId = _userId!;
+    final auth2 = _authHelper!.signForRefreshStep2();
+    final req2_1 = RefreshStep2Request()
+      ..userId = _userId!
+      ..signature = auth2.signature
+      ..timestampMs = auth2.timestampMs;
 
     await _stub.refreshStep2(req2_1);
 
@@ -314,9 +342,12 @@ class MpcClient {
         threshold.dkgRefreshPart2(r1Sec1, round1PkgsMap1);
 
     // Step 3: Finalize
+    final auth3 = _authHelper!.signForRefreshStep3();
     final req3_1 = RefreshStep3Request()
       ..userId = _userId!
-      ..round2PackagesForOthers.addAll(_buildSharesMap(sharesFrom1));
+      ..round2PackagesForOthers.addAll(_buildSharesMap(sharesFrom1))
+      ..signature = auth3.signature
+      ..timestampMs = auth3.timestampMs;
 
     final step3Resp1 = await _stub.refreshStep3(req3_1);
 
@@ -361,9 +392,12 @@ class MpcClient {
       throw StateError("User ID is null, cannot get Policy ID.");
     }
 
+    final auth = _authHelper!.signForGetPolicyId();
     final response = await _stub.getPolicyId(GetPolicyIdRequest()
       ..userId = _userId!
-      ..txMessage = message);
+      ..txMessage = message
+      ..signature = auth.signature
+      ..timestampMs = auth.timestampMs);
     return response.policyId;
   }
 
@@ -431,13 +465,16 @@ class MpcClient {
     }
 
     // 2. Step 1: Commitments
+    final auth1 = _authHelper!.signForSignStep1();
     final req = SignStep1Request()
       ..userId = _userId!
       ..hidingCommitment =
           threshold.elemSerializeCompressed(nonce.commitments.hiding)
       ..bindingCommitment =
           threshold.elemSerializeCompressed(nonce.commitments.binding)
-      ..messageToSign = message;
+      ..messageToSign = message
+      ..signature = auth1.signature
+      ..timestampMs = auth1.timestampMs;
 
     if (fullTransaction != null) {
       req.fullTransaction = fullTransaction;
@@ -467,9 +504,12 @@ class MpcClient {
     final sigShare = frost.sign(signingPkg, nonce, keyPkg);
 
     // 4. Send Share & Get Result
+    final auth2 = _authHelper!.signForSignStep2();
     final signStep2Resp = await _stub.signStep2(SignStep2Request()
       ..userId = _userId!
-      ..signatureShare = threshold.bigIntToBytes(sigShare.s));
+      ..signatureShare = threshold.bigIntToBytes(sigShare.s)
+      ..signature = auth2.signature
+      ..timestampMs = auth2.timestampMs);
 
     // 5. Verify
     final R = threshold
@@ -525,8 +565,11 @@ class MpcClient {
       throw StateError("User ID is null, cannot fetch history.");
     }
 
-    final response =
-        await _stub.fetchHistory(FetchHistoryRequest()..userId = _userId!);
+    final auth = _authHelper!.signForFetchHistory();
+    final response = await _stub.fetchHistory(FetchHistoryRequest()
+      ..userId = _userId!
+      ..signature = auth.signature
+      ..timestampMs = auth.timestampMs);
     return response.utxos;
   }
 
@@ -535,8 +578,11 @@ class MpcClient {
       throw StateError("User ID is null, cannot subscribe to history.");
     }
 
-    return _stub
-        .subscribeToHistory(SubscribeToHistoryRequest()..userId = _userId!);
+    final auth = _authHelper!.signForSubscribeHistory();
+    return _stub.subscribeToHistory(SubscribeToHistoryRequest()
+      ..userId = _userId!
+      ..signature = auth.signature
+      ..timestampMs = auth.timestampMs);
   }
 
   Future<List<TransactionSummary>> fetchRecentTransactions() async {
@@ -544,8 +590,12 @@ class MpcClient {
       throw StateError("User ID is null, cannot fetch recent transactions.");
     }
 
-    final response = await _stub.fetchRecentTransactions(
-        FetchRecentTransactionsRequest()..userId = _userId!);
+    final auth = _authHelper!.signForFetchRecentTransactions();
+    final response =
+        await _stub.fetchRecentTransactions(FetchRecentTransactionsRequest()
+          ..userId = _userId!
+          ..signature = auth.signature
+          ..timestampMs = auth.timestampMs);
     return response.transactions;
   }
 }
