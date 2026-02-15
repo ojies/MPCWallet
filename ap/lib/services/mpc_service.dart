@@ -3,6 +3,7 @@ import 'package:grpc/grpc.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:client/bitcoin.dart';
 import 'package:client/client.dart';
+import 'package:client/policy.dart';
 import 'package:hive/hive.dart';
 import 'dart:math';
 import 'package:protocol/protocol.dart';
@@ -25,6 +26,12 @@ class MpcService extends ChangeNotifier {
   BigInt _balance = BigInt.zero;
   BigInt get balance => _balance;
   List<TransactionSummary> get transactions => _wallet?.transactions ?? [];
+  ProtectedPolicy? get activePolicy => _client?.activeSpendingPolicy;
+  List<ProtectedPolicy> get policies => _client?.spendingPolicies ?? [];
+
+  void policyUpdated() {
+    notifyListeners();
+  }
 
   String? get receiveAddress {
     if (_wallet == null) return null;

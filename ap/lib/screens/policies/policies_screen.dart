@@ -1,12 +1,26 @@
+import 'package:client/policy.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../../services/mpc_service.dart';
 
 class PoliciesScreen extends StatelessWidget {
   const PoliciesScreen({super.key});
 
+  String _formatInterval(Duration interval) {
+    if (interval.inDays >= 7) return '${interval.inDays ~/ 7} Week(s)';
+    if (interval.inDays >= 1) return '${interval.inDays} Day(s)';
+    if (interval.inHours >= 1) return '${interval.inHours} Hour(s)';
+    return '${interval.inMinutes} Minute(s)';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final mpcService = context.watch<MpcService>();
+    final policies = mpcService.policies;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Spending Policies')),
       body: Padding(
@@ -14,30 +28,38 @@ class PoliciesScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildPolicyCard(
-              context,
-              title: 'Spending Threshold',
-              value: '100,000,000 Sats',
-              subtitle: 'Transactions above this amount require a PIN.',
-              icon: Icons.payments_outlined,
-            ),
+            if (policies.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.shield_outlined,
+                          size: 64, color: Colors.white24),
+                      const SizedBox(height: 16),
+                      Text('No Spending Policies',
+                          style: GoogleFonts.inter(
+                              fontSize: 18, color: Colors.white54)),
+                      const SizedBox(height: 8),
+                      Text(
+                          'Add a policy to set spending limits that require PIN authorization.',
+                          style: GoogleFonts.inter(
+                              fontSize: 12, color: Colors.white24),
+                          textAlign: TextAlign.center),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: ListView.separated(
+                  itemCount: policies.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) =>
+                      _buildPolicyTile(context, policies[index], index + 1),
+                ),
+              ),
             const SizedBox(height: 16),
-            _buildPolicyCard(
-              context,
-              title: 'Interval',
-              value: '24 Hours',
-              subtitle: 'Cumulative spending is reset every 24 hours.',
-              icon: Icons.timer_outlined,
-            ),
-            const SizedBox(height: 16),
-            _buildPolicyCard(
-              context,
-              title: 'Security PIN',
-              value: 'Set',
-              subtitle: '6-digit PIN for high-value transactions.',
-              icon: Icons.lock_outline,
-            ),
-            const Spacer(),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -51,7 +73,7 @@ class PoliciesScreen extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Updating policies requires authorization with your Recovery Key.',
+                      'Modifying or removing policies requires the Recovery Key.',
                       style:
                           GoogleFonts.inter(color: Colors.amber, fontSize: 12),
                     ),
@@ -59,12 +81,13 @@ class PoliciesScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton(
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
               onPressed: () {
                 context.push('/policies/edit');
               },
-              child: const Text('Update Policy'),
+              icon: const Icon(Icons.add),
+              label: const Text('Add Policy'),
             ),
           ],
         ),
@@ -72,11 +95,8 @@ class PoliciesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPolicyCard(BuildContext context,
-      {required String title,
-      required String value,
-      required String subtitle,
-      required IconData icon}) {
+  Widget _buildPolicyTile(
+      BuildContext context, ProtectedPolicy policy, int index) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -84,37 +104,75 @@ class PoliciesScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.white10),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: Colors.white, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style:
-                        GoogleFonts.inter(color: Colors.white54, fontSize: 12)),
-                const SizedBox(height: 4),
-                Text(value,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: const BoxDecoration(
+                  color: Colors.black,
+                  shape: BoxShape.circle,
+                ),
+                child:
+                    const Icon(Icons.shield_outlined, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text('Policy $index',
                     style: GoogleFonts.inter(
-                        fontWeight: FontWeight.bold, fontSize: 18)),
-                const SizedBox(height: 4),
-                Text(subtitle,
-                    style:
-                        GoogleFonts.inter(color: Colors.white24, fontSize: 10)),
-              ],
-            ),
+                        fontWeight: FontWeight.bold, fontSize: 16)),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text('Active',
+                    style: GoogleFonts.inter(
+                        color: Colors.green, fontSize: 10)),
+              ),
+            ],
+          ),
+          const Divider(color: Colors.white10, height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: _buildDetail(
+                  'Threshold',
+                  '${NumberFormat('#,###').format(policy.thresholdSats)} Sats',
+                ),
+              ),
+              Expanded(
+                child: _buildDetail(
+                  'Interval',
+                  _formatInterval(policy.interval),
+                ),
+              ),
+              Expanded(
+                child: _buildDetail('PIN', 'Set'),
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDetail(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: GoogleFonts.inter(color: Colors.white38, fontSize: 10)),
+        const SizedBox(height: 2),
+        Text(value,
+            style:
+                GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+      ],
     );
   }
 }

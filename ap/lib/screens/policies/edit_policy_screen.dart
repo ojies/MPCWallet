@@ -1,6 +1,8 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:fixnum/fixnum.dart';
 import '../../services/mpc_service.dart';
@@ -13,13 +15,46 @@ class EditPolicyScreen extends StatefulWidget {
 }
 
 class _EditPolicyScreenState extends State<EditPolicyScreen> {
+  static const double _minSats = 10000; // 10k sats
+  static const double _maxSats = 1000000000; // 10 BTC
+
   bool _isSigning = false;
-  double _threshold = 100000000;
+  double _sliderValue = 0.5; // 0.0–1.0, maps logarithmically
   String _interval = '24h';
 
+  int get _thresholdSats => pow(
+          10,
+          log(_minSats) / ln10 +
+              _sliderValue * (log(_maxSats) / ln10 - log(_minSats) / ln10))
+      .round();
+
+  double _satsToSlider(double sats) {
+    final clamped = sats.clamp(_minSats, _maxSats);
+    return (log(clamped) / ln10 - log(_minSats) / ln10) /
+        (log(_maxSats) / ln10 - log(_minSats) / ln10);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final policy = context.read<MpcService>().activePolicy;
+    if (policy != null) {
+      _sliderValue = _satsToSlider(policy.thresholdSats.toDouble());
+      if (policy.interval.inDays >= 7) {
+        _interval = '7d';
+      } else if (policy.interval.inHours >= 24) {
+        _interval = '24h';
+      } else if (policy.interval.inHours >= 1) {
+        _interval = '1h';
+      } else {
+        _interval = '5m';
+      }
+    }
+  }
+
   void _savePolicy() async {
-    // 1. Auth Recovery Key (Get PIN)
-    String? pin = await _showRecoveryAuthDialog();
+    // 1. Auth Key (Get PIN)
+    String? pin = await _showAuthDialog();
     if (pin == null || pin.isEmpty) return;
 
     final mpcService = context.read<MpcService>();
@@ -30,6 +65,9 @@ class _EditPolicyScreenState extends State<EditPolicyScreen> {
     try {
       Duration duration;
       switch (_interval) {
+        case '5m':
+          duration = const Duration(minutes: 5);
+          break;
         case '1h':
           duration = const Duration(hours: 1);
           break;
@@ -41,9 +79,10 @@ class _EditPolicyScreenState extends State<EditPolicyScreen> {
           duration = const Duration(hours: 24);
       }
 
-      final amount = Int64(_threshold.toInt());
+      final amount = Int64(_thresholdSats);
 
       await mpcService.client!.createSpendingPolicy(duration, amount, pin);
+      mpcService.policyUpdated();
 
       if (mounted) {
         setState(() => _isSigning = false);
@@ -62,7 +101,7 @@ class _EditPolicyScreenState extends State<EditPolicyScreen> {
     }
   }
 
-  Future<String?> _showRecoveryAuthDialog() async {
+  Future<String?> _showAuthDialog() async {
     String pin = '';
     return await showDialog<String>(
       context: context,
@@ -83,10 +122,14 @@ class _EditPolicyScreenState extends State<EditPolicyScreen> {
             const SizedBox(height: 16),
             TextField(
               obscureText: true,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
               onChanged: (v) => pin = v,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white, letterSpacing: 8),
+              textAlign: TextAlign.center,
               decoration: const InputDecoration(
-                labelText: 'PIN',
+                labelText: '6-digit PIN',
+                counterText: '',
                 border: OutlineInputBorder(),
               ),
             )
@@ -98,7 +141,11 @@ class _EditPolicyScreenState extends State<EditPolicyScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(pin),
+            onPressed: () {
+              if (pin.length == 6 && RegExp(r'^\d{6}$').hasMatch(pin)) {
+                Navigator.of(context).pop(pin);
+              }
+            },
             child: const Text('Sign'),
           ),
         ],
@@ -118,15 +165,15 @@ class _EditPolicyScreenState extends State<EditPolicyScreen> {
             Text('Spending Threshold (Sats)',
                 style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
             Slider(
-              value: _threshold,
-              min: 10000000, // 0.1 BTC
-              max: 1000000000, // 10 BTC
-              divisions: 99,
-              label: '${_threshold.toInt().toString()} Sats',
-              onChanged: (value) => setState(() => _threshold = value),
+              value: _sliderValue,
+              min: 0,
+              max: 1,
+              divisions: 200,
+              label: '${NumberFormat('#,###').format(_thresholdSats)} Sats',
+              onChanged: (value) => setState(() => _sliderValue = value),
             ),
             Text(
-              '${_threshold.toInt().toString()} Sats',
+              '${NumberFormat('#,###').format(_thresholdSats)} Sats',
               style:
                   GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
@@ -137,7 +184,8 @@ class _EditPolicyScreenState extends State<EditPolicyScreen> {
             const SizedBox(height: 16),
             SegmentedButton<String>(
                 segments: const [
-                  ButtonSegment(value: '1h', label: Text('1 Hourly')),
+                  ButtonSegment(value: '5m', label: Text('5 Min')),
+                  ButtonSegment(value: '1h', label: Text('1 Hour')),
                   ButtonSegment(value: '24h', label: Text('Daily')),
                   ButtonSegment(value: '7d', label: Text('Weekly')),
                 ],

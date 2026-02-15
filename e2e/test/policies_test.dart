@@ -67,7 +67,9 @@ void main() {
         policyStore: policyStore,
         utxoStore: utxoStore,
         bitcoinService: BitcoinService(utxoStore,
-            rpcUrl: "http://localhost:${mockBitcoind.port}"),
+            rpcUrl: "http://localhost:${mockBitcoind.port}",
+            rpcUser: "admin1",
+            rpcPassword: "123"),
         historyService: BitcoinHistoryService());
 
     server = Server.create(services: [service]);

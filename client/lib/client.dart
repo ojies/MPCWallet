@@ -97,6 +97,14 @@ class MpcClient {
 
   bool get isInitialized => _normalPolicy != null && _recoveryPolicy != null;
 
+  bool get hasSpendingPolicy => _protectedPolicies.isNotEmpty;
+
+  ProtectedPolicy? get activeSpendingPolicy =>
+      _protectedPolicies.isNotEmpty ? _protectedPolicies.values.last : null;
+
+  List<ProtectedPolicy> get spendingPolicies =>
+      _protectedPolicies.values.toList();
+
   /// Restores client state from persistence.
   /// [debugState] can be provided to inject state for testing (bypassing store).
   /// Returns true if state was found and restored.
@@ -398,6 +406,7 @@ class MpcClient {
       startTime:
           DateTime.fromMillisecondsSinceEpoch(step1Resp.startTime.toInt()),
       interval: interval,
+      thresholdSats: thresholdAmount.toInt(),
     );
     await _saveState();
   }

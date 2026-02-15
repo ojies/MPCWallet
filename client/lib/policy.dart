@@ -38,6 +38,7 @@ class ProtectedPolicy {
   final String id;
   final DateTime startTime;
   final Duration interval;
+  final int thresholdSats;
   final threshold.KeyPackage keyPackage;
   final threshold.PublicKeyPackage publicKeyPackage;
 
@@ -47,6 +48,7 @@ class ProtectedPolicy {
     required this.publicKeyPackage,
     required this.startTime,
     required this.interval,
+    required this.thresholdSats,
   });
 
   Map<String, dynamic> toJson() {
@@ -56,6 +58,7 @@ class ProtectedPolicy {
       'publicKeyPackage': publicKeyPackage.toJson(),
       'startTime': startTime.millisecondsSinceEpoch,
       'interval': interval.inSeconds,
+      'thresholdSats': thresholdSats,
     };
   }
 
@@ -71,6 +74,7 @@ class ProtectedPolicy {
           publicKeyPackageJson),
       startTime: DateTime.fromMillisecondsSinceEpoch(json['startTime']),
       interval: Duration(seconds: json['interval']),
+      thresholdSats: json['thresholdSats'] ?? 0,
     );
   }
 }
