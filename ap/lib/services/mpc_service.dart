@@ -22,7 +22,8 @@ class MpcService extends ChangeNotifier {
   MpcBitcoinWallet? _wallet;
   MpcBitcoinWallet? get wallet => _wallet;
 
-  BigInt get balance => _wallet?.balance ?? BigInt.zero;
+  BigInt _balance = BigInt.zero;
+  BigInt get balance => _balance;
   List<TransactionSummary> get transactions => _wallet?.transactions ?? [];
 
   String? get receiveAddress {
@@ -34,6 +35,7 @@ class MpcService extends ChangeNotifier {
   Future<void> refreshHistory() async {
     if (_wallet != null) {
       await _wallet!.sync();
+      _balance = await _wallet!.getBalance();
       notifyListeners();
     }
   }
@@ -122,6 +124,7 @@ class MpcService extends ChangeNotifier {
     _wallet = MpcBitcoinWallet(_client!, isTestnet: true, storageId: storageId);
 
     await _wallet!.init();
+    _balance = await _wallet!.getBalance();
 
     _dkgComplete = true;
 

@@ -77,7 +77,7 @@ class _SigningScreenState extends State<SigningScreen> {
         // Continue? Yes, maybe we have UTXOs cached.
       }
 
-      final balance = wallet.balance;
+      final balance = await wallet.getBalance();
       // Estimate fee (e.g. 500 sats) just for check
       if (amount + BigInt.from(500) > balance) {
         if (mounted) {

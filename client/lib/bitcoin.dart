@@ -34,10 +34,9 @@ class MpcBitcoinWallet {
   List<TransactionSummary> _transactions = [];
   List<TransactionSummary> get transactions => List.unmodifiable(_transactions);
 
-  BigInt get balance {
-    return store
-        .getUtxosSync()
-        .fold(BigInt.zero, (sum, u) => sum + u.utxo.value);
+  Future<BigInt> getBalance() async {
+    final utxos = await store.getUtxos();
+    return utxos.fold<BigInt>(BigInt.zero, (sum, u) => sum + u.utxo.value);
   }
 
   MpcBitcoinWallet(this.client,

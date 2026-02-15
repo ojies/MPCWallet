@@ -49,20 +49,36 @@ class MpcClient {
   // Bitcoin Wallet removed (Decoupled)
 
   /// Creates a client that manages two shares (identities).
-  /// [id1] and [id2] are the identifiers for this client's two shares.
-  /// [userId] identifies this DKG session until replaced by the group VerifyingKey.
-  MpcClient(ClientChannel channel,
-      {int maxSigners = 3, int minSigners = 2, String? storageId})
-      : _stub = MPCWalletClient(channel),
+  ///
+  /// [channel] - gRPC channel to the MPC server
+  /// [maxSigners] - Maximum number of signers in the threshold scheme
+  /// [minSigners] - Minimum signers required (threshold)
+  /// [storageId] - Unique identifier for the Hive box
+  /// [encryptionCipher] - Optional cipher for encrypted storage.
+  ///                      Use HiveAesCipher for AES-256 encryption.
+  ///                      When null, data is stored unencrypted.
+  MpcClient(
+    ClientChannel channel, {
+    int maxSigners = 3,
+    int minSigners = 2,
+    String? storageId,
+    HiveCipher? encryptionCipher,
+  })  : _stub = MPCWalletClient(channel),
         _maxSigners = maxSigners,
         _minSigners = minSigners,
         _protectedPolicies = {} {
-    _store = WalletStore(boxName: storageId ?? 'mpc_wallet_state_default');
+    _store = WalletStore(
+      boxName: storageId ?? 'mpc_wallet_state_default',
+      cipher: encryptionCipher,
+    );
   }
 
   /// Initializes persistence for the client.
+  ///
   /// [path] is the directory where client state will be stored.
   /// If [path] is null, defaults to `$HOME/.mpc_wallet/client`.
+  ///
+  /// This must be called before creating MpcClient instances.
   static Future<void> initPersistence({String? path}) async {
     String storePath;
     if (path != null) {

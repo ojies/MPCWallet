@@ -3,19 +3,19 @@
   "packages": [
     {
       "name": "_fe_analyzer_shared",
-      "rootUri": "file:///home/joshua/.pub-cache/hosted/pub.dev/_fe_analyzer_shared-68.0.0",
+      "rootUri": "file:///home/joshua/.pub-cache/hosted/pub.dev/_fe_analyzer_shared-73.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.3"
     },
     {
       "name": "_macros",
-      "rootUri": "file:///home/joshua/flutter/bin/cache/dart-sdk/pkg/_macros",
+      "rootUri": "file:///home/joshua/flutter/flutter/bin/cache/dart-sdk/pkg/_macros",
       "packageUri": "lib/",
       "languageVersion": "3.4"
     },
     {
       "name": "analyzer",
-      "rootUri": "file:///home/joshua/.pub-cache/hosted/pub.dev/analyzer-6.5.0",
+      "rootUri": "file:///home/joshua/.pub-cache/hosted/pub.dev/analyzer-6.8.0",
       "packageUri": "lib/",
       "languageVersion": "3.3"
     },
@@ -189,7 +189,7 @@
     },
     {
       "name": "macros",
-      "rootUri": "file:///home/joshua/.pub-cache/hosted/pub.dev/macros-0.1.0-main.0",
+      "rootUri": "file:///home/joshua/.pub-cache/hosted/pub.dev/macros-0.1.2-main.4",
       "packageUri": "lib/",
       "languageVersion": "3.4"
     },
@@ -422,10 +422,10 @@
       "languageVersion": "3.3"
     }
   ],
-  "generated": "2026-02-05T11:01:32.014298Z",
+  "generated": "2026-02-05T11:16:40.602559Z",
   "generator": "pub",
-  "generatorVersion": "3.4.0",
-  "flutterRoot": "file:///home/joshua/flutter",
-  "flutterVersion": "3.22.0",
+  "generatorVersion": "3.5.3",
+  "flutterRoot": "file:///home/joshua/flutter/flutter",
+  "flutterVersion": "3.24.3",
   "pubCache": "file:///home/joshua/.pub-cache"
 }
