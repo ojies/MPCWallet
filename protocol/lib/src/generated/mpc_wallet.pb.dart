@@ -1,50 +1,43 @@
-//
+///
 //  Generated code. Do not modify.
 //  source: mpc_wallet.proto
 //
-// @dart = 3.3
-
-// ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// @dart = 2.12
+// ignore_for_file: annotate_overrides,camel_case_types,constant_identifier_names,directives_ordering,library_prefixes,non_constant_identifier_names,prefer_final_fields,return_of_invalid_type,unnecessary_const,unnecessary_import,unnecessary_this,unused_import,unused_shown_name
 
 import 'dart:core' as $core;
 
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
-
 class DKGStep1Request extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'DKGStep1Request', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'identifier', $pb.PbFieldType.OY)
+    ..aOS(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'round1Package')
+    ..hasRequiredFields = false
+  ;
+
+  DKGStep1Request._() : super();
   factory DKGStep1Request({
     $core.List<$core.int>? userId,
     $core.List<$core.int>? identifier,
     $core.String? round1Package,
   }) {
-    final $result = create();
+    final _result = create();
     if (userId != null) {
-      $result.userId = userId;
+      _result.userId = userId;
     }
     if (identifier != null) {
-      $result.identifier = identifier;
+      _result.identifier = identifier;
     }
     if (round1Package != null) {
-      $result.round1Package = round1Package;
+      _result.round1Package = round1Package;
     }
-    return $result;
+    return _result;
   }
-  DKGStep1Request._() : super();
   factory DKGStep1Request.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory DKGStep1Request.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DKGStep1Request', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'identifier', $pb.PbFieldType.OY)
-    ..aOS(3, _omitFieldNames ? '' : 'round1Package')
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -54,10 +47,8 @@ class DKGStep1Request extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  DKGStep1Request copyWith(void Function(DKGStep1Request) updates) => super.copyWith((message) => updates(message as DKGStep1Request)) as DKGStep1Request;
-
+  DKGStep1Request copyWith(void Function(DKGStep1Request) updates) => super.copyWith((message) => updates(message as DKGStep1Request)) as DKGStep1Request; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static DKGStep1Request create() => DKGStep1Request._();
   DKGStep1Request createEmptyInstance() => create();
@@ -73,7 +64,7 @@ class DKGStep1Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUserId() => $_clearField(1);
+  void clearUserId() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.List<$core.int> get identifier => $_getN(1);
@@ -82,7 +73,7 @@ class DKGStep1Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasIdentifier() => $_has(1);
   @$pb.TagNumber(2)
-  void clearIdentifier() => $_clearField(2);
+  void clearIdentifier() => clearField(2);
 
   @$pb.TagNumber(3)
   $core.String get round1Package => $_getSZ(2);
@@ -91,28 +82,27 @@ class DKGStep1Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool hasRound1Package() => $_has(2);
   @$pb.TagNumber(3)
-  void clearRound1Package() => $_clearField(3);
+  void clearRound1Package() => clearField(3);
 }
 
 class DKGStep1Response extends $pb.GeneratedMessage {
-  factory DKGStep1Response({
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? round1Packages,
-  }) {
-    final $result = create();
-    if (round1Packages != null) {
-      $result.round1Packages.addEntries(round1Packages);
-    }
-    return $result;
-  }
-  DKGStep1Response._() : super();
-  factory DKGStep1Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory DKGStep1Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DKGStep1Response', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..m<$core.String, $core.String>(1, _omitFieldNames ? '' : 'round1Packages', entryClassName: 'DKGStep1Response.Round1PackagesEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'DKGStep1Response', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..m<$core.String, $core.String>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'round1Packages', entryClassName: 'DKGStep1Response.Round1PackagesEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
     ..hasRequiredFields = false
   ;
 
+  DKGStep1Response._() : super();
+  factory DKGStep1Response({
+    $core.Map<$core.String, $core.String>? round1Packages,
+  }) {
+    final _result = create();
+    if (round1Packages != null) {
+      _result.round1Packages.addAll(round1Packages);
+    }
+    return _result;
+  }
+  factory DKGStep1Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DKGStep1Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -122,10 +112,8 @@ class DKGStep1Response extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  DKGStep1Response copyWith(void Function(DKGStep1Response) updates) => super.copyWith((message) => updates(message as DKGStep1Response)) as DKGStep1Response;
-
+  DKGStep1Response copyWith(void Function(DKGStep1Response) updates) => super.copyWith((message) => updates(message as DKGStep1Response)) as DKGStep1Response; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static DKGStep1Response create() => DKGStep1Response._();
   DKGStep1Response createEmptyInstance() => create();
@@ -135,38 +123,37 @@ class DKGStep1Response extends $pb.GeneratedMessage {
   static DKGStep1Response? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $pb.PbMap<$core.String, $core.String> get round1Packages => $_getMap(0);
+  $core.Map<$core.String, $core.String> get round1Packages => $_getMap(0);
 }
 
 class DKGStep2Request extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'DKGStep2Request', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'identifier', $pb.PbFieldType.OY)
+    ..aOS(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'round1Package')
+    ..hasRequiredFields = false
+  ;
+
+  DKGStep2Request._() : super();
   factory DKGStep2Request({
     $core.List<$core.int>? userId,
     $core.List<$core.int>? identifier,
     $core.String? round1Package,
   }) {
-    final $result = create();
+    final _result = create();
     if (userId != null) {
-      $result.userId = userId;
+      _result.userId = userId;
     }
     if (identifier != null) {
-      $result.identifier = identifier;
+      _result.identifier = identifier;
     }
     if (round1Package != null) {
-      $result.round1Package = round1Package;
+      _result.round1Package = round1Package;
     }
-    return $result;
+    return _result;
   }
-  DKGStep2Request._() : super();
   factory DKGStep2Request.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory DKGStep2Request.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DKGStep2Request', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'identifier', $pb.PbFieldType.OY)
-    ..aOS(3, _omitFieldNames ? '' : 'round1Package')
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -176,10 +163,8 @@ class DKGStep2Request extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  DKGStep2Request copyWith(void Function(DKGStep2Request) updates) => super.copyWith((message) => updates(message as DKGStep2Request)) as DKGStep2Request;
-
+  DKGStep2Request copyWith(void Function(DKGStep2Request) updates) => super.copyWith((message) => updates(message as DKGStep2Request)) as DKGStep2Request; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static DKGStep2Request create() => DKGStep2Request._();
   DKGStep2Request createEmptyInstance() => create();
@@ -195,7 +180,7 @@ class DKGStep2Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUserId() => $_clearField(1);
+  void clearUserId() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.List<$core.int> get identifier => $_getN(1);
@@ -204,7 +189,7 @@ class DKGStep2Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasIdentifier() => $_has(1);
   @$pb.TagNumber(2)
-  void clearIdentifier() => $_clearField(2);
+  void clearIdentifier() => clearField(2);
 
   @$pb.TagNumber(3)
   $core.String get round1Package => $_getSZ(2);
@@ -213,28 +198,27 @@ class DKGStep2Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool hasRound1Package() => $_has(2);
   @$pb.TagNumber(3)
-  void clearRound1Package() => $_clearField(3);
+  void clearRound1Package() => clearField(3);
 }
 
 class DKGStep2Response extends $pb.GeneratedMessage {
-  factory DKGStep2Response({
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? allRound1Packages,
-  }) {
-    final $result = create();
-    if (allRound1Packages != null) {
-      $result.allRound1Packages.addEntries(allRound1Packages);
-    }
-    return $result;
-  }
-  DKGStep2Response._() : super();
-  factory DKGStep2Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory DKGStep2Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DKGStep2Response', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..m<$core.String, $core.String>(1, _omitFieldNames ? '' : 'allRound1Packages', entryClassName: 'DKGStep2Response.AllRound1PackagesEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'DKGStep2Response', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..m<$core.String, $core.String>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'allRound1Packages', entryClassName: 'DKGStep2Response.AllRound1PackagesEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
     ..hasRequiredFields = false
   ;
 
+  DKGStep2Response._() : super();
+  factory DKGStep2Response({
+    $core.Map<$core.String, $core.String>? allRound1Packages,
+  }) {
+    final _result = create();
+    if (allRound1Packages != null) {
+      _result.allRound1Packages.addAll(allRound1Packages);
+    }
+    return _result;
+  }
+  factory DKGStep2Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DKGStep2Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -244,10 +228,8 @@ class DKGStep2Response extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  DKGStep2Response copyWith(void Function(DKGStep2Response) updates) => super.copyWith((message) => updates(message as DKGStep2Response)) as DKGStep2Response;
-
+  DKGStep2Response copyWith(void Function(DKGStep2Response) updates) => super.copyWith((message) => updates(message as DKGStep2Response)) as DKGStep2Response; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static DKGStep2Response create() => DKGStep2Response._();
   DKGStep2Response createEmptyInstance() => create();
@@ -257,38 +239,37 @@ class DKGStep2Response extends $pb.GeneratedMessage {
   static DKGStep2Response? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $pb.PbMap<$core.String, $core.String> get allRound1Packages => $_getMap(0);
+  $core.Map<$core.String, $core.String> get allRound1Packages => $_getMap(0);
 }
 
 class DKGStep3Request extends $pb.GeneratedMessage {
-  factory DKGStep3Request({
-    $core.List<$core.int>? userId,
-    $core.List<$core.int>? identifier,
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? round2PackagesForOthers,
-  }) {
-    final $result = create();
-    if (userId != null) {
-      $result.userId = userId;
-    }
-    if (identifier != null) {
-      $result.identifier = identifier;
-    }
-    if (round2PackagesForOthers != null) {
-      $result.round2PackagesForOthers.addEntries(round2PackagesForOthers);
-    }
-    return $result;
-  }
-  DKGStep3Request._() : super();
-  factory DKGStep3Request.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory DKGStep3Request.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DKGStep3Request', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'identifier', $pb.PbFieldType.OY)
-    ..m<$core.String, $core.String>(3, _omitFieldNames ? '' : 'round2PackagesForOthers', entryClassName: 'DKGStep3Request.Round2PackagesForOthersEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'DKGStep3Request', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'identifier', $pb.PbFieldType.OY)
+    ..m<$core.String, $core.String>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'round2PackagesForOthers', entryClassName: 'DKGStep3Request.Round2PackagesForOthersEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
     ..hasRequiredFields = false
   ;
 
+  DKGStep3Request._() : super();
+  factory DKGStep3Request({
+    $core.List<$core.int>? userId,
+    $core.List<$core.int>? identifier,
+    $core.Map<$core.String, $core.String>? round2PackagesForOthers,
+  }) {
+    final _result = create();
+    if (userId != null) {
+      _result.userId = userId;
+    }
+    if (identifier != null) {
+      _result.identifier = identifier;
+    }
+    if (round2PackagesForOthers != null) {
+      _result.round2PackagesForOthers.addAll(round2PackagesForOthers);
+    }
+    return _result;
+  }
+  factory DKGStep3Request.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DKGStep3Request.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -298,10 +279,8 @@ class DKGStep3Request extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  DKGStep3Request copyWith(void Function(DKGStep3Request) updates) => super.copyWith((message) => updates(message as DKGStep3Request)) as DKGStep3Request;
-
+  DKGStep3Request copyWith(void Function(DKGStep3Request) updates) => super.copyWith((message) => updates(message as DKGStep3Request)) as DKGStep3Request; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static DKGStep3Request create() => DKGStep3Request._();
   DKGStep3Request createEmptyInstance() => create();
@@ -317,7 +296,7 @@ class DKGStep3Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUserId() => $_clearField(1);
+  void clearUserId() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.List<$core.int> get identifier => $_getN(1);
@@ -326,31 +305,30 @@ class DKGStep3Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasIdentifier() => $_has(1);
   @$pb.TagNumber(2)
-  void clearIdentifier() => $_clearField(2);
+  void clearIdentifier() => clearField(2);
 
   @$pb.TagNumber(3)
-  $pb.PbMap<$core.String, $core.String> get round2PackagesForOthers => $_getMap(2);
+  $core.Map<$core.String, $core.String> get round2PackagesForOthers => $_getMap(2);
 }
 
 class DKGStep3Response extends $pb.GeneratedMessage {
-  factory DKGStep3Response({
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? round2PackagesForMe,
-  }) {
-    final $result = create();
-    if (round2PackagesForMe != null) {
-      $result.round2PackagesForMe.addEntries(round2PackagesForMe);
-    }
-    return $result;
-  }
-  DKGStep3Response._() : super();
-  factory DKGStep3Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory DKGStep3Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DKGStep3Response', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..m<$core.String, $core.String>(1, _omitFieldNames ? '' : 'round2PackagesForMe', entryClassName: 'DKGStep3Response.Round2PackagesForMeEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'DKGStep3Response', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..m<$core.String, $core.String>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'round2PackagesForMe', entryClassName: 'DKGStep3Response.Round2PackagesForMeEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
     ..hasRequiredFields = false
   ;
 
+  DKGStep3Response._() : super();
+  factory DKGStep3Response({
+    $core.Map<$core.String, $core.String>? round2PackagesForMe,
+  }) {
+    final _result = create();
+    if (round2PackagesForMe != null) {
+      _result.round2PackagesForMe.addAll(round2PackagesForMe);
+    }
+    return _result;
+  }
+  factory DKGStep3Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DKGStep3Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -360,10 +338,8 @@ class DKGStep3Response extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  DKGStep3Response copyWith(void Function(DKGStep3Response) updates) => super.copyWith((message) => updates(message as DKGStep3Response)) as DKGStep3Response;
-
+  DKGStep3Response copyWith(void Function(DKGStep3Response) updates) => super.copyWith((message) => updates(message as DKGStep3Response)) as DKGStep3Response; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static DKGStep3Response create() => DKGStep3Response._();
   DKGStep3Response createEmptyInstance() => create();
@@ -373,10 +349,22 @@ class DKGStep3Response extends $pb.GeneratedMessage {
   static DKGStep3Response? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $pb.PbMap<$core.String, $core.String> get round2PackagesForMe => $_getMap(0);
+  $core.Map<$core.String, $core.String> get round2PackagesForMe => $_getMap(0);
 }
 
 class SignStep1Request extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'SignStep1Request', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'hidingCommitment', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'bindingCommitment', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'messageToSign', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(6, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'fullTransaction', $pb.PbFieldType.OY)
+    ..aInt64(7, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..hasRequiredFields = false
+  ;
+
+  SignStep1Request._() : super();
   factory SignStep1Request({
     $core.List<$core.int>? userId,
     $core.List<$core.int>? hidingCommitment,
@@ -386,45 +374,32 @@ class SignStep1Request extends $pb.GeneratedMessage {
     $core.List<$core.int>? fullTransaction,
     $fixnum.Int64? timestampMs,
   }) {
-    final $result = create();
+    final _result = create();
     if (userId != null) {
-      $result.userId = userId;
+      _result.userId = userId;
     }
     if (hidingCommitment != null) {
-      $result.hidingCommitment = hidingCommitment;
+      _result.hidingCommitment = hidingCommitment;
     }
     if (bindingCommitment != null) {
-      $result.bindingCommitment = bindingCommitment;
+      _result.bindingCommitment = bindingCommitment;
     }
     if (messageToSign != null) {
-      $result.messageToSign = messageToSign;
+      _result.messageToSign = messageToSign;
     }
     if (signature != null) {
-      $result.signature = signature;
+      _result.signature = signature;
     }
     if (fullTransaction != null) {
-      $result.fullTransaction = fullTransaction;
+      _result.fullTransaction = fullTransaction;
     }
     if (timestampMs != null) {
-      $result.timestampMs = timestampMs;
+      _result.timestampMs = timestampMs;
     }
-    return $result;
+    return _result;
   }
-  SignStep1Request._() : super();
   factory SignStep1Request.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory SignStep1Request.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SignStep1Request', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'hidingCommitment', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'bindingCommitment', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'messageToSign', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(5, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(6, _omitFieldNames ? '' : 'fullTransaction', $pb.PbFieldType.OY)
-    ..aInt64(7, _omitFieldNames ? '' : 'timestampMs')
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -434,10 +409,8 @@ class SignStep1Request extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  SignStep1Request copyWith(void Function(SignStep1Request) updates) => super.copyWith((message) => updates(message as SignStep1Request)) as SignStep1Request;
-
+  SignStep1Request copyWith(void Function(SignStep1Request) updates) => super.copyWith((message) => updates(message as SignStep1Request)) as SignStep1Request; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static SignStep1Request create() => SignStep1Request._();
   SignStep1Request createEmptyInstance() => create();
@@ -453,7 +426,7 @@ class SignStep1Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUserId() => $_clearField(1);
+  void clearUserId() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.List<$core.int> get hidingCommitment => $_getN(1);
@@ -462,7 +435,7 @@ class SignStep1Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasHidingCommitment() => $_has(1);
   @$pb.TagNumber(2)
-  void clearHidingCommitment() => $_clearField(2);
+  void clearHidingCommitment() => clearField(2);
 
   @$pb.TagNumber(3)
   $core.List<$core.int> get bindingCommitment => $_getN(2);
@@ -471,7 +444,7 @@ class SignStep1Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool hasBindingCommitment() => $_has(2);
   @$pb.TagNumber(3)
-  void clearBindingCommitment() => $_clearField(3);
+  void clearBindingCommitment() => clearField(3);
 
   @$pb.TagNumber(4)
   $core.List<$core.int> get messageToSign => $_getN(3);
@@ -480,7 +453,7 @@ class SignStep1Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.bool hasMessageToSign() => $_has(3);
   @$pb.TagNumber(4)
-  void clearMessageToSign() => $_clearField(4);
+  void clearMessageToSign() => clearField(4);
 
   @$pb.TagNumber(5)
   $core.List<$core.int> get signature => $_getN(4);
@@ -489,7 +462,7 @@ class SignStep1Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   $core.bool hasSignature() => $_has(4);
   @$pb.TagNumber(5)
-  void clearSignature() => $_clearField(5);
+  void clearSignature() => clearField(5);
 
   @$pb.TagNumber(6)
   $core.List<$core.int> get fullTransaction => $_getN(5);
@@ -498,7 +471,7 @@ class SignStep1Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   $core.bool hasFullTransaction() => $_has(5);
   @$pb.TagNumber(6)
-  void clearFullTransaction() => $_clearField(6);
+  void clearFullTransaction() => clearField(6);
 
   @$pb.TagNumber(7)
   $fixnum.Int64 get timestampMs => $_getI64(6);
@@ -507,33 +480,32 @@ class SignStep1Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   $core.bool hasTimestampMs() => $_has(6);
   @$pb.TagNumber(7)
-  void clearTimestampMs() => $_clearField(7);
+  void clearTimestampMs() => clearField(7);
 }
 
 class SignStep1Response_Commitment extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'SignStep1Response.Commitment', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'hiding', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'binding', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  SignStep1Response_Commitment._() : super();
   factory SignStep1Response_Commitment({
     $core.List<$core.int>? hiding,
     $core.List<$core.int>? binding,
   }) {
-    final $result = create();
+    final _result = create();
     if (hiding != null) {
-      $result.hiding = hiding;
+      _result.hiding = hiding;
     }
     if (binding != null) {
-      $result.binding = binding;
+      _result.binding = binding;
     }
-    return $result;
+    return _result;
   }
-  SignStep1Response_Commitment._() : super();
   factory SignStep1Response_Commitment.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory SignStep1Response_Commitment.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SignStep1Response.Commitment', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'hiding', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'binding', $pb.PbFieldType.OY)
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -543,10 +515,8 @@ class SignStep1Response_Commitment extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  SignStep1Response_Commitment copyWith(void Function(SignStep1Response_Commitment) updates) => super.copyWith((message) => updates(message as SignStep1Response_Commitment)) as SignStep1Response_Commitment;
-
+  SignStep1Response_Commitment copyWith(void Function(SignStep1Response_Commitment) updates) => super.copyWith((message) => updates(message as SignStep1Response_Commitment)) as SignStep1Response_Commitment; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static SignStep1Response_Commitment create() => SignStep1Response_Commitment._();
   SignStep1Response_Commitment createEmptyInstance() => create();
@@ -562,7 +532,7 @@ class SignStep1Response_Commitment extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasHiding() => $_has(0);
   @$pb.TagNumber(1)
-  void clearHiding() => $_clearField(1);
+  void clearHiding() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.List<$core.int> get binding => $_getN(1);
@@ -571,38 +541,37 @@ class SignStep1Response_Commitment extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasBinding() => $_has(1);
   @$pb.TagNumber(2)
-  void clearBinding() => $_clearField(2);
+  void clearBinding() => clearField(2);
 }
 
 class SignStep1Response extends $pb.GeneratedMessage {
-  factory SignStep1Response({
-    $core.Iterable<$core.MapEntry<$core.String, SignStep1Response_Commitment>>? commitments,
-    $core.List<$core.int>? messageToSign,
-    $core.int? usedKeyIndex,
-  }) {
-    final $result = create();
-    if (commitments != null) {
-      $result.commitments.addEntries(commitments);
-    }
-    if (messageToSign != null) {
-      $result.messageToSign = messageToSign;
-    }
-    if (usedKeyIndex != null) {
-      $result.usedKeyIndex = usedKeyIndex;
-    }
-    return $result;
-  }
-  SignStep1Response._() : super();
-  factory SignStep1Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory SignStep1Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SignStep1Response', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..m<$core.String, SignStep1Response_Commitment>(1, _omitFieldNames ? '' : 'commitments', entryClassName: 'SignStep1Response.CommitmentsEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OM, valueCreator: SignStep1Response_Commitment.create, valueDefaultOrMaker: SignStep1Response_Commitment.getDefault, packageName: const $pb.PackageName('mpc_wallet'))
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'messageToSign', $pb.PbFieldType.OY)
-    ..a<$core.int>(3, _omitFieldNames ? '' : 'usedKeyIndex', $pb.PbFieldType.O3)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'SignStep1Response', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..m<$core.String, SignStep1Response_Commitment>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'commitments', entryClassName: 'SignStep1Response.CommitmentsEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OM, valueCreator: SignStep1Response_Commitment.create, packageName: const $pb.PackageName('mpc_wallet'))
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'messageToSign', $pb.PbFieldType.OY)
+    ..a<$core.int>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'usedKeyIndex', $pb.PbFieldType.O3)
     ..hasRequiredFields = false
   ;
 
+  SignStep1Response._() : super();
+  factory SignStep1Response({
+    $core.Map<$core.String, SignStep1Response_Commitment>? commitments,
+    $core.List<$core.int>? messageToSign,
+    $core.int? usedKeyIndex,
+  }) {
+    final _result = create();
+    if (commitments != null) {
+      _result.commitments.addAll(commitments);
+    }
+    if (messageToSign != null) {
+      _result.messageToSign = messageToSign;
+    }
+    if (usedKeyIndex != null) {
+      _result.usedKeyIndex = usedKeyIndex;
+    }
+    return _result;
+  }
+  factory SignStep1Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory SignStep1Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -612,10 +581,8 @@ class SignStep1Response extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  SignStep1Response copyWith(void Function(SignStep1Response) updates) => super.copyWith((message) => updates(message as SignStep1Response)) as SignStep1Response;
-
+  SignStep1Response copyWith(void Function(SignStep1Response) updates) => super.copyWith((message) => updates(message as SignStep1Response)) as SignStep1Response; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static SignStep1Response create() => SignStep1Response._();
   SignStep1Response createEmptyInstance() => create();
@@ -625,7 +592,7 @@ class SignStep1Response extends $pb.GeneratedMessage {
   static SignStep1Response? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $pb.PbMap<$core.String, SignStep1Response_Commitment> get commitments => $_getMap(0);
+  $core.Map<$core.String, SignStep1Response_Commitment> get commitments => $_getMap(0);
 
   @$pb.TagNumber(2)
   $core.List<$core.int> get messageToSign => $_getN(1);
@@ -634,7 +601,7 @@ class SignStep1Response extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasMessageToSign() => $_has(1);
   @$pb.TagNumber(2)
-  void clearMessageToSign() => $_clearField(2);
+  void clearMessageToSign() => clearField(2);
 
   @$pb.TagNumber(3)
   $core.int get usedKeyIndex => $_getIZ(2);
@@ -643,43 +610,42 @@ class SignStep1Response extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool hasUsedKeyIndex() => $_has(2);
   @$pb.TagNumber(3)
-  void clearUsedKeyIndex() => $_clearField(3);
+  void clearUsedKeyIndex() => clearField(3);
 }
 
 class SignStep2Request extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'SignStep2Request', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signatureShare', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..hasRequiredFields = false
+  ;
+
+  SignStep2Request._() : super();
   factory SignStep2Request({
     $core.List<$core.int>? userId,
     $core.List<$core.int>? signatureShare,
     $core.List<$core.int>? signature,
     $fixnum.Int64? timestampMs,
   }) {
-    final $result = create();
+    final _result = create();
     if (userId != null) {
-      $result.userId = userId;
+      _result.userId = userId;
     }
     if (signatureShare != null) {
-      $result.signatureShare = signatureShare;
+      _result.signatureShare = signatureShare;
     }
     if (signature != null) {
-      $result.signature = signature;
+      _result.signature = signature;
     }
     if (timestampMs != null) {
-      $result.timestampMs = timestampMs;
+      _result.timestampMs = timestampMs;
     }
-    return $result;
+    return _result;
   }
-  SignStep2Request._() : super();
   factory SignStep2Request.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory SignStep2Request.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SignStep2Request', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'signatureShare', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
-    ..aInt64(5, _omitFieldNames ? '' : 'timestampMs')
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -689,10 +655,8 @@ class SignStep2Request extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  SignStep2Request copyWith(void Function(SignStep2Request) updates) => super.copyWith((message) => updates(message as SignStep2Request)) as SignStep2Request;
-
+  SignStep2Request copyWith(void Function(SignStep2Request) updates) => super.copyWith((message) => updates(message as SignStep2Request)) as SignStep2Request; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static SignStep2Request create() => SignStep2Request._();
   SignStep2Request createEmptyInstance() => create();
@@ -708,7 +672,7 @@ class SignStep2Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUserId() => $_clearField(1);
+  void clearUserId() => clearField(1);
 
   @$pb.TagNumber(3)
   $core.List<$core.int> get signatureShare => $_getN(1);
@@ -717,7 +681,7 @@ class SignStep2Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool hasSignatureShare() => $_has(1);
   @$pb.TagNumber(3)
-  void clearSignatureShare() => $_clearField(3);
+  void clearSignatureShare() => clearField(3);
 
   @$pb.TagNumber(4)
   $core.List<$core.int> get signature => $_getN(2);
@@ -726,7 +690,7 @@ class SignStep2Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.bool hasSignature() => $_has(2);
   @$pb.TagNumber(4)
-  void clearSignature() => $_clearField(4);
+  void clearSignature() => clearField(4);
 
   @$pb.TagNumber(5)
   $fixnum.Int64 get timestampMs => $_getI64(3);
@@ -735,38 +699,37 @@ class SignStep2Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   $core.bool hasTimestampMs() => $_has(3);
   @$pb.TagNumber(5)
-  void clearTimestampMs() => $_clearField(5);
+  void clearTimestampMs() => clearField(5);
 }
 
 class UtxoInfo extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'UtxoInfo', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'txHash')
+    ..a<$core.int>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'vout', $pb.PbFieldType.O3)
+    ..aInt64(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'amount')
+    ..hasRequiredFields = false
+  ;
+
+  UtxoInfo._() : super();
   factory UtxoInfo({
     $core.String? txHash,
     $core.int? vout,
     $fixnum.Int64? amount,
   }) {
-    final $result = create();
+    final _result = create();
     if (txHash != null) {
-      $result.txHash = txHash;
+      _result.txHash = txHash;
     }
     if (vout != null) {
-      $result.vout = vout;
+      _result.vout = vout;
     }
     if (amount != null) {
-      $result.amount = amount;
+      _result.amount = amount;
     }
-    return $result;
+    return _result;
   }
-  UtxoInfo._() : super();
   factory UtxoInfo.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory UtxoInfo.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'UtxoInfo', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'txHash')
-    ..a<$core.int>(2, _omitFieldNames ? '' : 'vout', $pb.PbFieldType.O3)
-    ..aInt64(3, _omitFieldNames ? '' : 'amount')
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -776,10 +739,8 @@ class UtxoInfo extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  UtxoInfo copyWith(void Function(UtxoInfo) updates) => super.copyWith((message) => updates(message as UtxoInfo)) as UtxoInfo;
-
+  UtxoInfo copyWith(void Function(UtxoInfo) updates) => super.copyWith((message) => updates(message as UtxoInfo)) as UtxoInfo; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static UtxoInfo create() => UtxoInfo._();
   UtxoInfo createEmptyInstance() => create();
@@ -795,7 +756,7 @@ class UtxoInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasTxHash() => $_has(0);
   @$pb.TagNumber(1)
-  void clearTxHash() => $_clearField(1);
+  void clearTxHash() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.int get vout => $_getIZ(1);
@@ -804,7 +765,7 @@ class UtxoInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasVout() => $_has(1);
   @$pb.TagNumber(2)
-  void clearVout() => $_clearField(2);
+  void clearVout() => clearField(2);
 
   @$pb.TagNumber(3)
   $fixnum.Int64 get amount => $_getI64(2);
@@ -813,33 +774,32 @@ class UtxoInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool hasAmount() => $_has(2);
   @$pb.TagNumber(3)
-  void clearAmount() => $_clearField(3);
+  void clearAmount() => clearField(3);
 }
 
 class SignStep2Response extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'SignStep2Response', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'rPoint', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'zScalar', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  SignStep2Response._() : super();
   factory SignStep2Response({
     $core.List<$core.int>? rPoint,
     $core.List<$core.int>? zScalar,
   }) {
-    final $result = create();
+    final _result = create();
     if (rPoint != null) {
-      $result.rPoint = rPoint;
+      _result.rPoint = rPoint;
     }
     if (zScalar != null) {
-      $result.zScalar = zScalar;
+      _result.zScalar = zScalar;
     }
-    return $result;
+    return _result;
   }
-  SignStep2Response._() : super();
   factory SignStep2Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory SignStep2Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SignStep2Response', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'rPoint', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'zScalar', $pb.PbFieldType.OY)
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -849,10 +809,8 @@ class SignStep2Response extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  SignStep2Response copyWith(void Function(SignStep2Response) updates) => super.copyWith((message) => updates(message as SignStep2Response)) as SignStep2Response;
-
+  SignStep2Response copyWith(void Function(SignStep2Response) updates) => super.copyWith((message) => updates(message as SignStep2Response)) as SignStep2Response; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static SignStep2Response create() => SignStep2Response._();
   SignStep2Response createEmptyInstance() => create();
@@ -861,8 +819,6 @@ class SignStep2Response extends $pb.GeneratedMessage {
   static SignStep2Response getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SignStep2Response>(create);
   static SignStep2Response? _defaultInstance;
 
-  /// Final aggregated signature
-  /// (R, z)
   @$pb.TagNumber(1)
   $core.List<$core.int> get rPoint => $_getN(0);
   @$pb.TagNumber(1)
@@ -870,7 +826,7 @@ class SignStep2Response extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasRPoint() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRPoint() => $_clearField(1);
+  void clearRPoint() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.List<$core.int> get zScalar => $_getN(1);
@@ -879,10 +835,21 @@ class SignStep2Response extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasZScalar() => $_has(1);
   @$pb.TagNumber(2)
-  void clearZScalar() => $_clearField(2);
+  void clearZScalar() => clearField(2);
 }
 
 class RefreshStep1Request extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'RefreshStep1Request', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..aOS(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'round1Package')
+    ..aInt64(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'thresholdAmount')
+    ..aInt64(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'interval')
+    ..a<$core.List<$core.int>>(6, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(7, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..hasRequiredFields = false
+  ;
+
+  RefreshStep1Request._() : super();
   factory RefreshStep1Request({
     $core.List<$core.int>? userId,
     $core.String? round1Package,
@@ -891,41 +858,29 @@ class RefreshStep1Request extends $pb.GeneratedMessage {
     $core.List<$core.int>? signature,
     $fixnum.Int64? timestampMs,
   }) {
-    final $result = create();
+    final _result = create();
     if (userId != null) {
-      $result.userId = userId;
+      _result.userId = userId;
     }
     if (round1Package != null) {
-      $result.round1Package = round1Package;
+      _result.round1Package = round1Package;
     }
     if (thresholdAmount != null) {
-      $result.thresholdAmount = thresholdAmount;
+      _result.thresholdAmount = thresholdAmount;
     }
     if (interval != null) {
-      $result.interval = interval;
+      _result.interval = interval;
     }
     if (signature != null) {
-      $result.signature = signature;
+      _result.signature = signature;
     }
     if (timestampMs != null) {
-      $result.timestampMs = timestampMs;
+      _result.timestampMs = timestampMs;
     }
-    return $result;
+    return _result;
   }
-  RefreshStep1Request._() : super();
   factory RefreshStep1Request.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory RefreshStep1Request.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RefreshStep1Request', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
-    ..aOS(3, _omitFieldNames ? '' : 'round1Package')
-    ..aInt64(4, _omitFieldNames ? '' : 'thresholdAmount')
-    ..aInt64(5, _omitFieldNames ? '' : 'interval')
-    ..a<$core.List<$core.int>>(6, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
-    ..aInt64(7, _omitFieldNames ? '' : 'timestampMs')
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -935,10 +890,8 @@ class RefreshStep1Request extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  RefreshStep1Request copyWith(void Function(RefreshStep1Request) updates) => super.copyWith((message) => updates(message as RefreshStep1Request)) as RefreshStep1Request;
-
+  RefreshStep1Request copyWith(void Function(RefreshStep1Request) updates) => super.copyWith((message) => updates(message as RefreshStep1Request)) as RefreshStep1Request; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static RefreshStep1Request create() => RefreshStep1Request._();
   RefreshStep1Request createEmptyInstance() => create();
@@ -954,7 +907,7 @@ class RefreshStep1Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUserId() => $_clearField(1);
+  void clearUserId() => clearField(1);
 
   @$pb.TagNumber(3)
   $core.String get round1Package => $_getSZ(1);
@@ -963,7 +916,7 @@ class RefreshStep1Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool hasRound1Package() => $_has(1);
   @$pb.TagNumber(3)
-  void clearRound1Package() => $_clearField(3);
+  void clearRound1Package() => clearField(3);
 
   @$pb.TagNumber(4)
   $fixnum.Int64 get thresholdAmount => $_getI64(2);
@@ -972,7 +925,7 @@ class RefreshStep1Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.bool hasThresholdAmount() => $_has(2);
   @$pb.TagNumber(4)
-  void clearThresholdAmount() => $_clearField(4);
+  void clearThresholdAmount() => clearField(4);
 
   @$pb.TagNumber(5)
   $fixnum.Int64 get interval => $_getI64(3);
@@ -981,7 +934,7 @@ class RefreshStep1Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   $core.bool hasInterval() => $_has(3);
   @$pb.TagNumber(5)
-  void clearInterval() => $_clearField(5);
+  void clearInterval() => clearField(5);
 
   @$pb.TagNumber(6)
   $core.List<$core.int> get signature => $_getN(4);
@@ -990,7 +943,7 @@ class RefreshStep1Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   $core.bool hasSignature() => $_has(4);
   @$pb.TagNumber(6)
-  void clearSignature() => $_clearField(6);
+  void clearSignature() => clearField(6);
 
   @$pb.TagNumber(7)
   $fixnum.Int64 get timestampMs => $_getI64(5);
@@ -999,38 +952,37 @@ class RefreshStep1Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   $core.bool hasTimestampMs() => $_has(5);
   @$pb.TagNumber(7)
-  void clearTimestampMs() => $_clearField(7);
+  void clearTimestampMs() => clearField(7);
 }
 
 class RefreshStep1Response extends $pb.GeneratedMessage {
-  factory RefreshStep1Response({
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? round1Packages,
-    $core.String? policyId,
-    $fixnum.Int64? startTime,
-  }) {
-    final $result = create();
-    if (round1Packages != null) {
-      $result.round1Packages.addEntries(round1Packages);
-    }
-    if (policyId != null) {
-      $result.policyId = policyId;
-    }
-    if (startTime != null) {
-      $result.startTime = startTime;
-    }
-    return $result;
-  }
-  RefreshStep1Response._() : super();
-  factory RefreshStep1Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory RefreshStep1Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RefreshStep1Response', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..m<$core.String, $core.String>(1, _omitFieldNames ? '' : 'round1Packages', entryClassName: 'RefreshStep1Response.Round1PackagesEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
-    ..aOS(2, _omitFieldNames ? '' : 'policyId')
-    ..aInt64(3, _omitFieldNames ? '' : 'startTime')
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'RefreshStep1Response', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..m<$core.String, $core.String>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'round1Packages', entryClassName: 'RefreshStep1Response.Round1PackagesEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
+    ..aOS(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'policyId')
+    ..aInt64(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'startTime')
     ..hasRequiredFields = false
   ;
 
+  RefreshStep1Response._() : super();
+  factory RefreshStep1Response({
+    $core.Map<$core.String, $core.String>? round1Packages,
+    $core.String? policyId,
+    $fixnum.Int64? startTime,
+  }) {
+    final _result = create();
+    if (round1Packages != null) {
+      _result.round1Packages.addAll(round1Packages);
+    }
+    if (policyId != null) {
+      _result.policyId = policyId;
+    }
+    if (startTime != null) {
+      _result.startTime = startTime;
+    }
+    return _result;
+  }
+  factory RefreshStep1Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory RefreshStep1Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -1040,10 +992,8 @@ class RefreshStep1Response extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  RefreshStep1Response copyWith(void Function(RefreshStep1Response) updates) => super.copyWith((message) => updates(message as RefreshStep1Response)) as RefreshStep1Response;
-
+  RefreshStep1Response copyWith(void Function(RefreshStep1Response) updates) => super.copyWith((message) => updates(message as RefreshStep1Response)) as RefreshStep1Response; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static RefreshStep1Response create() => RefreshStep1Response._();
   RefreshStep1Response createEmptyInstance() => create();
@@ -1053,7 +1003,7 @@ class RefreshStep1Response extends $pb.GeneratedMessage {
   static RefreshStep1Response? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $pb.PbMap<$core.String, $core.String> get round1Packages => $_getMap(0);
+  $core.Map<$core.String, $core.String> get round1Packages => $_getMap(0);
 
   @$pb.TagNumber(2)
   $core.String get policyId => $_getSZ(1);
@@ -1062,7 +1012,7 @@ class RefreshStep1Response extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasPolicyId() => $_has(1);
   @$pb.TagNumber(2)
-  void clearPolicyId() => $_clearField(2);
+  void clearPolicyId() => clearField(2);
 
   @$pb.TagNumber(3)
   $fixnum.Int64 get startTime => $_getI64(2);
@@ -1071,43 +1021,42 @@ class RefreshStep1Response extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool hasStartTime() => $_has(2);
   @$pb.TagNumber(3)
-  void clearStartTime() => $_clearField(3);
+  void clearStartTime() => clearField(3);
 }
 
 class RefreshStep2Request extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'RefreshStep2Request', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..aOS(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'round1Package')
+    ..a<$core.List<$core.int>>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..hasRequiredFields = false
+  ;
+
+  RefreshStep2Request._() : super();
   factory RefreshStep2Request({
     $core.List<$core.int>? userId,
     $core.String? round1Package,
     $core.List<$core.int>? signature,
     $fixnum.Int64? timestampMs,
   }) {
-    final $result = create();
+    final _result = create();
     if (userId != null) {
-      $result.userId = userId;
+      _result.userId = userId;
     }
     if (round1Package != null) {
-      $result.round1Package = round1Package;
+      _result.round1Package = round1Package;
     }
     if (signature != null) {
-      $result.signature = signature;
+      _result.signature = signature;
     }
     if (timestampMs != null) {
-      $result.timestampMs = timestampMs;
+      _result.timestampMs = timestampMs;
     }
-    return $result;
+    return _result;
   }
-  RefreshStep2Request._() : super();
   factory RefreshStep2Request.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory RefreshStep2Request.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RefreshStep2Request', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
-    ..aOS(3, _omitFieldNames ? '' : 'round1Package')
-    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
-    ..aInt64(5, _omitFieldNames ? '' : 'timestampMs')
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -1117,10 +1066,8 @@ class RefreshStep2Request extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  RefreshStep2Request copyWith(void Function(RefreshStep2Request) updates) => super.copyWith((message) => updates(message as RefreshStep2Request)) as RefreshStep2Request;
-
+  RefreshStep2Request copyWith(void Function(RefreshStep2Request) updates) => super.copyWith((message) => updates(message as RefreshStep2Request)) as RefreshStep2Request; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static RefreshStep2Request create() => RefreshStep2Request._();
   RefreshStep2Request createEmptyInstance() => create();
@@ -1136,10 +1083,8 @@ class RefreshStep2Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUserId() => $_clearField(1);
+  void clearUserId() => clearField(1);
 
-  /// In DKG Step 2 we sent round1_package again, but strict state management
-  /// might not need it if session is locked. We will mirror DKG for consistency.
   @$pb.TagNumber(3)
   $core.String get round1Package => $_getSZ(1);
   @$pb.TagNumber(3)
@@ -1147,7 +1092,7 @@ class RefreshStep2Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool hasRound1Package() => $_has(1);
   @$pb.TagNumber(3)
-  void clearRound1Package() => $_clearField(3);
+  void clearRound1Package() => clearField(3);
 
   @$pb.TagNumber(4)
   $core.List<$core.int> get signature => $_getN(2);
@@ -1156,7 +1101,7 @@ class RefreshStep2Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.bool hasSignature() => $_has(2);
   @$pb.TagNumber(4)
-  void clearSignature() => $_clearField(4);
+  void clearSignature() => clearField(4);
 
   @$pb.TagNumber(5)
   $fixnum.Int64 get timestampMs => $_getI64(3);
@@ -1165,28 +1110,27 @@ class RefreshStep2Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   $core.bool hasTimestampMs() => $_has(3);
   @$pb.TagNumber(5)
-  void clearTimestampMs() => $_clearField(5);
+  void clearTimestampMs() => clearField(5);
 }
 
 class RefreshStep2Response extends $pb.GeneratedMessage {
-  factory RefreshStep2Response({
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? allRound1Packages,
-  }) {
-    final $result = create();
-    if (allRound1Packages != null) {
-      $result.allRound1Packages.addEntries(allRound1Packages);
-    }
-    return $result;
-  }
-  RefreshStep2Response._() : super();
-  factory RefreshStep2Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory RefreshStep2Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RefreshStep2Response', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..m<$core.String, $core.String>(1, _omitFieldNames ? '' : 'allRound1Packages', entryClassName: 'RefreshStep2Response.AllRound1PackagesEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'RefreshStep2Response', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..m<$core.String, $core.String>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'allRound1Packages', entryClassName: 'RefreshStep2Response.AllRound1PackagesEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
     ..hasRequiredFields = false
   ;
 
+  RefreshStep2Response._() : super();
+  factory RefreshStep2Response({
+    $core.Map<$core.String, $core.String>? allRound1Packages,
+  }) {
+    final _result = create();
+    if (allRound1Packages != null) {
+      _result.allRound1Packages.addAll(allRound1Packages);
+    }
+    return _result;
+  }
+  factory RefreshStep2Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory RefreshStep2Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -1196,10 +1140,8 @@ class RefreshStep2Response extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  RefreshStep2Response copyWith(void Function(RefreshStep2Response) updates) => super.copyWith((message) => updates(message as RefreshStep2Response)) as RefreshStep2Response;
-
+  RefreshStep2Response copyWith(void Function(RefreshStep2Response) updates) => super.copyWith((message) => updates(message as RefreshStep2Response)) as RefreshStep2Response; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static RefreshStep2Response create() => RefreshStep2Response._();
   RefreshStep2Response createEmptyInstance() => create();
@@ -1209,43 +1151,42 @@ class RefreshStep2Response extends $pb.GeneratedMessage {
   static RefreshStep2Response? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $pb.PbMap<$core.String, $core.String> get allRound1Packages => $_getMap(0);
+  $core.Map<$core.String, $core.String> get allRound1Packages => $_getMap(0);
 }
 
 class RefreshStep3Request extends $pb.GeneratedMessage {
-  factory RefreshStep3Request({
-    $core.List<$core.int>? userId,
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? round2PackagesForOthers,
-    $core.List<$core.int>? signature,
-    $fixnum.Int64? timestampMs,
-  }) {
-    final $result = create();
-    if (userId != null) {
-      $result.userId = userId;
-    }
-    if (round2PackagesForOthers != null) {
-      $result.round2PackagesForOthers.addEntries(round2PackagesForOthers);
-    }
-    if (signature != null) {
-      $result.signature = signature;
-    }
-    if (timestampMs != null) {
-      $result.timestampMs = timestampMs;
-    }
-    return $result;
-  }
-  RefreshStep3Request._() : super();
-  factory RefreshStep3Request.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory RefreshStep3Request.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RefreshStep3Request', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
-    ..m<$core.String, $core.String>(3, _omitFieldNames ? '' : 'round2PackagesForOthers', entryClassName: 'RefreshStep3Request.Round2PackagesForOthersEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
-    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
-    ..aInt64(5, _omitFieldNames ? '' : 'timestampMs')
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'RefreshStep3Request', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..m<$core.String, $core.String>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'round2PackagesForOthers', entryClassName: 'RefreshStep3Request.Round2PackagesForOthersEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
+    ..a<$core.List<$core.int>>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
     ..hasRequiredFields = false
   ;
 
+  RefreshStep3Request._() : super();
+  factory RefreshStep3Request({
+    $core.List<$core.int>? userId,
+    $core.Map<$core.String, $core.String>? round2PackagesForOthers,
+    $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
+  }) {
+    final _result = create();
+    if (userId != null) {
+      _result.userId = userId;
+    }
+    if (round2PackagesForOthers != null) {
+      _result.round2PackagesForOthers.addAll(round2PackagesForOthers);
+    }
+    if (signature != null) {
+      _result.signature = signature;
+    }
+    if (timestampMs != null) {
+      _result.timestampMs = timestampMs;
+    }
+    return _result;
+  }
+  factory RefreshStep3Request.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory RefreshStep3Request.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -1255,10 +1196,8 @@ class RefreshStep3Request extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  RefreshStep3Request copyWith(void Function(RefreshStep3Request) updates) => super.copyWith((message) => updates(message as RefreshStep3Request)) as RefreshStep3Request;
-
+  RefreshStep3Request copyWith(void Function(RefreshStep3Request) updates) => super.copyWith((message) => updates(message as RefreshStep3Request)) as RefreshStep3Request; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static RefreshStep3Request create() => RefreshStep3Request._();
   RefreshStep3Request createEmptyInstance() => create();
@@ -1274,10 +1213,10 @@ class RefreshStep3Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUserId() => $_clearField(1);
+  void clearUserId() => clearField(1);
 
   @$pb.TagNumber(3)
-  $pb.PbMap<$core.String, $core.String> get round2PackagesForOthers => $_getMap(1);
+  $core.Map<$core.String, $core.String> get round2PackagesForOthers => $_getMap(1);
 
   @$pb.TagNumber(4)
   $core.List<$core.int> get signature => $_getN(2);
@@ -1286,7 +1225,7 @@ class RefreshStep3Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.bool hasSignature() => $_has(2);
   @$pb.TagNumber(4)
-  void clearSignature() => $_clearField(4);
+  void clearSignature() => clearField(4);
 
   @$pb.TagNumber(5)
   $fixnum.Int64 get timestampMs => $_getI64(3);
@@ -1295,28 +1234,27 @@ class RefreshStep3Request extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   $core.bool hasTimestampMs() => $_has(3);
   @$pb.TagNumber(5)
-  void clearTimestampMs() => $_clearField(5);
+  void clearTimestampMs() => clearField(5);
 }
 
 class RefreshStep3Response extends $pb.GeneratedMessage {
-  factory RefreshStep3Response({
-    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? round2PackagesForMe,
-  }) {
-    final $result = create();
-    if (round2PackagesForMe != null) {
-      $result.round2PackagesForMe.addEntries(round2PackagesForMe);
-    }
-    return $result;
-  }
-  RefreshStep3Response._() : super();
-  factory RefreshStep3Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory RefreshStep3Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RefreshStep3Response', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..m<$core.String, $core.String>(1, _omitFieldNames ? '' : 'round2PackagesForMe', entryClassName: 'RefreshStep3Response.Round2PackagesForMeEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'RefreshStep3Response', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..m<$core.String, $core.String>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'round2PackagesForMe', entryClassName: 'RefreshStep3Response.Round2PackagesForMeEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('mpc_wallet'))
     ..hasRequiredFields = false
   ;
 
+  RefreshStep3Response._() : super();
+  factory RefreshStep3Response({
+    $core.Map<$core.String, $core.String>? round2PackagesForMe,
+  }) {
+    final _result = create();
+    if (round2PackagesForMe != null) {
+      _result.round2PackagesForMe.addAll(round2PackagesForMe);
+    }
+    return _result;
+  }
+  factory RefreshStep3Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory RefreshStep3Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -1326,10 +1264,8 @@ class RefreshStep3Response extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  RefreshStep3Response copyWith(void Function(RefreshStep3Response) updates) => super.copyWith((message) => updates(message as RefreshStep3Response)) as RefreshStep3Response;
-
+  RefreshStep3Response copyWith(void Function(RefreshStep3Response) updates) => super.copyWith((message) => updates(message as RefreshStep3Response)) as RefreshStep3Response; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static RefreshStep3Response create() => RefreshStep3Response._();
   RefreshStep3Response createEmptyInstance() => create();
@@ -1339,10 +1275,21 @@ class RefreshStep3Response extends $pb.GeneratedMessage {
   static RefreshStep3Response? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $pb.PbMap<$core.String, $core.String> get round2PackagesForMe => $_getMap(0);
+  $core.Map<$core.String, $core.String> get round2PackagesForMe => $_getMap(0);
 }
 
 class CreateSpendingPolicyRequest extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'CreateSpendingPolicyRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..aInt64(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'thresholdSats')
+    ..aInt64(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'startTime')
+    ..aInt64(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'intervalSeconds')
+    ..a<$core.List<$core.int>>(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(6, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..hasRequiredFields = false
+  ;
+
+  CreateSpendingPolicyRequest._() : super();
   factory CreateSpendingPolicyRequest({
     $core.List<$core.int>? userId,
     $fixnum.Int64? thresholdSats,
@@ -1351,41 +1298,29 @@ class CreateSpendingPolicyRequest extends $pb.GeneratedMessage {
     $core.List<$core.int>? signature,
     $fixnum.Int64? timestampMs,
   }) {
-    final $result = create();
+    final _result = create();
     if (userId != null) {
-      $result.userId = userId;
+      _result.userId = userId;
     }
     if (thresholdSats != null) {
-      $result.thresholdSats = thresholdSats;
+      _result.thresholdSats = thresholdSats;
     }
     if (startTime != null) {
-      $result.startTime = startTime;
+      _result.startTime = startTime;
     }
     if (intervalSeconds != null) {
-      $result.intervalSeconds = intervalSeconds;
+      _result.intervalSeconds = intervalSeconds;
     }
     if (signature != null) {
-      $result.signature = signature;
+      _result.signature = signature;
     }
     if (timestampMs != null) {
-      $result.timestampMs = timestampMs;
+      _result.timestampMs = timestampMs;
     }
-    return $result;
+    return _result;
   }
-  CreateSpendingPolicyRequest._() : super();
   factory CreateSpendingPolicyRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory CreateSpendingPolicyRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CreateSpendingPolicyRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
-    ..aInt64(2, _omitFieldNames ? '' : 'thresholdSats')
-    ..aInt64(3, _omitFieldNames ? '' : 'startTime')
-    ..aInt64(4, _omitFieldNames ? '' : 'intervalSeconds')
-    ..a<$core.List<$core.int>>(5, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
-    ..aInt64(6, _omitFieldNames ? '' : 'timestampMs')
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -1395,10 +1330,8 @@ class CreateSpendingPolicyRequest extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  CreateSpendingPolicyRequest copyWith(void Function(CreateSpendingPolicyRequest) updates) => super.copyWith((message) => updates(message as CreateSpendingPolicyRequest)) as CreateSpendingPolicyRequest;
-
+  CreateSpendingPolicyRequest copyWith(void Function(CreateSpendingPolicyRequest) updates) => super.copyWith((message) => updates(message as CreateSpendingPolicyRequest)) as CreateSpendingPolicyRequest; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static CreateSpendingPolicyRequest create() => CreateSpendingPolicyRequest._();
   CreateSpendingPolicyRequest createEmptyInstance() => create();
@@ -1414,7 +1347,7 @@ class CreateSpendingPolicyRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUserId() => $_clearField(1);
+  void clearUserId() => clearField(1);
 
   @$pb.TagNumber(2)
   $fixnum.Int64 get thresholdSats => $_getI64(1);
@@ -1423,7 +1356,7 @@ class CreateSpendingPolicyRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasThresholdSats() => $_has(1);
   @$pb.TagNumber(2)
-  void clearThresholdSats() => $_clearField(2);
+  void clearThresholdSats() => clearField(2);
 
   @$pb.TagNumber(3)
   $fixnum.Int64 get startTime => $_getI64(2);
@@ -1432,7 +1365,7 @@ class CreateSpendingPolicyRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool hasStartTime() => $_has(2);
   @$pb.TagNumber(3)
-  void clearStartTime() => $_clearField(3);
+  void clearStartTime() => clearField(3);
 
   @$pb.TagNumber(4)
   $fixnum.Int64 get intervalSeconds => $_getI64(3);
@@ -1441,7 +1374,7 @@ class CreateSpendingPolicyRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.bool hasIntervalSeconds() => $_has(3);
   @$pb.TagNumber(4)
-  void clearIntervalSeconds() => $_clearField(4);
+  void clearIntervalSeconds() => clearField(4);
 
   @$pb.TagNumber(5)
   $core.List<$core.int> get signature => $_getN(4);
@@ -1450,7 +1383,7 @@ class CreateSpendingPolicyRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   $core.bool hasSignature() => $_has(4);
   @$pb.TagNumber(5)
-  void clearSignature() => $_clearField(5);
+  void clearSignature() => clearField(5);
 
   @$pb.TagNumber(6)
   $fixnum.Int64 get timestampMs => $_getI64(5);
@@ -1459,33 +1392,32 @@ class CreateSpendingPolicyRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   $core.bool hasTimestampMs() => $_has(5);
   @$pb.TagNumber(6)
-  void clearTimestampMs() => $_clearField(6);
+  void clearTimestampMs() => clearField(6);
 }
 
 class CreateSpendingPolicyResponse extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'CreateSpendingPolicyResponse', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'policyId')
+    ..a<$core.int>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'allocatedKeyIndex', $pb.PbFieldType.O3)
+    ..hasRequiredFields = false
+  ;
+
+  CreateSpendingPolicyResponse._() : super();
   factory CreateSpendingPolicyResponse({
     $core.String? policyId,
     $core.int? allocatedKeyIndex,
   }) {
-    final $result = create();
+    final _result = create();
     if (policyId != null) {
-      $result.policyId = policyId;
+      _result.policyId = policyId;
     }
     if (allocatedKeyIndex != null) {
-      $result.allocatedKeyIndex = allocatedKeyIndex;
+      _result.allocatedKeyIndex = allocatedKeyIndex;
     }
-    return $result;
+    return _result;
   }
-  CreateSpendingPolicyResponse._() : super();
   factory CreateSpendingPolicyResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory CreateSpendingPolicyResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'CreateSpendingPolicyResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'policyId')
-    ..a<$core.int>(2, _omitFieldNames ? '' : 'allocatedKeyIndex', $pb.PbFieldType.O3)
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -1495,10 +1427,8 @@ class CreateSpendingPolicyResponse extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  CreateSpendingPolicyResponse copyWith(void Function(CreateSpendingPolicyResponse) updates) => super.copyWith((message) => updates(message as CreateSpendingPolicyResponse)) as CreateSpendingPolicyResponse;
-
+  CreateSpendingPolicyResponse copyWith(void Function(CreateSpendingPolicyResponse) updates) => super.copyWith((message) => updates(message as CreateSpendingPolicyResponse)) as CreateSpendingPolicyResponse; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static CreateSpendingPolicyResponse create() => CreateSpendingPolicyResponse._();
   CreateSpendingPolicyResponse createEmptyInstance() => create();
@@ -1514,7 +1444,7 @@ class CreateSpendingPolicyResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasPolicyId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearPolicyId() => $_clearField(1);
+  void clearPolicyId() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.int get allocatedKeyIndex => $_getIZ(1);
@@ -1523,43 +1453,42 @@ class CreateSpendingPolicyResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasAllocatedKeyIndex() => $_has(1);
   @$pb.TagNumber(2)
-  void clearAllocatedKeyIndex() => $_clearField(2);
+  void clearAllocatedKeyIndex() => clearField(2);
 }
 
 class GetPolicyIdRequest extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'GetPolicyIdRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'txMessage', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..hasRequiredFields = false
+  ;
+
+  GetPolicyIdRequest._() : super();
   factory GetPolicyIdRequest({
     $core.List<$core.int>? userId,
     $core.List<$core.int>? txMessage,
     $core.List<$core.int>? signature,
     $fixnum.Int64? timestampMs,
   }) {
-    final $result = create();
+    final _result = create();
     if (userId != null) {
-      $result.userId = userId;
+      _result.userId = userId;
     }
     if (txMessage != null) {
-      $result.txMessage = txMessage;
+      _result.txMessage = txMessage;
     }
     if (signature != null) {
-      $result.signature = signature;
+      _result.signature = signature;
     }
     if (timestampMs != null) {
-      $result.timestampMs = timestampMs;
+      _result.timestampMs = timestampMs;
     }
-    return $result;
+    return _result;
   }
-  GetPolicyIdRequest._() : super();
   factory GetPolicyIdRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory GetPolicyIdRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetPolicyIdRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'txMessage', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
-    ..aInt64(4, _omitFieldNames ? '' : 'timestampMs')
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -1569,10 +1498,8 @@ class GetPolicyIdRequest extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  GetPolicyIdRequest copyWith(void Function(GetPolicyIdRequest) updates) => super.copyWith((message) => updates(message as GetPolicyIdRequest)) as GetPolicyIdRequest;
-
+  GetPolicyIdRequest copyWith(void Function(GetPolicyIdRequest) updates) => super.copyWith((message) => updates(message as GetPolicyIdRequest)) as GetPolicyIdRequest; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static GetPolicyIdRequest create() => GetPolicyIdRequest._();
   GetPolicyIdRequest createEmptyInstance() => create();
@@ -1588,7 +1515,7 @@ class GetPolicyIdRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUserId() => $_clearField(1);
+  void clearUserId() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.List<$core.int> get txMessage => $_getN(1);
@@ -1597,7 +1524,7 @@ class GetPolicyIdRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasTxMessage() => $_has(1);
   @$pb.TagNumber(2)
-  void clearTxMessage() => $_clearField(2);
+  void clearTxMessage() => clearField(2);
 
   @$pb.TagNumber(3)
   $core.List<$core.int> get signature => $_getN(2);
@@ -1606,7 +1533,7 @@ class GetPolicyIdRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool hasSignature() => $_has(2);
   @$pb.TagNumber(3)
-  void clearSignature() => $_clearField(3);
+  void clearSignature() => clearField(3);
 
   @$pb.TagNumber(4)
   $fixnum.Int64 get timestampMs => $_getI64(3);
@@ -1615,28 +1542,27 @@ class GetPolicyIdRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.bool hasTimestampMs() => $_has(3);
   @$pb.TagNumber(4)
-  void clearTimestampMs() => $_clearField(4);
+  void clearTimestampMs() => clearField(4);
 }
 
 class GetPolicyIdResponse extends $pb.GeneratedMessage {
-  factory GetPolicyIdResponse({
-    $core.String? policyId,
-  }) {
-    final $result = create();
-    if (policyId != null) {
-      $result.policyId = policyId;
-    }
-    return $result;
-  }
-  GetPolicyIdResponse._() : super();
-  factory GetPolicyIdResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory GetPolicyIdResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetPolicyIdResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'policyId')
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'GetPolicyIdResponse', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'policyId')
     ..hasRequiredFields = false
   ;
 
+  GetPolicyIdResponse._() : super();
+  factory GetPolicyIdResponse({
+    $core.String? policyId,
+  }) {
+    final _result = create();
+    if (policyId != null) {
+      _result.policyId = policyId;
+    }
+    return _result;
+  }
+  factory GetPolicyIdResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetPolicyIdResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -1646,10 +1572,8 @@ class GetPolicyIdResponse extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  GetPolicyIdResponse copyWith(void Function(GetPolicyIdResponse) updates) => super.copyWith((message) => updates(message as GetPolicyIdResponse)) as GetPolicyIdResponse;
-
+  GetPolicyIdResponse copyWith(void Function(GetPolicyIdResponse) updates) => super.copyWith((message) => updates(message as GetPolicyIdResponse)) as GetPolicyIdResponse; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static GetPolicyIdResponse create() => GetPolicyIdResponse._();
   GetPolicyIdResponse createEmptyInstance() => create();
@@ -1665,33 +1589,32 @@ class GetPolicyIdResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasPolicyId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearPolicyId() => $_clearField(1);
+  void clearPolicyId() => clearField(1);
 }
 
 class BroadcastTransactionRequest extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'BroadcastTransactionRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..aOS(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'txHex')
+    ..hasRequiredFields = false
+  ;
+
+  BroadcastTransactionRequest._() : super();
   factory BroadcastTransactionRequest({
     $core.List<$core.int>? userId,
     $core.String? txHex,
   }) {
-    final $result = create();
+    final _result = create();
     if (userId != null) {
-      $result.userId = userId;
+      _result.userId = userId;
     }
     if (txHex != null) {
-      $result.txHex = txHex;
+      _result.txHex = txHex;
     }
-    return $result;
+    return _result;
   }
-  BroadcastTransactionRequest._() : super();
   factory BroadcastTransactionRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory BroadcastTransactionRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BroadcastTransactionRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
-    ..aOS(2, _omitFieldNames ? '' : 'txHex')
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -1701,10 +1624,8 @@ class BroadcastTransactionRequest extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  BroadcastTransactionRequest copyWith(void Function(BroadcastTransactionRequest) updates) => super.copyWith((message) => updates(message as BroadcastTransactionRequest)) as BroadcastTransactionRequest;
-
+  BroadcastTransactionRequest copyWith(void Function(BroadcastTransactionRequest) updates) => super.copyWith((message) => updates(message as BroadcastTransactionRequest)) as BroadcastTransactionRequest; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static BroadcastTransactionRequest create() => BroadcastTransactionRequest._();
   BroadcastTransactionRequest createEmptyInstance() => create();
@@ -1720,7 +1641,7 @@ class BroadcastTransactionRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUserId() => $_clearField(1);
+  void clearUserId() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.String get txHex => $_getSZ(1);
@@ -1729,28 +1650,27 @@ class BroadcastTransactionRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasTxHex() => $_has(1);
   @$pb.TagNumber(2)
-  void clearTxHex() => $_clearField(2);
+  void clearTxHex() => clearField(2);
 }
 
 class BroadcastTransactionResponse extends $pb.GeneratedMessage {
-  factory BroadcastTransactionResponse({
-    $core.String? txId,
-  }) {
-    final $result = create();
-    if (txId != null) {
-      $result.txId = txId;
-    }
-    return $result;
-  }
-  BroadcastTransactionResponse._() : super();
-  factory BroadcastTransactionResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory BroadcastTransactionResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'BroadcastTransactionResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'txId')
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'BroadcastTransactionResponse', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'txId')
     ..hasRequiredFields = false
   ;
 
+  BroadcastTransactionResponse._() : super();
+  factory BroadcastTransactionResponse({
+    $core.String? txId,
+  }) {
+    final _result = create();
+    if (txId != null) {
+      _result.txId = txId;
+    }
+    return _result;
+  }
+  factory BroadcastTransactionResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory BroadcastTransactionResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -1760,10 +1680,8 @@ class BroadcastTransactionResponse extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  BroadcastTransactionResponse copyWith(void Function(BroadcastTransactionResponse) updates) => super.copyWith((message) => updates(message as BroadcastTransactionResponse)) as BroadcastTransactionResponse;
-
+  BroadcastTransactionResponse copyWith(void Function(BroadcastTransactionResponse) updates) => super.copyWith((message) => updates(message as BroadcastTransactionResponse)) as BroadcastTransactionResponse; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static BroadcastTransactionResponse create() => BroadcastTransactionResponse._();
   BroadcastTransactionResponse createEmptyInstance() => create();
@@ -1779,38 +1697,37 @@ class BroadcastTransactionResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasTxId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearTxId() => $_clearField(1);
+  void clearTxId() => clearField(1);
 }
 
 class FetchHistoryRequest extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'FetchHistoryRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..hasRequiredFields = false
+  ;
+
+  FetchHistoryRequest._() : super();
   factory FetchHistoryRequest({
     $core.List<$core.int>? userId,
     $core.List<$core.int>? signature,
     $fixnum.Int64? timestampMs,
   }) {
-    final $result = create();
+    final _result = create();
     if (userId != null) {
-      $result.userId = userId;
+      _result.userId = userId;
     }
     if (signature != null) {
-      $result.signature = signature;
+      _result.signature = signature;
     }
     if (timestampMs != null) {
-      $result.timestampMs = timestampMs;
+      _result.timestampMs = timestampMs;
     }
-    return $result;
+    return _result;
   }
-  FetchHistoryRequest._() : super();
   factory FetchHistoryRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory FetchHistoryRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FetchHistoryRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
-    ..aInt64(3, _omitFieldNames ? '' : 'timestampMs')
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -1820,10 +1737,8 @@ class FetchHistoryRequest extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  FetchHistoryRequest copyWith(void Function(FetchHistoryRequest) updates) => super.copyWith((message) => updates(message as FetchHistoryRequest)) as FetchHistoryRequest;
-
+  FetchHistoryRequest copyWith(void Function(FetchHistoryRequest) updates) => super.copyWith((message) => updates(message as FetchHistoryRequest)) as FetchHistoryRequest; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static FetchHistoryRequest create() => FetchHistoryRequest._();
   FetchHistoryRequest createEmptyInstance() => create();
@@ -1839,7 +1754,7 @@ class FetchHistoryRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUserId() => $_clearField(1);
+  void clearUserId() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.List<$core.int> get signature => $_getN(1);
@@ -1848,7 +1763,7 @@ class FetchHistoryRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasSignature() => $_has(1);
   @$pb.TagNumber(2)
-  void clearSignature() => $_clearField(2);
+  void clearSignature() => clearField(2);
 
   @$pb.TagNumber(3)
   $fixnum.Int64 get timestampMs => $_getI64(2);
@@ -1857,28 +1772,27 @@ class FetchHistoryRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool hasTimestampMs() => $_has(2);
   @$pb.TagNumber(3)
-  void clearTimestampMs() => $_clearField(3);
+  void clearTimestampMs() => clearField(3);
 }
 
 class FetchHistoryResponse extends $pb.GeneratedMessage {
-  factory FetchHistoryResponse({
-    $core.Iterable<UtxoInfo>? utxos,
-  }) {
-    final $result = create();
-    if (utxos != null) {
-      $result.utxos.addAll(utxos);
-    }
-    return $result;
-  }
-  FetchHistoryResponse._() : super();
-  factory FetchHistoryResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory FetchHistoryResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FetchHistoryResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..pc<UtxoInfo>(1, _omitFieldNames ? '' : 'utxos', $pb.PbFieldType.PM, subBuilder: UtxoInfo.create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'FetchHistoryResponse', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..pc<UtxoInfo>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'utxos', $pb.PbFieldType.PM, subBuilder: UtxoInfo.create)
     ..hasRequiredFields = false
   ;
 
+  FetchHistoryResponse._() : super();
+  factory FetchHistoryResponse({
+    $core.Iterable<UtxoInfo>? utxos,
+  }) {
+    final _result = create();
+    if (utxos != null) {
+      _result.utxos.addAll(utxos);
+    }
+    return _result;
+  }
+  factory FetchHistoryResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory FetchHistoryResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -1888,10 +1802,8 @@ class FetchHistoryResponse extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  FetchHistoryResponse copyWith(void Function(FetchHistoryResponse) updates) => super.copyWith((message) => updates(message as FetchHistoryResponse)) as FetchHistoryResponse;
-
+  FetchHistoryResponse copyWith(void Function(FetchHistoryResponse) updates) => super.copyWith((message) => updates(message as FetchHistoryResponse)) as FetchHistoryResponse; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static FetchHistoryResponse create() => FetchHistoryResponse._();
   FetchHistoryResponse createEmptyInstance() => create();
@@ -1901,38 +1813,37 @@ class FetchHistoryResponse extends $pb.GeneratedMessage {
   static FetchHistoryResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $pb.PbList<UtxoInfo> get utxos => $_getList(0);
+  $core.List<UtxoInfo> get utxos => $_getList(0);
 }
 
 class FetchRecentTransactionsRequest extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'FetchRecentTransactionsRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..hasRequiredFields = false
+  ;
+
+  FetchRecentTransactionsRequest._() : super();
   factory FetchRecentTransactionsRequest({
     $core.List<$core.int>? userId,
     $core.List<$core.int>? signature,
     $fixnum.Int64? timestampMs,
   }) {
-    final $result = create();
+    final _result = create();
     if (userId != null) {
-      $result.userId = userId;
+      _result.userId = userId;
     }
     if (signature != null) {
-      $result.signature = signature;
+      _result.signature = signature;
     }
     if (timestampMs != null) {
-      $result.timestampMs = timestampMs;
+      _result.timestampMs = timestampMs;
     }
-    return $result;
+    return _result;
   }
-  FetchRecentTransactionsRequest._() : super();
   factory FetchRecentTransactionsRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory FetchRecentTransactionsRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FetchRecentTransactionsRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
-    ..aInt64(3, _omitFieldNames ? '' : 'timestampMs')
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -1942,10 +1853,8 @@ class FetchRecentTransactionsRequest extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  FetchRecentTransactionsRequest copyWith(void Function(FetchRecentTransactionsRequest) updates) => super.copyWith((message) => updates(message as FetchRecentTransactionsRequest)) as FetchRecentTransactionsRequest;
-
+  FetchRecentTransactionsRequest copyWith(void Function(FetchRecentTransactionsRequest) updates) => super.copyWith((message) => updates(message as FetchRecentTransactionsRequest)) as FetchRecentTransactionsRequest; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static FetchRecentTransactionsRequest create() => FetchRecentTransactionsRequest._();
   FetchRecentTransactionsRequest createEmptyInstance() => create();
@@ -1961,7 +1870,7 @@ class FetchRecentTransactionsRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUserId() => $_clearField(1);
+  void clearUserId() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.List<$core.int> get signature => $_getN(1);
@@ -1970,7 +1879,7 @@ class FetchRecentTransactionsRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasSignature() => $_has(1);
   @$pb.TagNumber(2)
-  void clearSignature() => $_clearField(2);
+  void clearSignature() => clearField(2);
 
   @$pb.TagNumber(3)
   $fixnum.Int64 get timestampMs => $_getI64(2);
@@ -1979,28 +1888,27 @@ class FetchRecentTransactionsRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool hasTimestampMs() => $_has(2);
   @$pb.TagNumber(3)
-  void clearTimestampMs() => $_clearField(3);
+  void clearTimestampMs() => clearField(3);
 }
 
 class FetchRecentTransactionsResponse extends $pb.GeneratedMessage {
-  factory FetchRecentTransactionsResponse({
-    $core.Iterable<TransactionSummary>? transactions,
-  }) {
-    final $result = create();
-    if (transactions != null) {
-      $result.transactions.addAll(transactions);
-    }
-    return $result;
-  }
-  FetchRecentTransactionsResponse._() : super();
-  factory FetchRecentTransactionsResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory FetchRecentTransactionsResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FetchRecentTransactionsResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..pc<TransactionSummary>(1, _omitFieldNames ? '' : 'transactions', $pb.PbFieldType.PM, subBuilder: TransactionSummary.create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'FetchRecentTransactionsResponse', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..pc<TransactionSummary>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'transactions', $pb.PbFieldType.PM, subBuilder: TransactionSummary.create)
     ..hasRequiredFields = false
   ;
 
+  FetchRecentTransactionsResponse._() : super();
+  factory FetchRecentTransactionsResponse({
+    $core.Iterable<TransactionSummary>? transactions,
+  }) {
+    final _result = create();
+    if (transactions != null) {
+      _result.transactions.addAll(transactions);
+    }
+    return _result;
+  }
+  factory FetchRecentTransactionsResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory FetchRecentTransactionsResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -2010,10 +1918,8 @@ class FetchRecentTransactionsResponse extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  FetchRecentTransactionsResponse copyWith(void Function(FetchRecentTransactionsResponse) updates) => super.copyWith((message) => updates(message as FetchRecentTransactionsResponse)) as FetchRecentTransactionsResponse;
-
+  FetchRecentTransactionsResponse copyWith(void Function(FetchRecentTransactionsResponse) updates) => super.copyWith((message) => updates(message as FetchRecentTransactionsResponse)) as FetchRecentTransactionsResponse; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static FetchRecentTransactionsResponse create() => FetchRecentTransactionsResponse._();
   FetchRecentTransactionsResponse createEmptyInstance() => create();
@@ -2023,43 +1929,42 @@ class FetchRecentTransactionsResponse extends $pb.GeneratedMessage {
   static FetchRecentTransactionsResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $pb.PbList<TransactionSummary> get transactions => $_getList(0);
+  $core.List<TransactionSummary> get transactions => $_getList(0);
 }
 
 class TransactionSummary extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'TransactionSummary', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'txHash')
+    ..aInt64(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'amountSats')
+    ..aInt64(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestamp')
+    ..aOB(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'isPending')
+    ..hasRequiredFields = false
+  ;
+
+  TransactionSummary._() : super();
   factory TransactionSummary({
     $core.String? txHash,
     $fixnum.Int64? amountSats,
     $fixnum.Int64? timestamp,
     $core.bool? isPending,
   }) {
-    final $result = create();
+    final _result = create();
     if (txHash != null) {
-      $result.txHash = txHash;
+      _result.txHash = txHash;
     }
     if (amountSats != null) {
-      $result.amountSats = amountSats;
+      _result.amountSats = amountSats;
     }
     if (timestamp != null) {
-      $result.timestamp = timestamp;
+      _result.timestamp = timestamp;
     }
     if (isPending != null) {
-      $result.isPending = isPending;
+      _result.isPending = isPending;
     }
-    return $result;
+    return _result;
   }
-  TransactionSummary._() : super();
   factory TransactionSummary.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory TransactionSummary.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionSummary', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'txHash')
-    ..aInt64(2, _omitFieldNames ? '' : 'amountSats')
-    ..aInt64(3, _omitFieldNames ? '' : 'timestamp')
-    ..aOB(4, _omitFieldNames ? '' : 'isPending')
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -2069,10 +1974,8 @@ class TransactionSummary extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  TransactionSummary copyWith(void Function(TransactionSummary) updates) => super.copyWith((message) => updates(message as TransactionSummary)) as TransactionSummary;
-
+  TransactionSummary copyWith(void Function(TransactionSummary) updates) => super.copyWith((message) => updates(message as TransactionSummary)) as TransactionSummary; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static TransactionSummary create() => TransactionSummary._();
   TransactionSummary createEmptyInstance() => create();
@@ -2088,7 +1991,7 @@ class TransactionSummary extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasTxHash() => $_has(0);
   @$pb.TagNumber(1)
-  void clearTxHash() => $_clearField(1);
+  void clearTxHash() => clearField(1);
 
   @$pb.TagNumber(2)
   $fixnum.Int64 get amountSats => $_getI64(1);
@@ -2097,7 +2000,7 @@ class TransactionSummary extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasAmountSats() => $_has(1);
   @$pb.TagNumber(2)
-  void clearAmountSats() => $_clearField(2);
+  void clearAmountSats() => clearField(2);
 
   @$pb.TagNumber(3)
   $fixnum.Int64 get timestamp => $_getI64(2);
@@ -2106,7 +2009,7 @@ class TransactionSummary extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool hasTimestamp() => $_has(2);
   @$pb.TagNumber(3)
-  void clearTimestamp() => $_clearField(3);
+  void clearTimestamp() => clearField(3);
 
   @$pb.TagNumber(4)
   $core.bool get isPending => $_getBF(3);
@@ -2115,38 +2018,37 @@ class TransactionSummary extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.bool hasIsPending() => $_has(3);
   @$pb.TagNumber(4)
-  void clearIsPending() => $_clearField(4);
+  void clearIsPending() => clearField(4);
 }
 
 class SubscribeToHistoryRequest extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'SubscribeToHistoryRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..hasRequiredFields = false
+  ;
+
+  SubscribeToHistoryRequest._() : super();
   factory SubscribeToHistoryRequest({
     $core.List<$core.int>? userId,
     $core.List<$core.int>? signature,
     $fixnum.Int64? timestampMs,
   }) {
-    final $result = create();
+    final _result = create();
     if (userId != null) {
-      $result.userId = userId;
+      _result.userId = userId;
     }
     if (signature != null) {
-      $result.signature = signature;
+      _result.signature = signature;
     }
     if (timestampMs != null) {
-      $result.timestampMs = timestampMs;
+      _result.timestampMs = timestampMs;
     }
-    return $result;
+    return _result;
   }
-  SubscribeToHistoryRequest._() : super();
   factory SubscribeToHistoryRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory SubscribeToHistoryRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'SubscribeToHistoryRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
-    ..aInt64(3, _omitFieldNames ? '' : 'timestampMs')
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -2156,10 +2058,8 @@ class SubscribeToHistoryRequest extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  SubscribeToHistoryRequest copyWith(void Function(SubscribeToHistoryRequest) updates) => super.copyWith((message) => updates(message as SubscribeToHistoryRequest)) as SubscribeToHistoryRequest;
-
+  SubscribeToHistoryRequest copyWith(void Function(SubscribeToHistoryRequest) updates) => super.copyWith((message) => updates(message as SubscribeToHistoryRequest)) as SubscribeToHistoryRequest; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static SubscribeToHistoryRequest create() => SubscribeToHistoryRequest._();
   SubscribeToHistoryRequest createEmptyInstance() => create();
@@ -2175,7 +2075,7 @@ class SubscribeToHistoryRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUserId() => $_clearField(1);
+  void clearUserId() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.List<$core.int> get signature => $_getN(1);
@@ -2184,7 +2084,7 @@ class SubscribeToHistoryRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasSignature() => $_has(1);
   @$pb.TagNumber(2)
-  void clearSignature() => $_clearField(2);
+  void clearSignature() => clearField(2);
 
   @$pb.TagNumber(3)
   $fixnum.Int64 get timestampMs => $_getI64(2);
@@ -2193,43 +2093,42 @@ class SubscribeToHistoryRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool hasTimestampMs() => $_has(2);
   @$pb.TagNumber(3)
-  void clearTimestampMs() => $_clearField(3);
+  void clearTimestampMs() => clearField(3);
 }
 
 class TransactionNotification extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'TransactionNotification', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'txHash')
+    ..a<$core.int>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'height', $pb.PbFieldType.O3)
+    ..pc<UtxoInfo>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'addedUtxos', $pb.PbFieldType.PM, subBuilder: UtxoInfo.create)
+    ..pc<UtxoInfo>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'spentUtxos', $pb.PbFieldType.PM, subBuilder: UtxoInfo.create)
+    ..hasRequiredFields = false
+  ;
+
+  TransactionNotification._() : super();
   factory TransactionNotification({
     $core.String? txHash,
     $core.int? height,
     $core.Iterable<UtxoInfo>? addedUtxos,
     $core.Iterable<UtxoInfo>? spentUtxos,
   }) {
-    final $result = create();
+    final _result = create();
     if (txHash != null) {
-      $result.txHash = txHash;
+      _result.txHash = txHash;
     }
     if (height != null) {
-      $result.height = height;
+      _result.height = height;
     }
     if (addedUtxos != null) {
-      $result.addedUtxos.addAll(addedUtxos);
+      _result.addedUtxos.addAll(addedUtxos);
     }
     if (spentUtxos != null) {
-      $result.spentUtxos.addAll(spentUtxos);
+      _result.spentUtxos.addAll(spentUtxos);
     }
-    return $result;
+    return _result;
   }
-  TransactionNotification._() : super();
   factory TransactionNotification.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory TransactionNotification.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TransactionNotification', package: const $pb.PackageName(_omitMessageNames ? '' : 'mpc_wallet'), createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'txHash')
-    ..a<$core.int>(2, _omitFieldNames ? '' : 'height', $pb.PbFieldType.O3)
-    ..pc<UtxoInfo>(3, _omitFieldNames ? '' : 'addedUtxos', $pb.PbFieldType.PM, subBuilder: UtxoInfo.create)
-    ..pc<UtxoInfo>(4, _omitFieldNames ? '' : 'spentUtxos', $pb.PbFieldType.PM, subBuilder: UtxoInfo.create)
-    ..hasRequiredFields = false
-  ;
-
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
@@ -2239,10 +2138,8 @@ class TransactionNotification extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  TransactionNotification copyWith(void Function(TransactionNotification) updates) => super.copyWith((message) => updates(message as TransactionNotification)) as TransactionNotification;
-
+  TransactionNotification copyWith(void Function(TransactionNotification) updates) => super.copyWith((message) => updates(message as TransactionNotification)) as TransactionNotification; // ignore: deprecated_member_use
   $pb.BuilderInfo get info_ => _i;
-
   @$core.pragma('dart2js:noInline')
   static TransactionNotification create() => TransactionNotification._();
   TransactionNotification createEmptyInstance() => create();
@@ -2258,7 +2155,7 @@ class TransactionNotification extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool hasTxHash() => $_has(0);
   @$pb.TagNumber(1)
-  void clearTxHash() => $_clearField(1);
+  void clearTxHash() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.int get height => $_getIZ(1);
@@ -2267,18 +2164,12 @@ class TransactionNotification extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool hasHeight() => $_has(1);
   @$pb.TagNumber(2)
-  void clearHeight() => $_clearField(2);
+  void clearHeight() => clearField(2);
 
-  /// Using a simple notification that "something changed" or sending the full update?
-  /// User said "rely on server for maintaining state and updating it with latest transactions"
-  /// Sending the relevant UTXOs involved (newly created ones owned by wallet)
   @$pb.TagNumber(3)
-  $pb.PbList<UtxoInfo> get addedUtxos => $_getList(2);
+  $core.List<UtxoInfo> get addedUtxos => $_getList(2);
 
   @$pb.TagNumber(4)
-  $pb.PbList<UtxoInfo> get spentUtxos => $_getList(3);
+  $core.List<UtxoInfo> get spentUtxos => $_getList(3);
 }
 
-
-const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

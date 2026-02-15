@@ -1,4 +1,4 @@
-.PHONY: regtest-up regtest-down server-run regtest proto
+.PHONY: regtest-up regtest-down server-run regtest proto bitcoin-init
 
 # Start Docker environment (Bitcoind + Electrs)
 regtest-up:
@@ -19,10 +19,16 @@ server-run:
 	@echo "Starting MPC Server..."
 	export ELECTRUM_URL=127.0.0.1 && \
 	export ELECTRUM_PORT=50001 && \
+	export BITCOIN_RPC_USER=admin1 && \
+	export BITCOIN_RPC_PASSWORD=123 && \
 	dart server/bin/server.dart
 
 # Helper to start everything
 regtest: regtest-up server-run
+
+# Initialize regtest chain (mine 150 blocks)
+bitcoin-init:
+	./scripts/bitcoin.sh init
 
 # Generate Dart gRPC stubs from protos
 proto:

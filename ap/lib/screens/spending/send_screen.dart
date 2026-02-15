@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:ap/services/mpc_service.dart';
 
 class SendScreen extends StatefulWidget {
   const SendScreen({super.key});
@@ -16,6 +19,10 @@ class _SendScreenState extends State<SendScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final mpcService = context.watch<MpcService>();
+    final balanceSats = mpcService.balance;
+    final formattedBalance = NumberFormat('#,###').format(balanceSats.toInt());
+
     return Scaffold(
       appBar: AppBar(title: const Text('Send Bitcoin')),
       body: Padding(
@@ -63,7 +70,7 @@ class _SendScreenState extends State<SendScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Available Balance: 124,503,211 Sats',
+              'Available Balance: $formattedBalance Sats',
               style: GoogleFonts.inter(color: Colors.white54, fontSize: 12),
             ),
             const Spacer(),
