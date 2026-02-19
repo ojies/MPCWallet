@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
@@ -6,6 +7,28 @@ import 'package:threshold/core/dkg.dart';
 import 'package:threshold/core/errors.dart';
 import 'package:threshold/core/identifier.dart';
 import 'package:threshold/core/share.dart';
+
+BigInt taggedHash(String tag, Uint8List msg) {
+  final tagHash = sha256.convert(utf8.encode(tag)).bytes;
+  final builder = BytesBuilder();
+  builder.add(tagHash);
+  builder.add(tagHash);
+  builder.add(msg);
+
+  final hash = sha256.convert(builder.toBytes()).bytes;
+  return bytesToBigInt(Uint8List.fromList(hash)) % secp256k1Curve.n;
+}
+
+BigInt computeTweak(ECPoint P, List<int>? merkleRoot) {
+  // P is x-only (32 bytes)
+  final pBytes = elemSerializeCompressed(P).sublist(1);
+  final builder = BytesBuilder();
+  builder.add(pBytes);
+  if (merkleRoot != null) {
+    builder.add(merkleRoot);
+  }
+  return taggedHash("TapTweak", builder.toBytes());
+}
 
 final secp256k1Curve = ECDomainParameters('secp256k1');
 
@@ -33,7 +56,6 @@ Uint8List bigIntToBytes(BigInt number) {
   }
   return bytes;
 }
-
 
 BigInt modNFromBytesBE(Uint8List b) {
   final s = bytesToBigInt(b) % secp256k1Curve.n;
@@ -115,13 +137,40 @@ BigInt modNRandom() {
   BigInt s;
   do {
     final bytes = Uint8List.fromList(
-        List<int>.generate(32, (i) => random.nextInt(256)));
+      List<int>.generate(32, (i) => random.nextInt(256)),
+    );
     s = bytesToBigInt(bytes) % secp256k1Curve.n;
   } while (s == BigInt.zero);
   return s;
 }
 
-List<BigInt> generateCoefficients(int size) {
+BigInt modNRandomSeeded(List<int> seed, int counter) {
+  final seedHash = sha256.convert(seed).bytes;
+
+  // Deterministic generation: Hash(seed || counter)
+  // We need to loop until we get a non-zero value < n
+  var currentCounter = counter;
+  BigInt s;
+  do {
+    final builder = BytesBuilder();
+    builder.add(seedHash);
+
+    // Add counter as 4 bytes BE
+    final counterBytes = Uint8List(4);
+    final view = ByteData.view(counterBytes.buffer);
+    view.setUint32(0, currentCounter++);
+    builder.add(counterBytes);
+
+    final hash = sha256.convert(builder.toBytes()).bytes;
+    s = bytesToBigInt(Uint8List.fromList(hash)) % secp256k1Curve.n;
+  } while (s == BigInt.zero);
+  return s;
+}
+
+List<BigInt> generateCoefficients(int size, {List<int>? seed}) {
+  if (seed != null) {
+    return List<BigInt>.generate(size, (i) => modNRandomSeeded(seed, i));
+  }
   return List<BigInt>.generate(size, (i) => modNRandom());
 }
 
@@ -132,7 +181,11 @@ List<BigInt> generateCoefficients(int size) {
 }
 
 (List<BigInt>, List<ECPoint>) generateSecretPolynomial(
-    BigInt secret, int maxSigners, int minSigners, List<BigInt> coeffOnly) {
+  BigInt secret,
+  int maxSigners,
+  int minSigners,
+  List<BigInt> coeffOnly,
+) {
   validateNumOfSigners(minSigners, maxSigners);
   if (coeffOnly.length != minSigners - 1) {
     throw InvalidCoefficientsException("invalid coefficients");
@@ -144,7 +197,10 @@ List<BigInt> generateCoefficients(int size) {
 }
 
 Challenge dkgChallenge(
-    Identifier identifier, VerifyingKey verifyingKey, ECPoint R) {
+  Identifier identifier,
+  VerifyingKey verifyingKey,
+  ECPoint R,
+) {
   final pre = BytesBuilder();
   pre.add(identifier.serialize());
   pre.add(elemSerializeCompressed(verifyingKey.E));
@@ -154,8 +210,11 @@ Challenge dkgChallenge(
   return Challenge(bytesToBigInt(Uint8List.fromList(sum)) % secp256k1Curve.n);
 }
 
-Signature computeProofOfKnowledge(Identifier identifier,
-    List<BigInt> coefficients, VerifyingKey verifyingKey) {
+DKGSignature computeProofOfKnowledge(
+  Identifier identifier,
+  List<BigInt> coefficients,
+  VerifyingKey verifyingKey,
+) {
   final (k, R) = generateNonce();
   final chal = dkgChallenge(identifier, verifyingKey, R);
   if (coefficients.isEmpty) {
@@ -164,11 +223,14 @@ Signature computeProofOfKnowledge(Identifier identifier,
   final a0 = coefficients[0];
   final zc = (a0 * chal.C) % secp256k1Curve.n;
   final z = (zc + k) % secp256k1Curve.n;
-  return Signature(R, z);
+  return DKGSignature(R, z);
 }
 
 void verifyProofOfKnowledge(
-    Identifier identifier, VerifyingKey verifyingKey, Signature sig) {
+  Identifier identifier,
+  VerifyingKey verifyingKey,
+  DKGSignature sig,
+) {
   final chal = dkgChallenge(identifier, verifyingKey, sig.R);
   final gmu = elemBaseMul(sig.Z);
   final cneg = (secp256k1Curve.n - chal.C) % secp256k1Curve.n;
@@ -188,7 +250,9 @@ void validateNumOfSigners(int minSigners, int maxSigners) {
     throw InvalidMaxSignersException("max_signers must be >= 2");
   }
   if (minSigners > maxSigners) {
-    throw InvalidMinSignersException("min_signers cannot be greater than max_signers");
+    throw InvalidMinSignersException(
+      "min_signers cannot be greater than max_signers",
+    );
   }
 }
 

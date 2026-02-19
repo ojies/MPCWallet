@@ -11,13 +11,30 @@ service MPCWallet {
   // Signing
   rpc SignStep1 (SignStep1Request) returns (SignStep1Response);
   rpc SignStep2 (SignStep2Request) returns (SignStep2Response);
+
+  // Refresh
+  rpc RefreshStep1 (RefreshStep1Request) returns (RefreshStep1Response);
+  rpc RefreshStep2 (RefreshStep2Request) returns (RefreshStep2Response);
+  rpc RefreshStep3 (RefreshStep3Request) returns (RefreshStep3Response);
+
+  // Policy
+  rpc CreateSpendingPolicy (CreateSpendingPolicyRequest) returns (CreateSpendingPolicyResponse);
+  rpc GetPolicyId (GetPolicyIdRequest) returns (GetPolicyIdResponse);
+
+  // Broadcast
+  rpc BroadcastTransaction (BroadcastTransactionRequest) returns (BroadcastTransactionResponse);
+
+  // Sync / History
+  rpc FetchHistory (FetchHistoryRequest) returns (FetchHistoryResponse);
+  rpc FetchRecentTransactions (FetchRecentTransactionsRequest) returns (FetchRecentTransactionsResponse);
+  rpc SubscribeToHistory (SubscribeToHistoryRequest) returns (stream TransactionNotification);
 }
 
 // DKG Messages
 
 message DKGStep1Request {
-  string device_id = 1;
-  bytes identifier = 2;
+  bytes user_id = 1;
+  bytes identifier = 2;    
   string round1_package = 3; // JSON
 }
 
@@ -26,7 +43,7 @@ message DKGStep1Response {
 }
 
 message DKGStep2Request {
-  string device_id = 1;
+  bytes user_id = 1;
   bytes identifier = 2;
   string round1_package = 3; // JSON
 }
@@ -36,8 +53,8 @@ message DKGStep2Response {
 }
 
 message DKGStep3Request {
-   string device_id = 1;
-   bytes identifier = 2;
+   bytes user_id = 1;
+    bytes identifier = 2;
    map<string, string> round2_packages_for_others = 3;
 }
 
@@ -48,12 +65,15 @@ message DKGStep3Response {
 // Signing Messages
 
 message SignStep1Request {
-  string device_id = 1;
-  bytes identifier = 2;
-  bytes hiding_commitment = 3;
-  bytes binding_commitment = 4;
-  bytes message_to_sign = 5; 
+  bytes user_id = 1;
+  bytes hiding_commitment = 2;
+  bytes binding_commitment = 3;
+  bytes message_to_sign = 4;
+  bytes signature = 5; // Schnorr signature over auth message for authentication
+  bytes full_transaction = 6;
+  int64 timestamp_ms = 7; // Unix timestamp in milliseconds for replay protection
 }
+
 
 message SignStep1Response {
    message Commitment {
@@ -62,13 +82,22 @@ message SignStep1Response {
    }
    map<string, Commitment> commitments = 1;
    bytes message_to_sign = 2; 
+   int32 used_key_index = 3; // The key index the server selected for this signing session
 }
 
 message SignStep2Request {
-   string device_id = 1;
-   bytes identifier = 2;
+   bytes user_id = 1;
    bytes signature_share = 3;
+   bytes signature = 4; // Schnorr signature over auth message for authentication
+   int64 timestamp_ms = 5; // Unix timestamp in milliseconds for replay protection
 }
+
+message UtxoInfo {
+    string tx_hash = 1;
+    int32 vout = 2;
+    int64 amount = 3; // satoshis
+}
+
 
 message SignStep2Response {
    // Final aggregated signature
@@ -76,3 +105,124 @@ message SignStep2Response {
    bytes r_point = 1;
    bytes z_scalar = 2;
 }
+
+// Refresh Messages
+
+message RefreshStep1Request {
+  bytes user_id = 1;
+  string round1_package = 3; // JSON
+  int64 threshold_amount = 4;
+  int64 interval = 5;
+  bytes signature = 6; // Schnorr signature over auth message for authentication
+  int64 timestamp_ms = 7; // Unix timestamp in milliseconds for replay protection
+}
+
+message RefreshStep1Response {
+  map<string, string> round1_packages = 1;
+  string policy_id = 2;
+  int64 start_time = 3;
+}
+
+message RefreshStep2Request {
+  bytes user_id = 1;
+  // In DKG Step 2 we sent round1_package again, but strict state management
+  // might not need it if session is locked. We will mirror DKG for consistency.
+  string round1_package = 3;
+  bytes signature = 4; // Schnorr signature over auth message for authentication
+  int64 timestamp_ms = 5; // Unix timestamp in milliseconds for replay protection
+}
+
+message RefreshStep2Response {
+   map<string, string> all_round1_packages = 1;
+}
+
+message RefreshStep3Request {
+   bytes user_id = 1;
+   map<string, string> round2_packages_for_others = 3;
+   bytes signature = 4; // Schnorr signature over auth message for authentication
+   int64 timestamp_ms = 5; // Unix timestamp in milliseconds for replay protection
+}
+
+message RefreshStep3Response {
+    map<string, string> round2_packages_for_me = 1;
+}
+
+message CreateSpendingPolicyRequest {
+    bytes user_id = 1;
+    int64 threshold_sats = 2;
+    int64 start_time = 3; // timestamp seconds
+    int64 interval_seconds = 4; // duration in seconds
+    bytes signature = 5; // Schnorr signature over auth message for authentication
+    int64 timestamp_ms = 6; // Unix timestamp in milliseconds for replay protection
+}
+
+message CreateSpendingPolicyResponse {
+    string policy_id = 1;
+    int32 allocated_key_index = 2; // The index of the new key generated for this policy
+}
+
+message GetPolicyIdRequest {
+    bytes user_id = 1;
+    bytes tx_message = 2; // Transaction bytes
+    bytes signature = 3; // Schnorr signature over auth message for authentication
+    int64 timestamp_ms = 4; // Unix timestamp in milliseconds for replay protection
+}
+
+message GetPolicyIdResponse {
+    string policy_id = 1;
+}
+
+message BroadcastTransactionRequest {
+    bytes user_id = 1;
+    string tx_hex = 2;
+}
+
+message BroadcastTransactionResponse {
+    string tx_id = 1;
+}
+
+
+message FetchHistoryRequest {
+    bytes user_id = 1;
+    bytes signature = 2; // Schnorr signature over auth message for authentication
+    int64 timestamp_ms = 3; // Unix timestamp in milliseconds for replay protection
+}
+
+message FetchHistoryResponse {
+    repeated UtxoInfo utxos = 1; 
+    // Could add list of past transaction IDs if needed for UI history
+}
+
+message FetchRecentTransactionsRequest {
+    bytes user_id = 1;
+    bytes signature = 2; // Schnorr signature over auth message for authentication
+    int64 timestamp_ms = 3; // Unix timestamp in milliseconds for replay protection
+}
+
+message FetchRecentTransactionsResponse {
+    repeated TransactionSummary transactions = 1;
+}
+
+message TransactionSummary {
+    string tx_hash = 1;
+    int64 amount_sats = 2; // Signed amount (+ for receive, - for sent)
+    int64 timestamp = 3; // timestamp seconds
+    bool is_pending = 4; // if in mempool
+}
+
+message SubscribeToHistoryRequest {
+    bytes user_id = 1;
+    bytes signature = 2; // Schnorr signature over auth message for authentication
+    int64 timestamp_ms = 3; // Unix timestamp in milliseconds for replay protection
+}
+
+message TransactionNotification {
+    string tx_hash = 1;
+    int32 height = 2;
+    // Using a simple notification that "something changed" or sending the full update?
+    // User said "rely on server for maintaining state and updating it with latest transactions"
+    // Sending the relevant UTXOs involved (newly created ones owned by wallet)
+    repeated UtxoInfo added_utxos = 3;
+    repeated UtxoInfo spent_utxos = 4; // Inputs that consumed our UTXOs
+}
+

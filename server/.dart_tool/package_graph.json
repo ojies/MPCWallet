@@ -7,8 +7,12 @@
       "name": "server",
       "version": "1.0.0",
       "dependencies": [
+        "bitcoin_base",
+        "blockchain_utils",
         "grpc",
         "hive",
+        "http",
+        "path",
         "protobuf",
         "protocol",
         "threshold"
@@ -46,6 +50,33 @@
         "web_socket_channel",
         "webkit_inspection_protocol",
         "yaml"
+      ]
+    },
+    {
+      "name": "path",
+      "version": "1.9.1",
+      "dependencies": []
+    },
+    {
+      "name": "blockchain_utils",
+      "version": "5.4.0",
+      "dependencies": []
+    },
+    {
+      "name": "bitcoin_base",
+      "version": "7.0.0",
+      "dependencies": [
+        "blockchain_utils"
+      ]
+    },
+    {
+      "name": "http",
+      "version": "1.6.0",
+      "dependencies": [
+        "async",
+        "http_parser",
+        "meta",
+        "web"
       ]
     },
     {
@@ -248,11 +279,6 @@
       ]
     },
     {
-      "name": "path",
-      "version": "1.9.1",
-      "dependencies": []
-    },
-    {
       "name": "package_config",
       "version": "2.2.0",
       "dependencies": [
@@ -348,16 +374,31 @@
       ]
     },
     {
-      "name": "crypto",
-      "version": "3.0.7",
-      "dependencies": [
-        "typed_data"
-      ]
+      "name": "web",
+      "version": "1.1.1",
+      "dependencies": []
     },
     {
       "name": "meta",
       "version": "1.17.0",
       "dependencies": []
+    },
+    {
+      "name": "http_parser",
+      "version": "4.1.2",
+      "dependencies": [
+        "collection",
+        "source_span",
+        "string_scanner",
+        "typed_data"
+      ]
+    },
+    {
+      "name": "crypto",
+      "version": "3.0.7",
+      "dependencies": [
+        "typed_data"
+      ]
     },
     {
       "name": "pointycastle",
@@ -386,11 +427,6 @@
       "dependencies": []
     },
     {
-      "name": "web",
-      "version": "1.1.1",
-      "dependencies": []
-    },
-    {
       "name": "clock",
       "version": "1.1.2",
       "dependencies": []
@@ -399,16 +435,6 @@
       "name": "http2",
       "version": "2.3.1",
       "dependencies": []
-    },
-    {
-      "name": "http",
-      "version": "1.6.0",
-      "dependencies": [
-        "async",
-        "http_parser",
-        "meta",
-        "web"
-      ]
     },
     {
       "name": "googleapis_auth",
@@ -494,16 +520,6 @@
       "name": "mime",
       "version": "2.0.0",
       "dependencies": []
-    },
-    {
-      "name": "http_parser",
-      "version": "4.1.2",
-      "dependencies": [
-        "collection",
-        "source_span",
-        "string_scanner",
-        "typed_data"
-      ]
     },
     {
       "name": "cli_config",

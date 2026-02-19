@@ -7,6 +7,7 @@ export 'core/commitment.dart';
 export 'core/dkg.dart';
 export 'core/errors.dart';
 export 'core/identifier.dart';
+export 'frost/signature.dart';
 export 'core/share.dart';
 export 'core/utils.dart' hide generateNonce;
 export 'frost/binding.dart';
@@ -15,3 +16,7 @@ export 'frost/errors.dart';
 export 'frost/hasher.dart';
 export 'frost/signing.dart';
 export 'frost/utils.dart';
+
+// Authentication
+export 'auth/auth_message.dart';
+export 'auth/auth_signer.dart';
