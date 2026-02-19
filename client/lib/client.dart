@@ -179,7 +179,6 @@ class MpcClient {
           _protectedPolicies.map((k, v) => MapEntry(k, v.toJson()));
     }
     await _store.saveClientState(state);
-    print("Saved client state.");
   }
 
   // Getters for testing
@@ -545,6 +544,123 @@ class MpcClient {
     final signature = threshold.Signature(R, z);
 
     return signature.verify(pubPackage.verifyingKey, message);
+  }
+
+  // --- RECOVERY SIGNING (Client-only 2-of-3 FROST) ---
+
+  /// Produces a FROST threshold signature using both client key packages
+  /// (signing + recovery identity) without server participation.
+  /// No taproot tweak is applied — this is for auth, not Bitcoin transactions.
+  threshold.Signature _frostSignWithBothKeys(Uint8List message) {
+    if (!isInitialized) {
+      throw StateError("Client not initialized (DKG not run).");
+    }
+
+    final keyPkg1 = _normalPolicy!.keyPackage;
+    final keyPkg2 = _recoveryPolicy!.keyPackage;
+    final groupPubKey = _normalPolicy!.publicKeyPackage;
+
+    // Generate nonces for both identities
+    final nonce1 = frost_comm.newNonce(keyPkg1.secretShare);
+    final nonce2 = frost_comm.newNonce(keyPkg2.secretShare);
+
+    // Build commitments map
+    final commitmentsMap = <threshold.Identifier, frost_comm.SigningCommitments>{
+      keyPkg1.identifier: nonce1.commitments,
+      keyPkg2.identifier: nonce2.commitments,
+    };
+
+    // Create signing package
+    final signingPkg = frost_comm.SigningPackage(commitmentsMap, message);
+
+    // Compute signature shares (NO taproot tweak)
+    final share1 = frost.sign(signingPkg, nonce1, keyPkg1);
+    final share2 = frost.sign(signingPkg, nonce2, keyPkg2);
+
+    // Aggregate
+    final sharesMap = <threshold.Identifier, frost.SignatureShare>{
+      keyPkg1.identifier: share1,
+      keyPkg2.identifier: share2,
+    };
+
+    return frost.aggregate(signingPkg, sharesMap, groupPubKey);
+  }
+
+  // --- POLICY MANAGEMENT ---
+
+  Future<void> updatePolicy(String policyId,
+      {int? thresholdSats, int? intervalSeconds}) async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot update policy.");
+    }
+    if (!_protectedPolicies.containsKey(policyId)) {
+      throw StateError("Policy $policyId not found.");
+    }
+
+    final existing = _protectedPolicies[policyId]!;
+    final newThreshold = thresholdSats ?? existing.thresholdSats;
+    final newInterval = intervalSeconds ?? existing.interval.inSeconds;
+    final timestampMs = DateTime.now().millisecondsSinceEpoch;
+
+    final message = threshold.RecoveryAuthMessage.buildUpdatePolicyMessage(
+      policyId: policyId,
+      thresholdSats: newThreshold,
+      intervalSeconds: newInterval,
+      timestampMs: timestampMs,
+      userIdHex: hex.encode(_userId!),
+    );
+
+    final signature = _frostSignWithBothKeys(message);
+
+    await _stub.updatePolicy(UpdatePolicyRequest()
+      ..userId = _userId!
+      ..policyId = policyId
+      ..thresholdSats = Int64(newThreshold)
+      ..intervalSeconds = Int64(newInterval)
+      ..frostSignatureR = threshold.elemSerializeCompressed(signature.R)
+      ..frostSignatureZ = threshold.bigIntToBytes(signature.Z)
+      ..timestampMs = Int64(timestampMs));
+
+    // Update local state
+    _protectedPolicies[policyId] = ProtectedPolicy(
+      id: policyId,
+      keyPackage: existing.keyPackage,
+      publicKeyPackage: existing.publicKeyPackage,
+      startTime: existing.startTime,
+      interval: Duration(seconds: newInterval),
+      thresholdSats: newThreshold,
+    );
+    await _saveState();
+  }
+
+  Future<void> deletePolicy(String policyId) async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot delete policy.");
+    }
+    if (!_protectedPolicies.containsKey(policyId)) {
+      throw StateError("Policy $policyId not found.");
+    }
+
+    final timestampMs = DateTime.now().millisecondsSinceEpoch;
+
+    final message = threshold.RecoveryAuthMessage.buildDeletePolicyMessage(
+      policyId: policyId,
+      timestampMs: timestampMs,
+      userIdHex: hex.encode(_userId!),
+    );
+
+    final signature = _frostSignWithBothKeys(message);
+
+    await _stub.deletePolicy(DeletePolicyRequest()
+      ..userId = _userId!
+      ..policyId = policyId
+      ..frostSignatureR = threshold.elemSerializeCompressed(signature.R)
+      ..frostSignatureZ = threshold.bigIntToBytes(signature.Z)
+      ..timestampMs = Int64(timestampMs));
+
+    // Update local state
+    _protectedPolicies.remove(policyId);
+    await _saveState();
   }
 
   // Helpers

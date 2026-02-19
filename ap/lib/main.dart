@@ -13,6 +13,7 @@ import 'screens/spending/signing_screen.dart';
 import 'screens/policies/policies_screen.dart';
 import 'screens/policies/edit_policy_screen.dart';
 import 'screens/receive_screen.dart';
+import 'screens/splash_screen.dart';
 
 import 'package:provider/provider.dart';
 import 'services/mpc_service.dart';
@@ -21,7 +22,11 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => MpcService()..init()),
+        ChangeNotifierProvider(create: (_) {
+          final svc = MpcService();
+          svc.initFuture = svc.init();
+          return svc;
+        }),
       ],
       child: const MerlinWalletApp(),
     ),
@@ -43,8 +48,12 @@ class MerlinWalletApp extends StatelessWidget {
 }
 
 final GoRouter _router = GoRouter(
-  initialLocation: '/onboarding/welcome', // Start with onboarding for now
+  initialLocation: '/splash',
   routes: [
+    GoRoute(
+      path: '/splash',
+      builder: (context, state) => const SplashScreen(),
+    ),
     GoRoute(
       path: '/',
       builder: (context, state) => const HomeScreen(),
@@ -97,7 +106,10 @@ final GoRouter _router = GoRouter(
     ),
     GoRoute(
       path: '/policies/edit',
-      builder: (context, state) => const EditPolicyScreen(),
+      builder: (context, state) {
+        final extras = state.extra as Map<String, dynamic>?;
+        return EditPolicyScreen(extras: extras);
+      },
     ),
   ],
 );

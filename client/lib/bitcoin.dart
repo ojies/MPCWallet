@@ -23,6 +23,11 @@ class MpcBitcoinWallet {
   final WalletStore store;
   final bool isTestnet;
 
+  /// Called after a background sync completes (e.g. from a transaction
+  /// notification). The caller (MpcService) can use this to update
+  /// balance and notify the UI.
+  Future<void> Function()? onSyncComplete;
+
   late P2trAddress _address;
   P2trAddress get address {
     if (client.getTweakedPublicKeyPackage(null) == null) {
@@ -41,8 +46,7 @@ class MpcBitcoinWallet {
 
   MpcBitcoinWallet(this.client,
       {this.isTestnet = false, String? storageId, bool useIdentity2 = false})
-      : store = WalletStore(
-            boxName: storageId ?? 'mpc_wallet_state_default');
+      : store = WalletStore(boxName: storageId ?? 'mpc_wallet_state_default');
 
   Future<void> init() async {
     await store.init();
@@ -65,6 +69,7 @@ class MpcBitcoinWallet {
   Future<void> _startBackgroundSync() async {
     try {
       await sync();
+      await onSyncComplete?.call();
     } catch (e) {
       print("Error during initial sync: $e");
     }
@@ -97,8 +102,6 @@ class MpcBitcoinWallet {
     final ecPub = ECPublic.fromHex(pointHex);
     _address = P2trAddress.fromProgram(
         program: BytesUtils.toHexString(ecPub.toXOnly()));
-    print(
-        "Wallet Address: ${_address.toAddress(isTestnet ? BitcoinNetwork.testnet : BitcoinNetwork.mainnet)}");
   }
 
   /// Helper to generate address with custom HRP (e.g. 'bcrt' for Regtest)
@@ -302,7 +305,6 @@ class MpcBitcoinWallet {
     final utxoInfos = await client.fetchHistory();
     try {
       _transactions = await client.fetchRecentTransactions();
-      print("Synced ${_transactions.length} recent transactions.");
     } catch (e) {
       print("Error fetching recent transactions: $e");
     }
@@ -345,13 +347,15 @@ class MpcBitcoinWallet {
     }
     final uniqueUtxos = deduped.values.toList();
     await store.saveUtxos(uniqueUtxos);
-    print("Synced ${uniqueUtxos.length} UTXOs from server.");
   }
 
   void subscribe() {
     client.subscribeToHistory().listen((notification) {
-      print("Received Transaction Notification. Refreshing history...");
-      sync();
+      sync().then((_) async {
+        await onSyncComplete?.call();
+      }).catchError((e) {
+        print("Error during notification sync: $e");
+      });
     }, onError: (e) {
       print("History Subscription Error: $e");
     });
@@ -359,7 +363,6 @@ class MpcBitcoinWallet {
 
   /// Broadcasts a signed transaction hex to the network via the MPC Server.
   Future<String> broadcast(String txHex) async {
-    print("Broadcasting transaction...");
     return await client.broadcastTransaction(txHex);
   }
 }

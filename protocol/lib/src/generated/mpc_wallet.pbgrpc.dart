@@ -74,6 +74,18 @@ class MPCWalletClient extends $grpc.Client {
           ($0.GetPolicyIdRequest value) => value.writeToBuffer(),
           ($core.List<$core.int> value) =>
               $0.GetPolicyIdResponse.fromBuffer(value));
+  static final _$updatePolicy =
+      $grpc.ClientMethod<$0.UpdatePolicyRequest, $0.UpdatePolicyResponse>(
+          '/mpc_wallet.MPCWallet/UpdatePolicy',
+          ($0.UpdatePolicyRequest value) => value.writeToBuffer(),
+          ($core.List<$core.int> value) =>
+              $0.UpdatePolicyResponse.fromBuffer(value));
+  static final _$deletePolicy =
+      $grpc.ClientMethod<$0.DeletePolicyRequest, $0.DeletePolicyResponse>(
+          '/mpc_wallet.MPCWallet/DeletePolicy',
+          ($0.DeletePolicyRequest value) => value.writeToBuffer(),
+          ($core.List<$core.int> value) =>
+              $0.DeletePolicyResponse.fromBuffer(value));
   static final _$broadcastTransaction = $grpc.ClientMethod<
           $0.BroadcastTransactionRequest, $0.BroadcastTransactionResponse>(
       '/mpc_wallet.MPCWallet/BroadcastTransaction',
@@ -160,6 +172,18 @@ class MPCWalletClient extends $grpc.Client {
       $0.GetPolicyIdRequest request,
       {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$getPolicyId, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.UpdatePolicyResponse> updatePolicy(
+      $0.UpdatePolicyRequest request,
+      {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$updatePolicy, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.DeletePolicyResponse> deletePolicy(
+      $0.DeletePolicyRequest request,
+      {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$deletePolicy, request, options: options);
   }
 
   $grpc.ResponseFuture<$0.BroadcastTransactionResponse> broadcastTransaction(
@@ -274,6 +298,24 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
             ($core.List<$core.int> value) =>
                 $0.GetPolicyIdRequest.fromBuffer(value),
             ($0.GetPolicyIdResponse value) => value.writeToBuffer()));
+    $addMethod(
+        $grpc.ServiceMethod<$0.UpdatePolicyRequest, $0.UpdatePolicyResponse>(
+            'UpdatePolicy',
+            updatePolicy_Pre,
+            false,
+            false,
+            ($core.List<$core.int> value) =>
+                $0.UpdatePolicyRequest.fromBuffer(value),
+            ($0.UpdatePolicyResponse value) => value.writeToBuffer()));
+    $addMethod(
+        $grpc.ServiceMethod<$0.DeletePolicyRequest, $0.DeletePolicyResponse>(
+            'DeletePolicy',
+            deletePolicy_Pre,
+            false,
+            false,
+            ($core.List<$core.int> value) =>
+                $0.DeletePolicyRequest.fromBuffer(value),
+            ($0.DeletePolicyResponse value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.BroadcastTransactionRequest,
             $0.BroadcastTransactionResponse>(
         'BroadcastTransaction',
@@ -366,6 +408,18 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
     return getPolicyId(call, await request);
   }
 
+  $async.Future<$0.UpdatePolicyResponse> updatePolicy_Pre(
+      $grpc.ServiceCall call,
+      $async.Future<$0.UpdatePolicyRequest> request) async {
+    return updatePolicy(call, await request);
+  }
+
+  $async.Future<$0.DeletePolicyResponse> deletePolicy_Pre(
+      $grpc.ServiceCall call,
+      $async.Future<$0.DeletePolicyRequest> request) async {
+    return deletePolicy(call, await request);
+  }
+
   $async.Future<$0.BroadcastTransactionResponse> broadcastTransaction_Pre(
       $grpc.ServiceCall call,
       $async.Future<$0.BroadcastTransactionRequest> request) async {
@@ -410,6 +464,10 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
       $grpc.ServiceCall call, $0.CreateSpendingPolicyRequest request);
   $async.Future<$0.GetPolicyIdResponse> getPolicyId(
       $grpc.ServiceCall call, $0.GetPolicyIdRequest request);
+  $async.Future<$0.UpdatePolicyResponse> updatePolicy(
+      $grpc.ServiceCall call, $0.UpdatePolicyRequest request);
+  $async.Future<$0.DeletePolicyResponse> deletePolicy(
+      $grpc.ServiceCall call, $0.DeletePolicyRequest request);
   $async.Future<$0.BroadcastTransactionResponse> broadcastTransaction(
       $grpc.ServiceCall call, $0.BroadcastTransactionRequest request);
   $async.Future<$0.FetchHistoryResponse> fetchHistory(

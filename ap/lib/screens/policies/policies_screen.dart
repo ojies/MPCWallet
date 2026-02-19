@@ -6,14 +6,82 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../services/mpc_service.dart';
 
-class PoliciesScreen extends StatelessWidget {
+class PoliciesScreen extends StatefulWidget {
   const PoliciesScreen({super.key});
+
+  @override
+  State<PoliciesScreen> createState() => _PoliciesScreenState();
+}
+
+class _PoliciesScreenState extends State<PoliciesScreen> {
+  bool _isDeleting = false;
 
   String _formatInterval(Duration interval) {
     if (interval.inDays >= 7) return '${interval.inDays ~/ 7} Week(s)';
     if (interval.inDays >= 1) return '${interval.inDays} Day(s)';
     if (interval.inHours >= 1) return '${interval.inHours} Hour(s)';
     return '${interval.inMinutes} Minute(s)';
+  }
+
+  Future<void> _deletePolicy(String policyId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: Text('Delete Policy',
+            style: GoogleFonts.inter(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.warning_amber_rounded,
+                size: 48, color: Colors.redAccent),
+            const SizedBox(height: 16),
+            Text(
+              'This will permanently remove this spending policy. '
+              'Both your signing and recovery keys will be used to authorize this action.',
+              style: GoogleFonts.inter(color: Colors.white70),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isDeleting = true);
+    try {
+      final mpcService = context.read<MpcService>();
+      await mpcService.client!.deletePolicy(policyId);
+      mpcService.policyUpdated();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Policy deleted successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isDeleting = false);
+    }
   }
 
   @override
@@ -115,8 +183,8 @@ class PoliciesScreen extends StatelessWidget {
                   color: Colors.black,
                   shape: BoxShape.circle,
                 ),
-                child:
-                    const Icon(Icons.shield_outlined, color: Colors.white, size: 20),
+                child: const Icon(Icons.shield_outlined,
+                    color: Colors.white, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -125,15 +193,35 @@ class PoliciesScreen extends StatelessWidget {
                         fontWeight: FontWeight.bold, fontSize: 16)),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.green.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text('Active',
-                    style: GoogleFonts.inter(
-                        color: Colors.green, fontSize: 10)),
+                    style:
+                        GoogleFonts.inter(color: Colors.green, fontSize: 10)),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined,
+                    color: Colors.white54, size: 20),
+                tooltip: 'Edit Policy',
+                onPressed: _isDeleting
+                    ? null
+                    : () => context
+                        .push('/policies/edit', extra: {'policyId': policy.id}),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                icon: const Icon(Icons.delete_outline,
+                    color: Colors.redAccent, size: 20),
+                tooltip: 'Delete Policy',
+                onPressed: _isDeleting ? null : () => _deletePolicy(policy.id),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
             ],
           ),

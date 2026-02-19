@@ -1592,6 +1592,334 @@ class GetPolicyIdResponse extends $pb.GeneratedMessage {
   void clearPolicyId() => clearField(1);
 }
 
+class UpdatePolicyRequest extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'UpdatePolicyRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..aOS(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'policyId')
+    ..aInt64(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'thresholdSats')
+    ..aInt64(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'intervalSeconds')
+    ..a<$core.List<$core.int>>(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'frostSignatureR', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(6, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'frostSignatureZ', $pb.PbFieldType.OY)
+    ..aInt64(7, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..hasRequiredFields = false
+  ;
+
+  UpdatePolicyRequest._() : super();
+  factory UpdatePolicyRequest({
+    $core.List<$core.int>? userId,
+    $core.String? policyId,
+    $fixnum.Int64? thresholdSats,
+    $fixnum.Int64? intervalSeconds,
+    $core.List<$core.int>? frostSignatureR,
+    $core.List<$core.int>? frostSignatureZ,
+    $fixnum.Int64? timestampMs,
+  }) {
+    final _result = create();
+    if (userId != null) {
+      _result.userId = userId;
+    }
+    if (policyId != null) {
+      _result.policyId = policyId;
+    }
+    if (thresholdSats != null) {
+      _result.thresholdSats = thresholdSats;
+    }
+    if (intervalSeconds != null) {
+      _result.intervalSeconds = intervalSeconds;
+    }
+    if (frostSignatureR != null) {
+      _result.frostSignatureR = frostSignatureR;
+    }
+    if (frostSignatureZ != null) {
+      _result.frostSignatureZ = frostSignatureZ;
+    }
+    if (timestampMs != null) {
+      _result.timestampMs = timestampMs;
+    }
+    return _result;
+  }
+  factory UpdatePolicyRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory UpdatePolicyRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  UpdatePolicyRequest clone() => UpdatePolicyRequest()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  UpdatePolicyRequest copyWith(void Function(UpdatePolicyRequest) updates) => super.copyWith((message) => updates(message as UpdatePolicyRequest)) as UpdatePolicyRequest; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static UpdatePolicyRequest create() => UpdatePolicyRequest._();
+  UpdatePolicyRequest createEmptyInstance() => create();
+  static $pb.PbList<UpdatePolicyRequest> createRepeated() => $pb.PbList<UpdatePolicyRequest>();
+  @$core.pragma('dart2js:noInline')
+  static UpdatePolicyRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<UpdatePolicyRequest>(create);
+  static UpdatePolicyRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get userId => $_getN(0);
+  @$pb.TagNumber(1)
+  set userId($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get policyId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set policyId($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasPolicyId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPolicyId() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get thresholdSats => $_getI64(2);
+  @$pb.TagNumber(3)
+  set thresholdSats($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasThresholdSats() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearThresholdSats() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get intervalSeconds => $_getI64(3);
+  @$pb.TagNumber(4)
+  set intervalSeconds($fixnum.Int64 v) { $_setInt64(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasIntervalSeconds() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearIntervalSeconds() => clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.List<$core.int> get frostSignatureR => $_getN(4);
+  @$pb.TagNumber(5)
+  set frostSignatureR($core.List<$core.int> v) { $_setBytes(4, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasFrostSignatureR() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearFrostSignatureR() => clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.List<$core.int> get frostSignatureZ => $_getN(5);
+  @$pb.TagNumber(6)
+  set frostSignatureZ($core.List<$core.int> v) { $_setBytes(5, v); }
+  @$pb.TagNumber(6)
+  $core.bool hasFrostSignatureZ() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearFrostSignatureZ() => clearField(6);
+
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get timestampMs => $_getI64(6);
+  @$pb.TagNumber(7)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(6, v); }
+  @$pb.TagNumber(7)
+  $core.bool hasTimestampMs() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearTimestampMs() => clearField(7);
+}
+
+class UpdatePolicyResponse extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'UpdatePolicyResponse', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..aOB(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'success')
+    ..hasRequiredFields = false
+  ;
+
+  UpdatePolicyResponse._() : super();
+  factory UpdatePolicyResponse({
+    $core.bool? success,
+  }) {
+    final _result = create();
+    if (success != null) {
+      _result.success = success;
+    }
+    return _result;
+  }
+  factory UpdatePolicyResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory UpdatePolicyResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  UpdatePolicyResponse clone() => UpdatePolicyResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  UpdatePolicyResponse copyWith(void Function(UpdatePolicyResponse) updates) => super.copyWith((message) => updates(message as UpdatePolicyResponse)) as UpdatePolicyResponse; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static UpdatePolicyResponse create() => UpdatePolicyResponse._();
+  UpdatePolicyResponse createEmptyInstance() => create();
+  static $pb.PbList<UpdatePolicyResponse> createRepeated() => $pb.PbList<UpdatePolicyResponse>();
+  @$core.pragma('dart2js:noInline')
+  static UpdatePolicyResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<UpdatePolicyResponse>(create);
+  static UpdatePolicyResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get success => $_getBF(0);
+  @$pb.TagNumber(1)
+  set success($core.bool v) { $_setBool(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasSuccess() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSuccess() => clearField(1);
+}
+
+class DeletePolicyRequest extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'DeletePolicyRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..aOS(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'policyId')
+    ..a<$core.List<$core.int>>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'frostSignatureR', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'frostSignatureZ', $pb.PbFieldType.OY)
+    ..aInt64(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..hasRequiredFields = false
+  ;
+
+  DeletePolicyRequest._() : super();
+  factory DeletePolicyRequest({
+    $core.List<$core.int>? userId,
+    $core.String? policyId,
+    $core.List<$core.int>? frostSignatureR,
+    $core.List<$core.int>? frostSignatureZ,
+    $fixnum.Int64? timestampMs,
+  }) {
+    final _result = create();
+    if (userId != null) {
+      _result.userId = userId;
+    }
+    if (policyId != null) {
+      _result.policyId = policyId;
+    }
+    if (frostSignatureR != null) {
+      _result.frostSignatureR = frostSignatureR;
+    }
+    if (frostSignatureZ != null) {
+      _result.frostSignatureZ = frostSignatureZ;
+    }
+    if (timestampMs != null) {
+      _result.timestampMs = timestampMs;
+    }
+    return _result;
+  }
+  factory DeletePolicyRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DeletePolicyRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  DeletePolicyRequest clone() => DeletePolicyRequest()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  DeletePolicyRequest copyWith(void Function(DeletePolicyRequest) updates) => super.copyWith((message) => updates(message as DeletePolicyRequest)) as DeletePolicyRequest; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static DeletePolicyRequest create() => DeletePolicyRequest._();
+  DeletePolicyRequest createEmptyInstance() => create();
+  static $pb.PbList<DeletePolicyRequest> createRepeated() => $pb.PbList<DeletePolicyRequest>();
+  @$core.pragma('dart2js:noInline')
+  static DeletePolicyRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DeletePolicyRequest>(create);
+  static DeletePolicyRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get userId => $_getN(0);
+  @$pb.TagNumber(1)
+  set userId($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get policyId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set policyId($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasPolicyId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPolicyId() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get frostSignatureR => $_getN(2);
+  @$pb.TagNumber(3)
+  set frostSignatureR($core.List<$core.int> v) { $_setBytes(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasFrostSignatureR() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearFrostSignatureR() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get frostSignatureZ => $_getN(3);
+  @$pb.TagNumber(4)
+  set frostSignatureZ($core.List<$core.int> v) { $_setBytes(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasFrostSignatureZ() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearFrostSignatureZ() => clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get timestampMs => $_getI64(4);
+  @$pb.TagNumber(5)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(4, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasTimestampMs() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearTimestampMs() => clearField(5);
+}
+
+class DeletePolicyResponse extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'DeletePolicyResponse', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..aOB(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'success')
+    ..hasRequiredFields = false
+  ;
+
+  DeletePolicyResponse._() : super();
+  factory DeletePolicyResponse({
+    $core.bool? success,
+  }) {
+    final _result = create();
+    if (success != null) {
+      _result.success = success;
+    }
+    return _result;
+  }
+  factory DeletePolicyResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DeletePolicyResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  DeletePolicyResponse clone() => DeletePolicyResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  DeletePolicyResponse copyWith(void Function(DeletePolicyResponse) updates) => super.copyWith((message) => updates(message as DeletePolicyResponse)) as DeletePolicyResponse; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static DeletePolicyResponse create() => DeletePolicyResponse._();
+  DeletePolicyResponse createEmptyInstance() => create();
+  static $pb.PbList<DeletePolicyResponse> createRepeated() => $pb.PbList<DeletePolicyResponse>();
+  @$core.pragma('dart2js:noInline')
+  static DeletePolicyResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DeletePolicyResponse>(create);
+  static DeletePolicyResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get success => $_getBF(0);
+  @$pb.TagNumber(1)
+  set success($core.bool v) { $_setBool(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasSuccess() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSuccess() => clearField(1);
+}
+
 class BroadcastTransactionRequest extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'BroadcastTransactionRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)

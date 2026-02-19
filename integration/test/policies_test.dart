@@ -528,4 +528,157 @@ void main() {
       }
     });
   });
+
+  // -------------------------------------------------------------------------
+  // Group 9: Update Policy
+  // -------------------------------------------------------------------------
+  group('Update Policy', () {
+    test('Updating policy threshold changes enforcement', () async {
+      final (client, p2tr, utxoTxId) =
+          await setupDkgAndFund(channel, 10000);
+
+      // Create policy: threshold=1000, interval=60s
+      await client.createSpendingPolicy(
+          const Duration(seconds: 60), Int64(1000), "123456");
+
+      // Spend 800 sats — under threshold (800 <= 1000), should pass
+      final (fullTx1, msg1) = buildSpendTx(
+          utxoTxId: utxoTxId,
+          inputAmount: 10000,
+          spendAmount: 800,
+          changeAddress: p2tr,
+          msgByte: 1);
+      final sig1 = await client.sign(msg1, fullTransaction: fullTx1);
+      expect(sig1, isNotNull);
+
+      // Update policy threshold from 1000 → 500
+      final policies = client.spendingPolicies;
+      expect(policies, isNotEmpty);
+      final policyId = policies.first.id;
+
+      await client.updatePolicy(policyId, thresholdSats: 500);
+
+      // Spend 200 sats — cumulative 800 + 200 = 1000 > 500, should fail
+      final (fullTx2, msg2) = buildSpendTx(
+          utxoTxId: utxoTxId,
+          inputAmount: 10000,
+          spendAmount: 200,
+          changeAddress: p2tr,
+          msgByte: 2);
+
+      try {
+        await client.sign(msg2, fullTransaction: fullTx2);
+        fail("Should have thrown — cumulative 1000 > 500 (updated threshold)");
+      } catch (e) {
+        expect(e.toString().toLowerCase(), contains('invalid signature'));
+      }
+
+      // Retry with PIN succeeds
+      final sig2 = await signWithPin(client, msg2, fullTx2, "123456");
+      expect(sig2, isNotNull);
+    });
+
+    test('Updating policy interval changes window', () async {
+      final (client, p2tr, utxoTxId) =
+          await setupDkgAndFund(channel, 10000);
+
+      // Create policy: threshold=500, interval=60s
+      await client.createSpendingPolicy(
+          const Duration(seconds: 60), Int64(500), "123456");
+
+      // Spend 400 sats
+      final (fullTx1, msg1) = buildSpendTx(
+          utxoTxId: utxoTxId,
+          inputAmount: 10000,
+          spendAmount: 400,
+          changeAddress: p2tr,
+          msgByte: 1);
+      final sig1 = await client.sign(msg1, fullTransaction: fullTx1);
+      expect(sig1, isNotNull);
+
+      // Update interval to 2 seconds
+      final policyId = client.spendingPolicies.first.id;
+      await client.updatePolicy(policyId, intervalSeconds: 2);
+
+      // Spend 200 sats — cumulative 600 > 500, should fail
+      final (fullTx2, msg2) = buildSpendTx(
+          utxoTxId: utxoTxId,
+          inputAmount: 10000,
+          spendAmount: 200,
+          changeAddress: p2tr,
+          msgByte: 2);
+
+      try {
+        await client.sign(msg2, fullTransaction: fullTx2);
+        fail("Should have thrown — cumulative 600 > 500");
+      } catch (e) {
+        expect(e.toString().toLowerCase(), contains('invalid signature'));
+      }
+
+      // Wait for the new 2-second window to elapse
+      await Future.delayed(const Duration(seconds: 3));
+
+      // Now spend 200 sats — new window, cumulative 200 <= 500, should pass
+      final (fullTx3, msg3) = buildSpendTx(
+          utxoTxId: utxoTxId,
+          inputAmount: 10000,
+          spendAmount: 200,
+          changeAddress: p2tr,
+          msgByte: 3);
+      final sig3 = await client.sign(msg3, fullTransaction: fullTx3);
+      expect(sig3, isNotNull);
+    }, timeout: Timeout(Duration(seconds: 30)));
+  });
+
+  // -------------------------------------------------------------------------
+  // Group 10: Delete Policy
+  // -------------------------------------------------------------------------
+  group('Delete Policy', () {
+    test('Deleting policy removes spending enforcement', () async {
+      final (client, p2tr, utxoTxId) =
+          await setupDkgAndFund(channel, 10000);
+
+      // Create policy: threshold=1000, interval=60s
+      await client.createSpendingPolicy(
+          const Duration(seconds: 60), Int64(1000), "123456");
+
+      // Spend 1500 sats — exceeds threshold, should fail
+      final (fullTx1, msg1) = buildSpendTx(
+          utxoTxId: utxoTxId,
+          inputAmount: 10000,
+          spendAmount: 1500,
+          changeAddress: p2tr,
+          msgByte: 1);
+
+      try {
+        await client.sign(msg1, fullTransaction: fullTx1);
+        fail("Should have thrown — 1500 > 1000");
+      } catch (e) {
+        expect(e.toString().toLowerCase(), contains('invalid signature'));
+      }
+
+      // Delete the policy
+      final policyId = client.spendingPolicies.first.id;
+      await client.deletePolicy(policyId);
+
+      // Spend 1500 sats again — no policy active, should pass
+      final (fullTx2, msg2) = buildSpendTx(
+          utxoTxId: utxoTxId,
+          inputAmount: 10000,
+          spendAmount: 1500,
+          changeAddress: p2tr,
+          msgByte: 2);
+      final sig = await client.sign(msg2, fullTransaction: fullTx2);
+      expect(sig, isNotNull);
+    });
+
+    test('Deleting non-existent policy throws error', () async {
+      final (client, _, _) = await setupDkgAndFund(channel, 10000);
+
+      expect(
+        () => client.deletePolicy("non_existent_policy_id"),
+        throwsA(isA<StateError>()),
+      );
+    });
+  });
 }
