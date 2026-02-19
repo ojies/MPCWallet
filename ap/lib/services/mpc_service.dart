@@ -13,12 +13,20 @@ class MpcService extends ChangeNotifier {
   bool _isInitialized = false;
   Future<void>? _persistenceInitFuture;
   bool _dkgComplete = false;
+  bool _isConnected = false;
   Box? _identityBox;
+  ClientChannel? _channel;
 
   String? _storageId;
 
+  /// Future that completes when init() finishes. Await this before
+  /// checking dkgComplete or calling restoreSession().
+  late Future<void> initFuture;
+
   MpcClient? get client => _client;
   bool get isInitialized => _isInitialized;
+  bool get dkgComplete => _dkgComplete;
+  bool get isConnected => _isConnected;
 
   MpcBitcoinWallet? _wallet;
   MpcBitcoinWallet? get wallet => _wallet;
@@ -41,8 +49,14 @@ class MpcService extends ChangeNotifier {
 
   Future<void> refreshHistory() async {
     if (_wallet != null) {
-      await _wallet!.sync();
-      _balance = await _wallet!.getBalance();
+      try {
+        await _wallet!.sync();
+        _balance = await _wallet!.getBalance();
+        _isConnected = true;
+      } catch (e) {
+        print("Refresh failed: $e");
+        _isConnected = false;
+      }
       notifyListeners();
     }
   }
@@ -119,22 +133,85 @@ class MpcService extends ChangeNotifier {
 
     final storageId = _storageId ?? 'mpc_wallet_state_default';
 
-    // Create channel
-    final channel = ClientChannel(
+    _channel = ClientChannel(
       _host,
       port: _port,
       options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
     );
 
-    _client = MpcClient(channel, storageId: storageId);
-
+    _client = MpcClient(_channel!, storageId: storageId);
     _wallet = MpcBitcoinWallet(_client!, isTestnet: true, storageId: storageId);
+    _wallet!.onSyncComplete = _onWalletSyncComplete;
 
     await _wallet!.init();
     _balance = await _wallet!.getBalance();
 
     _dkgComplete = true;
+    _isConnected = true;
+    await _identityBox!.put('dkgComplete', true);
 
+    notifyListeners();
+  }
+
+  /// Restores a previously completed session without re-running DKG.
+  /// Creates gRPC channel + MpcClient + MpcBitcoinWallet, then calls
+  /// wallet.init() which restores keys from Hive persistence.
+  Future<void> restoreSession() async {
+    if (!_isInitialized) throw StateError("MPC Service not initialized");
+    if (!_dkgComplete) throw StateError("DKG not completed. Cannot restore.");
+
+    final storageId = _storageId ?? 'mpc_wallet_state_default';
+
+    _channel = ClientChannel(
+      _host,
+      port: _port,
+      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
+    );
+
+    _client = MpcClient(_channel!, storageId: storageId);
+    _wallet = MpcBitcoinWallet(_client!, isTestnet: true, storageId: storageId);
+    _wallet!.onSyncComplete = _onWalletSyncComplete;
+
+    await _wallet!.init();
+    _balance = await _wallet!.getBalance();
+    _isConnected = true;
+
+    notifyListeners();
+  }
+
+  /// Reconnects to the server by tearing down the existing channel
+  /// and restoring the session fresh.
+  Future<void> reconnect() async {
+    if (!_dkgComplete) return;
+
+    _isConnected = false;
+    notifyListeners();
+
+    try {
+      await _channel?.shutdown();
+    } catch (_) {}
+    _channel = null;
+    _client = null;
+    _wallet = null;
+
+    try {
+      await restoreSession();
+    } catch (e) {
+      print("Reconnect failed: $e");
+      _isConnected = false;
+      notifyListeners();
+    }
+  }
+
+  /// Called by MpcBitcoinWallet when a background sync completes
+  /// (e.g. after a transaction notification from the server).
+  Future<void> _onWalletSyncComplete() async {
+    try {
+      _balance = await _wallet!.getBalance();
+      _isConnected = true;
+    } catch (e) {
+      print("Post-sync balance update failed: $e");
+    }
     notifyListeners();
   }
 

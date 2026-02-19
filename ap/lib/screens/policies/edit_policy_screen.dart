@@ -8,7 +8,8 @@ import 'package:fixnum/fixnum.dart';
 import '../../services/mpc_service.dart';
 
 class EditPolicyScreen extends StatefulWidget {
-  const EditPolicyScreen({super.key});
+  final Map<String, dynamic>? extras;
+  const EditPolicyScreen({super.key, this.extras});
 
   @override
   State<EditPolicyScreen> createState() => _EditPolicyScreenState();
@@ -22,6 +23,10 @@ class _EditPolicyScreenState extends State<EditPolicyScreen> {
   double _sliderValue = 0.5; // 0.0–1.0, maps logarithmically
   String _interval = '24h';
 
+  /// Non-null when editing an existing policy
+  String? _editingPolicyId;
+  bool get _isEditMode => _editingPolicyId != null;
+
   int get _thresholdSats => pow(
           10,
           log(_minSats) / ln10 +
@@ -34,60 +39,119 @@ class _EditPolicyScreenState extends State<EditPolicyScreen> {
         (log(_maxSats) / ln10 - log(_minSats) / ln10);
   }
 
+  String _intervalFromDuration(Duration d) {
+    if (d.inDays >= 7) return '7d';
+    if (d.inHours >= 24) return '24h';
+    if (d.inHours >= 1) return '1h';
+    return '5m';
+  }
+
   @override
   void initState() {
     super.initState();
-    final policy = context.read<MpcService>().activePolicy;
-    if (policy != null) {
-      _sliderValue = _satsToSlider(policy.thresholdSats.toDouble());
-      if (policy.interval.inDays >= 7) {
-        _interval = '7d';
-      } else if (policy.interval.inHours >= 24) {
-        _interval = '24h';
-      } else if (policy.interval.inHours >= 1) {
-        _interval = '1h';
-      } else {
-        _interval = '5m';
+    final extras = widget.extras;
+    final policyId = extras?['policyId'] as String?;
+
+    if (policyId != null) {
+      // Edit mode: load from the specific policy
+      final policies = context.read<MpcService>().policies;
+      final policy = policies.where((p) => p.id == policyId).firstOrNull;
+      if (policy != null) {
+        _editingPolicyId = policyId;
+        _sliderValue = _satsToSlider(policy.thresholdSats.toDouble());
+        _interval = _intervalFromDuration(policy.interval);
+      }
+    } else {
+      // Create mode: pre-populate from active policy if one exists
+      final policy = context.read<MpcService>().activePolicy;
+      if (policy != null) {
+        _sliderValue = _satsToSlider(policy.thresholdSats.toDouble());
+        _interval = _intervalFromDuration(policy.interval);
       }
     }
   }
 
+  Duration get _selectedDuration {
+    switch (_interval) {
+      case '5m':
+        return const Duration(minutes: 5);
+      case '1h':
+        return const Duration(hours: 1);
+      case '7d':
+        return const Duration(days: 7);
+      case '24h':
+      default:
+        return const Duration(hours: 24);
+    }
+  }
+
   void _savePolicy() async {
-    // 1. Auth Key (Get PIN)
+    final mpcService = context.read<MpcService>();
+    if (mpcService.client == null) return;
+
+    // Check for duplicate threshold + interval
+    final duplicate = mpcService.policies.any((p) =>
+        p.id != _editingPolicyId &&
+        p.thresholdSats == _thresholdSats &&
+        p.interval.inSeconds == _selectedDuration.inSeconds);
+    if (duplicate) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('A policy with this threshold and interval already exists.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_isEditMode) {
+      await _updatePolicy(mpcService);
+    } else {
+      await _createPolicy(mpcService);
+    }
+  }
+
+  Future<void> _createPolicy(MpcService mpcService) async {
     String? pin = await _showAuthDialog();
     if (pin == null || pin.isEmpty) return;
 
-    final mpcService = context.read<MpcService>();
-    if (mpcService.client == null) return; // Should notify user
-
     setState(() => _isSigning = true);
-
     try {
-      Duration duration;
-      switch (_interval) {
-        case '5m':
-          duration = const Duration(minutes: 5);
-          break;
-        case '1h':
-          duration = const Duration(hours: 1);
-          break;
-        case '7d':
-          duration = const Duration(days: 7);
-          break;
-        case '24h':
-        default:
-          duration = const Duration(hours: 24);
-      }
-
-      final amount = Int64(_thresholdSats);
-
-      await mpcService.client!.createSpendingPolicy(duration, amount, pin);
+      await mpcService.client!.createSpendingPolicy(
+          _selectedDuration, Int64(_thresholdSats), pin);
       mpcService.policyUpdated();
 
       if (mounted) {
         setState(() => _isSigning = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Policy Updated Successfully!')),
+          const SnackBar(content: Text('Policy created successfully!')),
+        );
+        context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSigning = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _updatePolicy(MpcService mpcService) async {
+    setState(() => _isSigning = true);
+    try {
+      await mpcService.client!.updatePolicy(
+        _editingPolicyId!,
+        thresholdSats: _thresholdSats,
+        intervalSeconds: _selectedDuration.inSeconds,
+      );
+      mpcService.policyUpdated();
+
+      if (mounted) {
+        setState(() => _isSigning = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Policy updated successfully!')),
         );
         context.pop();
       }
@@ -156,7 +220,7 @@ class _EditPolicyScreenState extends State<EditPolicyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Policy')),
+      appBar: AppBar(title: Text(_isEditMode ? 'Edit Policy' : 'New Policy')),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -221,7 +285,7 @@ class _EditPolicyScreenState extends State<EditPolicyScreen> {
                       height: 20,
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Sign & Update Policy'),
+                  : Text(_isEditMode ? 'Update Policy' : 'Sign & Create Policy'),
             )
           ],
         ),

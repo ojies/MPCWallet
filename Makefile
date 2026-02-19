@@ -24,7 +24,7 @@ server-run:
 	dart server/bin/server.dart
 
 # Helper to start everything
-regtest: regtest-up server-run
+regtest: regtest-up bitcoin-init server-run
 
 # Initialize regtest chain (mine 150 blocks)
 bitcoin-init:

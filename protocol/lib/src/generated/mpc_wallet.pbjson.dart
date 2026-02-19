@@ -368,6 +368,56 @@ const GetPolicyIdResponse$json = const {
 
 /// Descriptor for `GetPolicyIdResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getPolicyIdResponseDescriptor = $convert.base64Decode('ChNHZXRQb2xpY3lJZFJlc3BvbnNlEhsKCXBvbGljeV9pZBgBIAEoCVIIcG9saWN5SWQ=');
+@$core.Deprecated('Use updatePolicyRequestDescriptor instead')
+const UpdatePolicyRequest$json = const {
+  '1': 'UpdatePolicyRequest',
+  '2': const [
+    const {'1': 'user_id', '3': 1, '4': 1, '5': 12, '10': 'userId'},
+    const {'1': 'policy_id', '3': 2, '4': 1, '5': 9, '10': 'policyId'},
+    const {'1': 'threshold_sats', '3': 3, '4': 1, '5': 3, '10': 'thresholdSats'},
+    const {'1': 'interval_seconds', '3': 4, '4': 1, '5': 3, '10': 'intervalSeconds'},
+    const {'1': 'frost_signature_r', '3': 5, '4': 1, '5': 12, '10': 'frostSignatureR'},
+    const {'1': 'frost_signature_z', '3': 6, '4': 1, '5': 12, '10': 'frostSignatureZ'},
+    const {'1': 'timestamp_ms', '3': 7, '4': 1, '5': 3, '10': 'timestampMs'},
+  ],
+};
+
+/// Descriptor for `UpdatePolicyRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updatePolicyRequestDescriptor = $convert.base64Decode('ChNVcGRhdGVQb2xpY3lSZXF1ZXN0EhcKB3VzZXJfaWQYASABKAxSBnVzZXJJZBIbCglwb2xpY3lfaWQYAiABKAlSCHBvbGljeUlkEiUKDnRocmVzaG9sZF9zYXRzGAMgASgDUg10aHJlc2hvbGRTYXRzEikKEGludGVydmFsX3NlY29uZHMYBCABKANSD2ludGVydmFsU2Vjb25kcxIqChFmcm9zdF9zaWduYXR1cmVfchgFIAEoDFIPZnJvc3RTaWduYXR1cmVSEioKEWZyb3N0X3NpZ25hdHVyZV96GAYgASgMUg9mcm9zdFNpZ25hdHVyZVoSIQoMdGltZXN0YW1wX21zGAcgASgDUgt0aW1lc3RhbXBNcw==');
+@$core.Deprecated('Use updatePolicyResponseDescriptor instead')
+const UpdatePolicyResponse$json = const {
+  '1': 'UpdatePolicyResponse',
+  '2': const [
+    const {'1': 'success', '3': 1, '4': 1, '5': 8, '10': 'success'},
+  ],
+};
+
+/// Descriptor for `UpdatePolicyResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updatePolicyResponseDescriptor = $convert.base64Decode('ChRVcGRhdGVQb2xpY3lSZXNwb25zZRIYCgdzdWNjZXNzGAEgASgIUgdzdWNjZXNz');
+@$core.Deprecated('Use deletePolicyRequestDescriptor instead')
+const DeletePolicyRequest$json = const {
+  '1': 'DeletePolicyRequest',
+  '2': const [
+    const {'1': 'user_id', '3': 1, '4': 1, '5': 12, '10': 'userId'},
+    const {'1': 'policy_id', '3': 2, '4': 1, '5': 9, '10': 'policyId'},
+    const {'1': 'frost_signature_r', '3': 3, '4': 1, '5': 12, '10': 'frostSignatureR'},
+    const {'1': 'frost_signature_z', '3': 4, '4': 1, '5': 12, '10': 'frostSignatureZ'},
+    const {'1': 'timestamp_ms', '3': 5, '4': 1, '5': 3, '10': 'timestampMs'},
+  ],
+};
+
+/// Descriptor for `DeletePolicyRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deletePolicyRequestDescriptor = $convert.base64Decode('ChNEZWxldGVQb2xpY3lSZXF1ZXN0EhcKB3VzZXJfaWQYASABKAxSBnVzZXJJZBIbCglwb2xpY3lfaWQYAiABKAlSCHBvbGljeUlkEioKEWZyb3N0X3NpZ25hdHVyZV9yGAMgASgMUg9mcm9zdFNpZ25hdHVyZVISKgoRZnJvc3Rfc2lnbmF0dXJlX3oYBCABKAxSD2Zyb3N0U2lnbmF0dXJlWhIhCgx0aW1lc3RhbXBfbXMYBSABKANSC3RpbWVzdGFtcE1z');
+@$core.Deprecated('Use deletePolicyResponseDescriptor instead')
+const DeletePolicyResponse$json = const {
+  '1': 'DeletePolicyResponse',
+  '2': const [
+    const {'1': 'success', '3': 1, '4': 1, '5': 8, '10': 'success'},
+  ],
+};
+
+/// Descriptor for `DeletePolicyResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deletePolicyResponseDescriptor = $convert.base64Decode('ChREZWxldGVQb2xpY3lSZXNwb25zZRIYCgdzdWNjZXNzGAEgASgIUgdzdWNjZXNz');
 @$core.Deprecated('Use broadcastTransactionRequestDescriptor instead')
 const BroadcastTransactionRequest$json = const {
   '1': 'BroadcastTransactionRequest',

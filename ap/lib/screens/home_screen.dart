@@ -26,6 +26,7 @@ class HomeScreen extends StatelessWidget {
         ),
         centerTitle: true,
         actions: [
+          _buildConnectionIndicator(context, mpcService),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
@@ -139,6 +140,43 @@ class HomeScreen extends StatelessWidget {
             label: 'Policies',
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildConnectionIndicator(BuildContext context, MpcService mpcService) {
+    final isConnected = mpcService.isConnected;
+    final color = isConnected ? Colors.greenAccent : Colors.redAccent;
+
+    return GestureDetector(
+      onTap: isConnected
+          ? null
+          : () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Reconnecting...')),
+              );
+              mpcService.reconnect();
+            },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Tooltip(
+          message: isConnected ? 'Connected' : 'Disconnected — tap to reconnect',
+          child: Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.4),
+                  blurRadius: 6,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
