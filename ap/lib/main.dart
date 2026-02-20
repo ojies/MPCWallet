@@ -5,8 +5,8 @@ import 'screens/home_screen.dart';
 import 'screens/onboarding/welcome_screen.dart';
 import 'screens/onboarding/server_connect_screen.dart';
 import 'screens/onboarding/dkg_progress_screen.dart';
-import 'screens/onboarding/secure_storage_screen.dart';
 import 'screens/onboarding/wallet_ready_screen.dart';
+import 'screens/onboarding/signer_selection_screen.dart';
 import 'screens/spending/send_screen.dart';
 import 'screens/spending/review_screen.dart';
 import 'screens/spending/signing_screen.dart';
@@ -63,6 +63,10 @@ final GoRouter _router = GoRouter(
       builder: (context, state) => const WelcomeScreen(),
     ),
     GoRoute(
+      path: '/onboarding/signer-selection',
+      builder: (context, state) => const SignerSelectionScreen(),
+    ),
+    GoRoute(
       path: '/onboarding/server',
       builder: (context, state) => const ServerConnectionScreen(),
     ),
@@ -70,11 +74,7 @@ final GoRouter _router = GoRouter(
       path: '/onboarding/dkg',
       builder: (context, state) => const DkgProgressScreen(),
     ),
-    GoRoute(
-      path: '/onboarding/secure_storage',
-      builder: (context, state) => const SecureStorageScreen(),
-    ),
-    GoRoute(
+GoRoute(
       path: '/onboarding/ready',
       builder: (context, state) => const WalletReadyScreen(),
     ),

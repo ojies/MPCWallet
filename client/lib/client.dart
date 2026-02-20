@@ -18,6 +18,7 @@ import 'package:path/path.dart' as p;
 import 'package:convert/convert.dart';
 
 import 'package:client/persistence/wallet_store.dart';
+import 'package:client/hardware_signer.dart';
 
 class MpcClient {
   final MPCWalletClient _stub;
@@ -36,7 +37,6 @@ class MpcClient {
   final int _minSigners;
 
   threshold.SecretKey? _signingSecret;
-  threshold.SecretKey? _recoverySecret;
 
   // Auth helper for signing requests (initialized after DKG or restore)
   ClientAuthHelper? _authHelper;
@@ -46,7 +46,8 @@ class MpcClient {
 
   RecoveryPolicy? _recoveryPolicy;
 
-  // Bitcoin Wallet removed (Decoupled)
+  // Hardware signer for recovery identity
+  final HardwareSignerInterface _hardwareSigner;
 
   /// Creates a client that manages two shares (identities).
   ///
@@ -57,15 +58,20 @@ class MpcClient {
   /// [encryptionCipher] - Optional cipher for encrypted storage.
   ///                      Use HiveAesCipher for AES-256 encryption.
   ///                      When null, data is stored unencrypted.
+  /// [hardwareSigner] - Hardware signer for recovery identity.
+  ///                    The recovery identity's secret stays on the
+  ///                    hardware signer and DKG/signing is delegated.
   MpcClient(
     ClientChannel channel, {
     int maxSigners = 3,
     int minSigners = 2,
     String? storageId,
     HiveCipher? encryptionCipher,
+    required HardwareSignerInterface hardwareSigner,
   })  : _stub = MPCWalletClient(channel),
         _maxSigners = maxSigners,
         _minSigners = minSigners,
+        _hardwareSigner = hardwareSigner,
         _protectedPolicies = {} {
     _store = WalletStore(
       boxName: storageId ?? 'mpc_wallet_state_default',
@@ -188,31 +194,31 @@ class MpcClient {
 
   // --- DKG ---
 
+  /// DKG: signing identity runs locally, recovery identity
+  /// runs on the hardware signer (secret never leaves the device).
   Future<void> doDkg() async {
-    await _store.init(); // Ensure store is ready
-    // 1. Generate Secrets for both identities
-    _signingSecret = threshold.SecretKey(threshold.modNRandom());
+    await _store.init();
+    final signer = _hardwareSigner;
 
+    // 1. Generate signing secret locally (participant 1 — unchanged)
+    _signingSecret = threshold.SecretKey(threshold.modNRandom());
     final coeffs1 = threshold.generateCoefficients(_minSigners - 1);
     final (r1Sec1, r1Pub1) =
         threshold.dkgPart1(_maxSigners, _minSigners, _signingSecret!, coeffs1);
 
-    _recoverySecret = threshold.SecretKey(threshold.modNRandom());
-    final coeffs2 = threshold.generateCoefficients(_minSigners - 1);
-    final (r1Sec2, r1Pub2) =
-        threshold.dkgPart1(_maxSigners, _minSigners, _recoverySecret!, coeffs2);
+    // 2. Hardware signer generates recovery secret (participant 2)
+    final dkgInit = await signer.dkgInit(_maxSigners, _minSigners);
 
     final userId = threshold.elemSerializeCompressed(r1Pub1.verifyingKey.E);
-    final recoveryId = threshold.elemSerializeCompressed(r1Pub2.verifyingKey.E);
+    final recoveryId = dkgInit.verifyingKeyBytes;
 
-    //save userId
     _userId = userId;
     _recoveryId = recoveryId;
 
     final signingIdThresholdId = threshold.Identifier.derive(userId);
-    final recoveryIdThresholdId = threshold.Identifier.derive(recoveryId);
+    final recoveryIdThresholdId = dkgInit.identifier;
 
-    // 2. Step 1: Exchange Round 1 Packages for both
+    // 3. Send both Round1Packages to server
     final req1 = DKGStep1Request()
       ..userId = userId
       ..identifier = signingIdThresholdId.serialize()
@@ -221,35 +227,31 @@ class MpcClient {
     final req2 = DKGStep1Request()
       ..userId = userId
       ..identifier = recoveryIdThresholdId.serialize()
-      ..round1Package = jsonEncode(r1Pub2.toJson());
+      ..round1Package = jsonEncode(dkgInit.round1Package.toJson());
 
     final step1Futures =
         await Future.wait([_stub.dKGStep1(req1), _stub.dKGStep1(req2)]);
-
     final step1Resp = step1Futures[0];
 
-    // 3. Step 2: Compute Shares
-    // Trigger Step 2 on server for this session
+    // Trigger Step 2 on server
     await _stub.dKGStep2(DKGStep2Request()..userId = userId);
 
-    // Parse R1 packages for Identity 1
+    // Parse R1 packages for both identities
     final round1PkgsMap1 = <threshold.Identifier, threshold.Round1Package>{};
-    // Parse R1 packages for Identity 2
     final round1PkgsMap2 = <threshold.Identifier, threshold.Round1Package>{};
 
     step1Resp.round1Packages.forEach((k, v) {
       final id = threshold.Identifier(BigInt.parse(k, radix: 16));
       final pkg = threshold.Round1Package.fromJson(jsonDecode(v));
-
       if (id != signingIdThresholdId) round1PkgsMap1[id] = pkg;
       if (id != recoveryIdThresholdId) round1PkgsMap2[id] = pkg;
     });
 
-    // Compute shares
+    // 4. Compute shares: signing identity locally, recovery via hardware signer
     final (r2Sec1, sharesFrom1) = threshold.dkgPart2(r1Sec1, round1PkgsMap1);
-    final (r2Sec2, sharesFrom2) = threshold.dkgPart2(r1Sec2, round1PkgsMap2);
+    final sharesFrom2 = await signer.dkgRound2(round1PkgsMap2);
 
-    // 4. Step 3: Exchange Shares
+    // 5. Send shares to server
     final req3_1 = DKGStep3Request()
       ..userId = userId
       ..identifier = threshold.bigIntToBytes(signingIdThresholdId.toScalar())
@@ -266,25 +268,40 @@ class MpcClient {
     final sharesForMe1 = _parseShares(step3Futures[0].round2PackagesForMe);
     final sharesForMe2 = _parseShares(step3Futures[1].round2PackagesForMe);
 
-    // 5. Finalize for both
+    // 6. Finalize signing identity locally
     final (keyPkg1, pubKeyPkg1) =
         threshold.dkgPart3(r1Sec1, r2Sec1, round1PkgsMap1, sharesForMe1);
-    final (keyPkg2, pubKeyPkg2) =
-        threshold.dkgPart3(r1Sec2, r2Sec2, round1PkgsMap2, sharesForMe2);
 
+    // 7. Hardware signer finalizes recovery identity (stores key internally)
+    final dkgResult = await signer.dkgRound3(round1PkgsMap2, sharesForMe2);
+
+    // 8. Store policies
     _normalPolicy = SpendingPolicy(
         id: "normal_policy_id",
         keyPackage: keyPkg1,
         publicKeyPackage: pubKeyPkg1);
 
+    // Recovery policy: secret share stays on hardware signer (store zero locally)
+    final recoveryVerifyingShare =
+        pubKeyPkg1.verifyingShares[dkgResult.identifier];
+    if (recoveryVerifyingShare == null) {
+      throw StateError("Recovery identifier not found in public key package");
+    }
+
+    final recoveryKeyPkg = threshold.KeyPackage(
+      dkgResult.identifier,
+      BigInt.zero, // secret stays on hardware signer
+      recoveryVerifyingShare,
+      pubKeyPkg1.verifyingKey,
+      _minSigners,
+    );
+
     _recoveryPolicy = RecoveryPolicy(
         id: "recovery_policy_id",
-        keyPackage: keyPkg2,
-        publicKeyPackage: pubKeyPkg2);
+        keyPackage: recoveryKeyPkg,
+        publicKeyPackage: pubKeyPkg1);
 
     _userId = userId.toList();
-
-    // Initialize auth helper for signing authenticated requests
     _authHelper = ClientAuthHelper.fromSigningSecret(_signingSecret!, _userId!);
 
     await _saveState();
@@ -551,36 +568,50 @@ class MpcClient {
   /// Produces a FROST threshold signature using both client key packages
   /// (signing + recovery identity) without server participation.
   /// No taproot tweak is applied — this is for auth, not Bitcoin transactions.
-  threshold.Signature _frostSignWithBothKeys(Uint8List message) {
+  ///
+  /// When a hardware signer is configured, the recovery identity's nonce
+  /// generation and signing are delegated to the hardware device.
+  /// FROST sign with both keys: signing identity (local) + recovery identity
+  /// (hardware signer). No taproot tweak — used for auth, not Bitcoin txs.
+  Future<threshold.Signature> _frostSignWithBothKeys(Uint8List message) async {
     if (!isInitialized) {
       throw StateError("Client not initialized (DKG not run).");
     }
 
+    final signer = _hardwareSigner;
     final keyPkg1 = _normalPolicy!.keyPackage;
-    final keyPkg2 = _recoveryPolicy!.keyPackage;
+    final recoveryId = _recoveryPolicy!.keyPackage.identifier;
     final groupPubKey = _normalPolicy!.publicKeyPackage;
 
-    // Generate nonces for both identities
-    final nonce1 = frost_comm.newNonce(keyPkg1.secretShare);
-    final nonce2 = frost_comm.newNonce(keyPkg2.secretShare);
+    // 1. Hardware signer generates nonce for recovery identity
+    final recoveryCommitments = await signer.generateNonce();
 
-    // Build commitments map
+    // 2. Generate signing identity nonce locally
+    final nonce1 = frost_comm.newNonce(keyPkg1.secretShare);
+
+    // 3. Build commitments map with both identities
     final commitmentsMap = <threshold.Identifier, frost_comm.SigningCommitments>{
       keyPkg1.identifier: nonce1.commitments,
-      keyPkg2.identifier: nonce2.commitments,
+      recoveryId: recoveryCommitments,
     };
 
-    // Create signing package
+    // 4. Create signing package
     final signingPkg = frost_comm.SigningPackage(commitmentsMap, message);
 
-    // Compute signature shares (NO taproot tweak)
-    final share1 = frost.sign(signingPkg, nonce1, keyPkg1);
-    final share2 = frost.sign(signingPkg, nonce2, keyPkg2);
+    // 5. Hardware signer produces recovery share (no taproot tweak)
+    final recoveryShareScalar = await signer.sign(
+      message: message,
+      commitments: commitmentsMap,
+      applyTweak: false,
+    );
 
-    // Aggregate
+    // 6. Compute signing identity share locally
+    final share1 = frost.sign(signingPkg, nonce1, keyPkg1);
+
+    // 7. Aggregate both shares
     final sharesMap = <threshold.Identifier, frost.SignatureShare>{
       keyPkg1.identifier: share1,
-      keyPkg2.identifier: share2,
+      recoveryId: frost.SignatureShare(recoveryShareScalar),
     };
 
     return frost.aggregate(signingPkg, sharesMap, groupPubKey);
@@ -610,7 +641,7 @@ class MpcClient {
       userIdHex: hex.encode(_userId!),
     );
 
-    final signature = _frostSignWithBothKeys(message);
+    final signature = await _frostSignWithBothKeys(message);
 
     await _stub.updatePolicy(UpdatePolicyRequest()
       ..userId = _userId!
@@ -649,7 +680,7 @@ class MpcClient {
       userIdHex: hex.encode(_userId!),
     );
 
-    final signature = _frostSignWithBothKeys(message);
+    final signature = await _frostSignWithBothKeys(message);
 
     await _stub.deletePolicy(DeletePolicyRequest()
       ..userId = _userId!
