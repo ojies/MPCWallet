@@ -3,6 +3,7 @@ import 'package:grpc/grpc.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:client/bitcoin.dart';
 import 'package:client/client.dart';
+import 'package:client/hardware_signer.dart';
 import 'package:client/policy.dart';
 import 'package:hive/hive.dart';
 import 'dart:math';
@@ -18,6 +19,14 @@ class MpcService extends ChangeNotifier {
   ClientChannel? _channel;
 
   String? _storageId;
+
+  // Hardware signer mode
+  String _signerMode = 'hardware';
+  String _signerHost = '10.0.2.2';
+  int _signerPort = 9090;
+  HardwareSignerInterface? _hardwareSigner;
+
+  String get signerMode => _signerMode;
 
   /// Future that completes when init() finishes. Await this before
   /// checking dkgComplete or calling restoreSession().
@@ -85,6 +94,11 @@ class MpcService extends ChangeNotifier {
       _host = _identityBox!.get('serverHost', defaultValue: '10.0.2.2');
       print("MPC Service: Using host: $_host");
 
+      _signerMode = _identityBox!.get('signerMode', defaultValue: 'hardware');
+      _signerHost = _identityBox!.get('signerHost', defaultValue: '10.0.2.2');
+      _signerPort = _identityBox!.get('signerPort', defaultValue: 9090);
+      print("MPC Service: Signer mode: $_signerMode");
+
       _dkgComplete = _identityBox!.get('dkgComplete', defaultValue: false);
       _storageId = _identityBox!.get('storageId') as String?;
       if (_storageId == null || _storageId!.isEmpty) {
@@ -102,6 +116,12 @@ class MpcService extends ChangeNotifier {
   /// Closes all resources. Call this when the app is shutting down.
   @override
   Future<void> dispose() async {
+    try {
+      await _hardwareSigner?.disconnect();
+      _hardwareSigner = null;
+    } catch (e) {
+      print("MPC Service: Error disconnecting hardware signer: $e");
+    }
     try {
       await _identityBox?.close();
       _identityBox = null;
@@ -124,6 +144,17 @@ class MpcService extends ChangeNotifier {
     await _identityBox!.put('serverHost', host);
   }
 
+  Future<void> setSignerHost(String host, int port) async {
+    _signerHost = host;
+    _signerPort = port;
+    await _ensurePersistenceInitialized();
+    if (_identityBox == null || !_identityBox!.isOpen) {
+      _identityBox = await Hive.openBox('mpc_service_identity');
+    }
+    await _identityBox!.put('signerHost', host);
+    await _identityBox!.put('signerPort', port);
+  }
+
   Future<void> doDkg() async {
     if (!_isInitialized) throw StateError("MPC Service not initialized");
 
@@ -133,13 +164,21 @@ class MpcService extends ChangeNotifier {
 
     final storageId = _storageId ?? 'mpc_wallet_state_default';
 
+    // Connect hardware signer
+    _hardwareSigner = TcpHardwareSigner(host: _signerHost, port: _signerPort);
+    await _hardwareSigner!.connect();
+
     _channel = ClientChannel(
       _host,
       port: _port,
       options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
     );
 
-    _client = MpcClient(_channel!, storageId: storageId);
+    _client = MpcClient(
+      _channel!,
+      storageId: storageId,
+      hardwareSigner: _hardwareSigner!,
+    );
     _wallet = MpcBitcoinWallet(_client!, isTestnet: true, storageId: storageId);
     _wallet!.onSyncComplete = _onWalletSyncComplete;
 
@@ -162,13 +201,23 @@ class MpcService extends ChangeNotifier {
 
     final storageId = _storageId ?? 'mpc_wallet_state_default';
 
+    // Reconnect hardware signer
+    if (_hardwareSigner == null) {
+      _hardwareSigner = TcpHardwareSigner(host: _signerHost, port: _signerPort);
+      await _hardwareSigner!.connect();
+    }
+
     _channel = ClientChannel(
       _host,
       port: _port,
       options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
     );
 
-    _client = MpcClient(_channel!, storageId: storageId);
+    _client = MpcClient(
+      _channel!,
+      storageId: storageId,
+      hardwareSigner: _hardwareSigner!,
+    );
     _wallet = MpcBitcoinWallet(_client!, isTestnet: true, storageId: storageId);
     _wallet!.onSyncComplete = _onWalletSyncComplete;
 
@@ -190,9 +239,13 @@ class MpcService extends ChangeNotifier {
     try {
       await _channel?.shutdown();
     } catch (_) {}
+    try {
+      await _hardwareSigner?.disconnect();
+    } catch (_) {}
     _channel = null;
     _client = null;
     _wallet = null;
+    _hardwareSigner = null;
 
     try {
       await restoreSession();

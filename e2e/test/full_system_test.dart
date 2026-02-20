@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:test/test.dart';
 import 'package:client/client.dart';
 import 'package:client/bitcoin.dart';
+import 'package:client/hardware_signer.dart';
 import 'package:e2e/regtest_helper.dart';
 import 'package:grpc/grpc.dart';
 import 'package:hive/hive.dart';
@@ -98,6 +99,8 @@ void main() {
       environment: {
         'ELECTRUM_URL': '127.0.0.1',
         'ELECTRUM_PORT': '50001',
+        'BITCOIN_RPC_USER': 'admin1',
+        'BITCOIN_RPC_PASSWORD': '123',
         'HOME': serverTempDir.path,
         'PORT': serverPort.toString(),
       },
@@ -166,7 +169,9 @@ void main() {
       port: serverPort,
       options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
     );
-    final client1 = MpcClient(channel);
+    final signer = TcpHardwareSigner(host: '127.0.0.1', port: 9090);
+    await signer.connect();
+    final client1 = MpcClient(channel, hardwareSigner: signer);
 
     await client1.doDkg();
     print('DKG Complete');

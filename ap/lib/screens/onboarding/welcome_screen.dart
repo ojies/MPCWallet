@@ -53,7 +53,7 @@ class WelcomeScreen extends StatelessWidget {
               const Spacer(),
               ElevatedButton(
                 onPressed: () {
-                  context.push('/onboarding/server');
+                  context.push('/onboarding/signer-selection');
                 },
                 child: const Text('Create MPC Wallet'),
               ),

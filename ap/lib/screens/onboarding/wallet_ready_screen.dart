@@ -29,7 +29,7 @@ class WalletReadyScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Your MPC Bitcoin Wallet has been successfully created and secured.',
+                'Your MPC Bitcoin Wallet has been created.\nRecovery key is stored on your hardware signer.',
                 style: GoogleFonts.inter(color: Colors.white70, fontSize: 16),
                 textAlign: TextAlign.center,
               ),
@@ -49,6 +49,13 @@ class WalletReadyScreen extends StatelessWidget {
                     Text('Bitcoin Testnet',
                         style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
                     const Divider(height: 24, color: Colors.white24),
+                    Text('Recovery Key',
+                        style: GoogleFonts.inter(
+                            color: Colors.white54, fontSize: 12)),
+                    const SizedBox(height: 4),
+                    Text('Hardware Signer',
+                        style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                    const Divider(height: 24, color: Colors.white24),
                     Text('Balance',
                         style: GoogleFonts.inter(
                             color: Colors.white54, fontSize: 12)),
@@ -61,7 +68,6 @@ class WalletReadyScreen extends StatelessWidget {
               const Spacer(),
               ElevatedButton(
                 onPressed: () {
-                  // Navigate to the main wallet home, clearing the onboarding stack
                   context.go('/');
                 },
                 child: const Text('Go to Wallet'),

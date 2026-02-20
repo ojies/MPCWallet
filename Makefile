@@ -1,4 +1,4 @@
-.PHONY: regtest-up regtest-down server-run regtest proto bitcoin-init
+.PHONY: regtest-up regtest-down server-run regtest proto bitcoin-init signer-build signer-run signer-stop
 
 # Start Docker environment (Bitcoind + Electrs)
 regtest-up:
@@ -11,6 +11,7 @@ regtest-up:
 regtest-down:
 	@echo "Stopping Regtest environment..."
 	cd e2e && docker compose down
+	-pkill -f "signer-server" || true
 
 # Run the MPC Server attached to the Regtest environment
 # Using host networking for Docker on Linux implies 127.0.0.1 works
@@ -23,8 +24,26 @@ server-run:
 	export BITCOIN_RPC_PASSWORD=123 && \
 	dart server/bin/server.dart
 
-# Helper to start everything
-regtest: regtest-up bitcoin-init server-run
+# Build the hardware signer test server
+signer-build:
+	@echo "Building Hardware Signer Test Server..."
+	export PATH="$$HOME/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin:$$PATH" && \
+	cd signer-server && cargo build --release
+
+# Run the hardware signer test server (background, default port 9090)
+signer-run: signer-build
+	@echo "Starting Hardware Signer Test Server on port 9090..."
+	export PATH="$$HOME/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin:$$PATH" && \
+	cd signer-server && cargo run --release -- --port 9090 &
+	@sleep 2
+
+# Stop the hardware signer test server
+signer-stop:
+	@echo "Stopping Hardware Signer Test Server..."
+	-pkill -f "signer-server" || true
+
+# Helper to start everything (includes hardware signer test server)
+regtest: regtest-up bitcoin-init signer-run server-run
 
 # Initialize regtest chain (mine 150 blocks)
 bitcoin-init:

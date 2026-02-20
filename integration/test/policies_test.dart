@@ -5,6 +5,7 @@ import 'package:test/test.dart';
 import 'package:grpc/grpc.dart';
 import 'package:threshold/threshold.dart' as threshold;
 import 'package:client/client.dart';
+import 'package:client/hardware_signer.dart';
 import 'package:bitcoin_base/bitcoin_base.dart';
 import 'package:blockchain_utils/blockchain_utils.dart';
 import 'package:fixnum/fixnum.dart';
@@ -22,8 +23,8 @@ import 'package:server/persistence/store.dart';
 /// Runs DKG, derives P2TR address, builds and broadcasts a funding tx.
 /// Returns (client, p2trAddress, utxoTxId).
 Future<(MpcClient, P2trAddress, String)> setupDkgAndFund(
-    ClientChannel channel, int fundingSats) async {
-  final client = MpcClient(channel, minSigners: 2, maxSigners: 3);
+    ClientChannel channel, TcpHardwareSigner signer, int fundingSats) async {
+  final client = MpcClient(channel, minSigners: 2, maxSigners: 3, hardwareSigner: signer);
   await client.doDkg();
 
   final pubKeyPkg = client.getTweakedPublicKeyPackage(null)!;
@@ -101,11 +102,26 @@ void main() {
   late Server server;
   late ClientChannel channel;
   late HttpServer mockBitcoind;
+  late Process signerProcess;
+  late TcpHardwareSigner signer;
+  late int signerPort;
   Directory? tempDir;
 
   setUp(() async {
     tempDir = Directory.systemTemp.createTempSync("policies_test_");
     Hive.init(tempDir!.path);
+
+    // Start signer-server on a random port
+    final signerPortServer = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+    signerPort = signerPortServer.port;
+    await signerPortServer.close();
+    signerProcess = await Process.start(
+      '${Directory.current.parent.path}/signer-server/target/release/signer-server',
+      ['--port', signerPort.toString()],
+    );
+    await Future.delayed(const Duration(milliseconds: 500));
+    signer = TcpHardwareSigner(host: '127.0.0.1', port: signerPort);
+    await signer.connect();
 
     // Mock Bitcoind
     mockBitcoind = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
@@ -158,6 +174,8 @@ void main() {
   });
 
   tearDown(() async {
+    try { await signer.disconnect(); } catch (_) {}
+    signerProcess.kill();
     await channel.shutdown();
     await server.shutdown();
     await mockBitcoind.close();
@@ -173,7 +191,7 @@ void main() {
   group('Boundary Amounts', () {
     test('Spend exactly at threshold passes without PIN', () async {
       final (client, p2tr, utxoTxId) =
-          await setupDkgAndFund(channel, 10000);
+          await setupDkgAndFund(channel, signer, 10000);
 
       await client.createSpendingPolicy(
           const Duration(seconds: 60), Int64(1000), "123456");
@@ -192,7 +210,7 @@ void main() {
 
     test('Spend 1 sat over threshold triggers policy', () async {
       final (client, p2tr, utxoTxId) =
-          await setupDkgAndFund(channel, 10000);
+          await setupDkgAndFund(channel, signer, 10000);
 
       await client.createSpendingPolicy(
           const Duration(seconds: 60), Int64(1000), "123456");
@@ -225,7 +243,7 @@ void main() {
   group('Time Window', () {
     test('Spending resets after time window elapses', () async {
       final (client, p2tr, utxoTxId) =
-          await setupDkgAndFund(channel, 10000);
+          await setupDkgAndFund(channel, signer, 10000);
 
       // 2-second interval, 500 sats threshold
       await client.createSpendingPolicy(
@@ -276,7 +294,7 @@ void main() {
   group('Multiple Policies', () {
     test('Stricter policy triggers when violated', () async {
       final (client, p2tr, utxoTxId) =
-          await setupDkgAndFund(channel, 10000);
+          await setupDkgAndFund(channel, signer, 10000);
 
       // Policy A: loose (2000 sats threshold)
       await client.createSpendingPolicy(
@@ -321,7 +339,7 @@ void main() {
   group('Wrong PIN', () {
     test('Wrong PIN causes invalid signature', () async {
       final (client, p2tr, utxoTxId) =
-          await setupDkgAndFund(channel, 10000);
+          await setupDkgAndFund(channel, signer, 10000);
 
       await client.createSpendingPolicy(
           const Duration(seconds: 60), Int64(1000), "123456");
@@ -366,7 +384,7 @@ void main() {
   group('Cumulative Spending', () {
     test('Multiple small spends within threshold all succeed', () async {
       final (client, p2tr, utxoTxId) =
-          await setupDkgAndFund(channel, 10000);
+          await setupDkgAndFund(channel, signer, 10000);
 
       await client.createSpendingPolicy(
           const Duration(seconds: 60), Int64(1000), "123456");
@@ -388,7 +406,7 @@ void main() {
     test('Cumulative small spends exceeding threshold triggers policy',
         () async {
       final (client, p2tr, utxoTxId) =
-          await setupDkgAndFund(channel, 10000);
+          await setupDkgAndFund(channel, signer, 10000);
 
       await client.createSpendingPolicy(
           const Duration(seconds: 60), Int64(1000), "123456");
@@ -429,7 +447,7 @@ void main() {
   group('Policy Creation Ordering', () {
     test('Policy created before any spending works', () async {
       final (client, p2tr, utxoTxId) =
-          await setupDkgAndFund(channel, 10000);
+          await setupDkgAndFund(channel, signer, 10000);
 
       // Create policy FIRST — no prior spending
       await client.createSpendingPolicy(
@@ -454,7 +472,7 @@ void main() {
     test('Single transaction exceeding threshold triggers policy immediately',
         () async {
       final (client, p2tr, utxoTxId) =
-          await setupDkgAndFund(channel, 10000);
+          await setupDkgAndFund(channel, signer, 10000);
 
       await client.createSpendingPolicy(
           const Duration(seconds: 60), Int64(1000), "123456");
@@ -486,7 +504,7 @@ void main() {
   group('PIN-Authorized Spending History', () {
     test('PIN-authorized spend is recorded in spending history', () async {
       final (client, p2tr, utxoTxId) =
-          await setupDkgAndFund(channel, 10000);
+          await setupDkgAndFund(channel, signer, 10000);
 
       await client.createSpendingPolicy(
           const Duration(seconds: 60), Int64(1000), "123456");
@@ -535,7 +553,7 @@ void main() {
   group('Update Policy', () {
     test('Updating policy threshold changes enforcement', () async {
       final (client, p2tr, utxoTxId) =
-          await setupDkgAndFund(channel, 10000);
+          await setupDkgAndFund(channel, signer, 10000);
 
       // Create policy: threshold=1000, interval=60s
       await client.createSpendingPolicy(
@@ -580,7 +598,7 @@ void main() {
 
     test('Updating policy interval changes window', () async {
       final (client, p2tr, utxoTxId) =
-          await setupDkgAndFund(channel, 10000);
+          await setupDkgAndFund(channel, signer, 10000);
 
       // Create policy: threshold=500, interval=60s
       await client.createSpendingPolicy(
@@ -636,7 +654,7 @@ void main() {
   group('Delete Policy', () {
     test('Deleting policy removes spending enforcement', () async {
       final (client, p2tr, utxoTxId) =
-          await setupDkgAndFund(channel, 10000);
+          await setupDkgAndFund(channel, signer, 10000);
 
       // Create policy: threshold=1000, interval=60s
       await client.createSpendingPolicy(
@@ -673,7 +691,7 @@ void main() {
     });
 
     test('Deleting non-existent policy throws error', () async {
-      final (client, _, _) = await setupDkgAndFund(channel, 10000);
+      final (client, _, _) = await setupDkgAndFund(channel, signer, 10000);
 
       expect(
         () => client.deletePolicy("non_existent_policy_id"),
