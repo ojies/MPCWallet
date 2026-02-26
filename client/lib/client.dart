@@ -219,15 +219,18 @@ class MpcClient {
     final recoveryIdThresholdId = dkgInit.identifier;
 
     // 3. Send both Round1Packages to server
+    final r1Json1 = jsonEncode(r1Pub1.toJson());
+    final r1Json2 = jsonEncode(dkgInit.round1Package.toJson());
+
     final req1 = DKGStep1Request()
       ..userId = userId
       ..identifier = signingIdThresholdId.serialize()
-      ..round1Package = jsonEncode(r1Pub1.toJson());
+      ..round1Package = r1Json1;
 
     final req2 = DKGStep1Request()
       ..userId = userId
       ..identifier = recoveryIdThresholdId.serialize()
-      ..round1Package = jsonEncode(dkgInit.round1Package.toJson());
+      ..round1Package = r1Json2;
 
     final step1Futures =
         await Future.wait([_stub.dKGStep1(req1), _stub.dKGStep1(req2)]);
@@ -241,6 +244,9 @@ class MpcClient {
     final round1PkgsMap2 = <threshold.Identifier, threshold.Round1Package>{};
 
     step1Resp.round1Packages.forEach((k, v) {
+      if (v.isEmpty) {
+        throw FormatException('Empty round1 package for key $k');
+      }
       final id = threshold.Identifier(BigInt.parse(k, radix: 16));
       final pkg = threshold.Round1Package.fromJson(jsonDecode(v));
       if (id != signingIdThresholdId) round1PkgsMap1[id] = pkg;

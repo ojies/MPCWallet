@@ -2,3 +2,8 @@ e2e/hive_db
 */.dart_tool
 */build
 *.log
+
+*/.venv
+
+*/pico-signer.elf
+*/pico-signer.uf2

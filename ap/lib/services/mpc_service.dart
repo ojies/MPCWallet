@@ -5,6 +5,7 @@ import 'package:client/bitcoin.dart';
 import 'package:client/client.dart';
 import 'package:client/hardware_signer.dart';
 import 'package:client/policy.dart';
+import '../usb/usb_hardware_signer.dart';
 import 'package:hive/hive.dart';
 import 'dart:math';
 import 'package:protocol/protocol.dart';
@@ -20,13 +21,15 @@ class MpcService extends ChangeNotifier {
 
   String? _storageId;
 
-  // Hardware signer mode
+  // Hardware signer settings
   String _signerMode = 'hardware';
+  String _signerType = 'tcp'; // 'usb' or 'tcp'
   String _signerHost = '10.0.2.2';
   int _signerPort = 9090;
   HardwareSignerInterface? _hardwareSigner;
 
   String get signerMode => _signerMode;
+  String get signerType => _signerType;
 
   /// Future that completes when init() finishes. Await this before
   /// checking dkgComplete or calling restoreSession().
@@ -95,9 +98,10 @@ class MpcService extends ChangeNotifier {
       print("MPC Service: Using host: $_host");
 
       _signerMode = _identityBox!.get('signerMode', defaultValue: 'hardware');
+      _signerType = _identityBox!.get('signerType', defaultValue: 'tcp');
       _signerHost = _identityBox!.get('signerHost', defaultValue: '10.0.2.2');
       _signerPort = _identityBox!.get('signerPort', defaultValue: 9090);
-      print("MPC Service: Signer mode: $_signerMode");
+      print("MPC Service: Signer type: $_signerType");
 
       _dkgComplete = _identityBox!.get('dkgComplete', defaultValue: false);
       _storageId = _identityBox!.get('storageId') as String?;
@@ -144,6 +148,15 @@ class MpcService extends ChangeNotifier {
     await _identityBox!.put('serverHost', host);
   }
 
+  Future<void> setSignerType(String type) async {
+    _signerType = type;
+    await _ensurePersistenceInitialized();
+    if (_identityBox == null || !_identityBox!.isOpen) {
+      _identityBox = await Hive.openBox('mpc_service_identity');
+    }
+    await _identityBox!.put('signerType', type);
+  }
+
   Future<void> setSignerHost(String host, int port) async {
     _signerHost = host;
     _signerPort = port;
@@ -155,6 +168,13 @@ class MpcService extends ChangeNotifier {
     await _identityBox!.put('signerPort', port);
   }
 
+  HardwareSignerInterface _createSigner() {
+    if (_signerType == 'usb') {
+      return UsbHardwareSigner();
+    }
+    return TcpHardwareSigner(host: _signerHost, port: _signerPort);
+  }
+
   Future<void> doDkg() async {
     if (!_isInitialized) throw StateError("MPC Service not initialized");
 
@@ -164,8 +184,8 @@ class MpcService extends ChangeNotifier {
 
     final storageId = _storageId ?? 'mpc_wallet_state_default';
 
-    // Connect hardware signer
-    _hardwareSigner = TcpHardwareSigner(host: _signerHost, port: _signerPort);
+    // Connect hardware signer based on type
+    _hardwareSigner = _createSigner();
     await _hardwareSigner!.connect();
 
     _channel = ClientChannel(
@@ -203,7 +223,7 @@ class MpcService extends ChangeNotifier {
 
     // Reconnect hardware signer
     if (_hardwareSigner == null) {
-      _hardwareSigner = TcpHardwareSigner(host: _signerHost, port: _signerPort);
+      _hardwareSigner = _createSigner();
       await _hardwareSigner!.connect();
     }
 
