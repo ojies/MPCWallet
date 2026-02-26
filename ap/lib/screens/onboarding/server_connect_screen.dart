@@ -12,10 +12,19 @@ class ServerConnectionScreen extends StatefulWidget {
 }
 
 class _ServerConnectionScreenState extends State<ServerConnectionScreen> {
-  final TextEditingController _urlController = TextEditingController(
-    text: '10.0.2.2', // Default localized for Android Emulator
-  );
+  late final TextEditingController _urlController;
   bool _isChecking = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final signerType = context.read<MpcService>().signerType;
+    // Physical device (USB signer) uses ADB reverse → 127.0.0.1
+    // Emulator (TCP signer) uses Android's host alias → 10.0.2.2
+    _urlController = TextEditingController(
+      text: signerType == 'usb' ? '127.0.0.1' : '10.0.2.2',
+    );
+  }
 
   void _connect() async {
     setState(() {
