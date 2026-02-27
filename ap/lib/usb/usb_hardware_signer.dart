@@ -63,6 +63,31 @@ class UsbHardwareSigner implements HardwareSignerInterface {
   }
 
   @override
+  Future<DkgInitResult> restoreInit(int maxSigners, int minSigners) async {
+    final resp = await _transport.sendCommand({
+      'cmd': 'restore_init',
+      'max_signers': maxSigners,
+      'min_signers': minSigners,
+    });
+
+    final r1PkgJson = resp['round1_package_json'] as Map<String, dynamic>;
+    final round1Package = Round1Package.fromJson(r1PkgJson);
+
+    final vkHex = resp['verifying_key_hex'] as String;
+    final verifyingKeyBytes = hex.decode(vkHex);
+
+    final idHex = resp['identifier_hex'] as String;
+    final idBytes = Uint8List.fromList(hex.decode(idHex));
+    final identifier = Identifier.deserialize(idBytes);
+
+    return DkgInitResult(
+      round1Package: round1Package,
+      verifyingKeyBytes: verifyingKeyBytes,
+      identifier: identifier,
+    );
+  }
+
+  @override
   Future<Map<Identifier, Round2Package>> dkgRound2(
     Map<Identifier, Round1Package> othersRound1, {
     List<Identifier> receiverIdentifiers = const [],

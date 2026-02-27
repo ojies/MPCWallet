@@ -58,6 +58,10 @@ abstract class HardwareSignerInterface {
   /// DKG round 1: generate secret on device, return Round1Package + identifier.
   Future<DkgInitResult> dkgInit(int maxSigners, int minSigners);
 
+  /// Restore round 1: reuse stored DKG secret, generate fresh coefficients.
+  /// Returns same verifying key/identifier as original DKG but different R1 package.
+  Future<DkgInitResult> restoreInit(int maxSigners, int minSigners);
+
   /// DKG round 2: verify others' Round1Packages, compute shares.
   /// [receiverIdentifiers] are passive participants who get shares but
   /// don't contribute a secret polynomial.
@@ -187,6 +191,31 @@ class TcpHardwareSigner implements HardwareSignerInterface {
   Future<DkgInitResult> dkgInit(int maxSigners, int minSigners) async {
     final resp = await _sendCommand({
       'cmd': 'dkg_init',
+      'max_signers': maxSigners,
+      'min_signers': minSigners,
+    });
+
+    final r1PkgJson = resp['round1_package_json'] as Map<String, dynamic>;
+    final round1Package = Round1Package.fromJson(r1PkgJson);
+
+    final vkHex = resp['verifying_key_hex'] as String;
+    final verifyingKeyBytes = hex.decode(vkHex);
+
+    final idHex = resp['identifier_hex'] as String;
+    final idBytes = Uint8List.fromList(hex.decode(idHex));
+    final identifier = Identifier.deserialize(idBytes);
+
+    return DkgInitResult(
+      round1Package: round1Package,
+      verifyingKeyBytes: verifyingKeyBytes,
+      identifier: identifier,
+    );
+  }
+
+  @override
+  Future<DkgInitResult> restoreInit(int maxSigners, int minSigners) async {
+    final resp = await _sendCommand({
+      'cmd': 'restore_init',
       'max_signers': maxSigners,
       'min_signers': minSigners,
     });

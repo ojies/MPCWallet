@@ -15,6 +15,7 @@ class DKGStep1Request extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'identifier', $pb.PbFieldType.OY)
     ..aOS(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'round1Package')
+    ..aOB(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'isRestore')
     ..hasRequiredFields = false
   ;
 
@@ -23,6 +24,7 @@ class DKGStep1Request extends $pb.GeneratedMessage {
     $core.List<$core.int>? userId,
     $core.List<$core.int>? identifier,
     $core.String? round1Package,
+    $core.bool? isRestore,
   }) {
     final _result = create();
     if (userId != null) {
@@ -33,6 +35,9 @@ class DKGStep1Request extends $pb.GeneratedMessage {
     }
     if (round1Package != null) {
       _result.round1Package = round1Package;
+    }
+    if (isRestore != null) {
+      _result.isRestore = isRestore;
     }
     return _result;
   }
@@ -83,6 +88,15 @@ class DKGStep1Request extends $pb.GeneratedMessage {
   $core.bool hasRound1Package() => $_has(2);
   @$pb.TagNumber(3)
   void clearRound1Package() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.bool get isRestore => $_getBF(3);
+  @$pb.TagNumber(4)
+  set isRestore($core.bool v) { $_setBool(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasIsRestore() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearIsRestore() => clearField(4);
 }
 
 class DKGStep1Response extends $pb.GeneratedMessage {
