@@ -1,4 +1,4 @@
-.PHONY: regtest-up regtest-down server-run server-run-bg regtest regtest-hardware proto bitcoin-init signer-build signer-run signer-stop pico-build pico-flash pico-test flutter-run threshold-ffi-build threshold-rs-test threshold-ffi-test
+.PHONY: regtest-up regtest-down server-run server-run-bg regtest regtest-hardware proto bitcoin-init signer-build signer-run signer-stop pico-build pico-flash pico-test flutter-run threshold-ffi-build threshold-rs-test threshold-ffi-test e2e-test
 
 # Start Docker environment (Bitcoind + Electrs)
 regtest-up:
@@ -122,6 +122,12 @@ threshold-rs-test:
 threshold-ffi-test:
 	@echo "Running threshold-ffi tests..."
 	cd threshold-ffi && cargo test
+
+# Run the full E2E test (requires Docker running)
+e2e-test: threshold-ffi-build signer-run
+	@echo "Running E2E test..."
+	cd e2e && dart test test/full_system_test.dart
+	-pkill -f "signer-server" || true
 
 # Generate Dart gRPC stubs from protos
 proto:
