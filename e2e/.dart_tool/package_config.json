@@ -92,6 +92,12 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "ffi",
+      "rootUri": "file:///home/joshua/.pub-cache/hosted/pub.dev/ffi-2.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.7"
+    },
+    {
       "name": "file",
       "rootUri": "file:///home/joshua/.pub-cache/hosted/pub.dev/file-7.0.1",
       "packageUri": "lib/",
@@ -218,12 +224,6 @@
       "languageVersion": "3.4"
     },
     {
-      "name": "pointycastle",
-      "rootUri": "file:///home/joshua/.pub-cache/hosted/pub.dev/pointycastle-3.9.1",
-      "packageUri": "lib/",
-      "languageVersion": "3.2"
-    },
-    {
       "name": "pool",
       "rootUri": "file:///home/joshua/.pub-cache/hosted/pub.dev/pool-1.5.2",
       "packageUri": "lib/",
@@ -246,12 +246,6 @@
       "rootUri": "file:///home/joshua/.pub-cache/hosted/pub.dev/pub_semver-2.2.0",
       "packageUri": "lib/",
       "languageVersion": "3.4"
-    },
-    {
-      "name": "secp256k1",
-      "rootUri": "file:///home/joshua/.pub-cache/hosted/pub.dev/secp256k1-0.3.0",
-      "packageUri": "lib/",
-      "languageVersion": "2.12"
     },
     {
       "name": "server",
@@ -410,10 +404,7 @@
       "languageVersion": "3.3"
     }
   ],
-  "generated": "2026-02-21T19:13:51.615393Z",
   "generator": "pub",
-  "generatorVersion": "3.5.3",
-  "flutterRoot": "file:///home/joshua/flutter/flutter",
-  "flutterVersion": "3.24.3",
+  "generatorVersion": "3.10.3",
   "pubCache": "file:///home/joshua/.pub-cache"
 }

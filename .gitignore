@@ -7,3 +7,4 @@ e2e/hive_db
 
 */pico-signer.elf
 */pico-signer.uf2
+threshold-ffi/target

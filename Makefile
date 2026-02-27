@@ -1,4 +1,4 @@
-.PHONY: regtest-up regtest-down server-run server-run-bg regtest regtest-hardware proto bitcoin-init signer-build signer-run signer-stop pico-build pico-flash pico-test flutter-run
+.PHONY: regtest-up regtest-down server-run server-run-bg regtest regtest-hardware proto bitcoin-init signer-build signer-run signer-stop pico-build pico-flash pico-test flutter-run threshold-ffi-build threshold-rs-test threshold-ffi-test
 
 # Start Docker environment (Bitcoind + Electrs)
 regtest-up:
@@ -106,6 +106,22 @@ pico-flash: pico-build
 pico-test:
 	@echo "Testing Pico Signer over USB HID..."
 	scripts/.venv/bin/python3 scripts/test_pico.py $(ARGS)
+
+# Build threshold FFI shared library
+threshold-ffi-build:
+	@echo "Building threshold-ffi..."
+	cd threshold-ffi && cargo build --release
+	@echo "Built: threshold-ffi/target/release/libthreshold_ffi.so"
+
+# Run threshold-rs tests
+threshold-rs-test:
+	@echo "Running threshold-rs tests..."
+	cd threshold-rs && cargo test --features std
+
+# Run threshold-ffi tests
+threshold-ffi-test:
+	@echo "Running threshold-ffi tests..."
+	cd threshold-ffi && cargo test
 
 # Generate Dart gRPC stubs from protos
 proto:
