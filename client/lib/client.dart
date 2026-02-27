@@ -336,6 +336,145 @@ class MpcClient {
     await _saveState();
   }
 
+  /// Restore: re-derive the wallet's signing share using the same DKG secrets
+  /// stored on the hardware signer and server. The group public key stays the
+  /// same so the Bitcoin address (and funds) are preserved.
+  Future<void> doRestore() async {
+    await _store.init();
+    final signer = _hardwareSigner;
+
+    // 1. Hardware signer reuses stored DKG secret (same VK, same identifier)
+    final restoreInit = await signer.restoreInit(_maxSigners, _minSigners);
+    final hwVerifyingKey = restoreInit.verifyingKeyBytes;
+    final hwIdentifier = restoreInit.identifier;
+
+    // 2. Derive wallet identifier (deterministic — same as original DKG)
+    final walletIdInput = Uint8List.fromList(
+      [...'wallet:'.codeUnits, ...hwVerifyingKey],
+    );
+    final walletIdentifier = threshold.Identifier.derive(walletIdInput);
+
+    // Use HW VK as temporary session key during restore
+    final tempUserId = Uint8List.fromList(hwVerifyingKey);
+
+    // 3. Send Round1 packages to server with is_restore flag
+    final hwR1Json = jsonEncode(restoreInit.round1Package.toJson());
+
+    final reqWallet = DKGStep1Request()
+      ..userId = tempUserId
+      ..identifier = walletIdentifier.serialize()
+      ..round1Package = '' // passive receiver
+      ..isRestore = true;
+
+    final reqHw = DKGStep1Request()
+      ..userId = tempUserId
+      ..identifier = hwIdentifier.serialize()
+      ..round1Package = hwR1Json
+      ..isRestore = true;
+
+    final step1Futures = await Future.wait(
+        [_stub.dKGStep1(reqWallet), _stub.dKGStep1(reqHw)]);
+    final step1Resp = step1Futures[0];
+
+    // 4. Trigger Step 2 on server (server computes round2)
+    await _stub.dKGStep2(DKGStep2Request()..userId = tempUserId);
+
+    // 5. Parse dealer R1 packages (for HW signer and wallet)
+    final dealerR1ForHw = <threshold.Identifier, threshold.Round1Package>{};
+    final dealerR1ForWallet = <threshold.Identifier, threshold.Round1Package>{};
+
+    step1Resp.round1Packages.forEach((k, v) {
+      if (v.isEmpty) return;
+      final id = threshold.Identifier(BigInt.parse(k, radix: 16));
+      final pkg = threshold.Round1Package.fromJson(jsonDecode(v));
+      if (id != hwIdentifier) dealerR1ForHw[id] = pkg;
+      dealerR1ForWallet[id] = pkg;
+    });
+
+    // 6. HW signer computes shares for server + wallet
+    final sharesFromHw = await signer.dkgRound2(
+      dealerR1ForHw,
+      receiverIdentifiers: [walletIdentifier],
+    );
+
+    // 7. Send Round2 packages to server
+    final reqStep3Hw = DKGStep3Request()
+      ..userId = tempUserId
+      ..identifier = threshold.bigIntToBytes(hwIdentifier.toScalar())
+      ..round2PackagesForOthers.addAll(_buildSharesMap(sharesFromHw));
+
+    final reqStep3Wallet = DKGStep3Request()
+      ..userId = tempUserId
+      ..identifier = threshold.bigIntToBytes(walletIdentifier.toScalar());
+
+    final step3Futures = await Future.wait(
+        [_stub.dKGStep3(reqStep3Wallet), _stub.dKGStep3(reqStep3Hw)]);
+
+    // 8. Wallet receives shares from dealers (HW signer + server)
+    final sharesForWallet = _parseShares(step3Futures[0].round2PackagesForMe);
+    final sharesForHw = _parseShares(step3Futures[1].round2PackagesForMe);
+
+    // 9. Wallet finalizes as passive receiver
+    final allParticipantIds = <threshold.Identifier>[
+      ...dealerR1ForWallet.keys,
+      walletIdentifier,
+    ];
+    final (walletKeyPkg, pubKeyPkg) = threshold.dkgPart3Receive(
+      walletIdentifier,
+      dealerR1ForWallet,
+      sharesForWallet,
+      _minSigners,
+      _maxSigners,
+      allParticipantIds,
+    );
+
+    // 10. HW signer finalizes (stores updated key internally)
+    final dkgResult = await signer.dkgRound3(
+      dealerR1ForHw,
+      sharesForHw,
+      receiverIdentifiers: [walletIdentifier],
+    );
+
+    // 11. Wallet's new secret share becomes the auth key
+    _signingSecret = threshold.SecretKey(walletKeyPkg.secretShare);
+    _userId = threshold
+        .elemSerializeCompressed(walletKeyPkg.verifyingShare)
+        .toList();
+    _recoveryId = hwVerifyingKey.toList();
+
+    // 12. Store policies
+    _normalPolicy = SpendingPolicy(
+        id: "normal_policy_id",
+        keyPackage: walletKeyPkg,
+        publicKeyPackage: pubKeyPkg);
+
+    final recoveryVerifyingShare =
+        pubKeyPkg.verifyingShares[dkgResult.identifier];
+    if (recoveryVerifyingShare == null) {
+      throw StateError("Recovery identifier not found in public key package");
+    }
+
+    final recoveryKeyPkg = threshold.KeyPackage(
+      dkgResult.identifier,
+      BigInt.zero,
+      recoveryVerifyingShare,
+      pubKeyPkg.verifyingKey,
+      _minSigners,
+    );
+
+    _recoveryPolicy = RecoveryPolicy(
+        id: "recovery_policy_id",
+        keyPackage: recoveryKeyPkg,
+        publicKeyPackage: pubKeyPkg);
+
+    // Clear protected policies (verifying shares changed, old keys invalid)
+    _protectedPolicies.clear();
+
+    _authHelper = ClientAuthHelper.fromSigningSecret(_signingSecret!, _userId!);
+
+    await _saveState();
+  }
+
   // Note: PublicKey is the unifying key for all identities
   PublicKeyPackage? getTweakedPublicKeyPackage(List<int>? merkle_root) {
     final publicKeyPackage = _normalPolicy?.publicKeyPackage;

@@ -15,11 +15,12 @@ const DKGStep1Request$json = const {
     const {'1': 'user_id', '3': 1, '4': 1, '5': 12, '10': 'userId'},
     const {'1': 'identifier', '3': 2, '4': 1, '5': 12, '10': 'identifier'},
     const {'1': 'round1_package', '3': 3, '4': 1, '5': 9, '10': 'round1Package'},
+    const {'1': 'is_restore', '3': 4, '4': 1, '5': 8, '10': 'isRestore'},
   ],
 };
 
 /// Descriptor for `DKGStep1Request`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List dKGStep1RequestDescriptor = $convert.base64Decode('Cg9ES0dTdGVwMVJlcXVlc3QSFwoHdXNlcl9pZBgBIAEoDFIGdXNlcklkEh4KCmlkZW50aWZpZXIYAiABKAxSCmlkZW50aWZpZXISJQoOcm91bmQxX3BhY2thZ2UYAyABKAlSDXJvdW5kMVBhY2thZ2U=');
+final $typed_data.Uint8List dKGStep1RequestDescriptor = $convert.base64Decode('Cg9ES0dTdGVwMVJlcXVlc3QSFwoHdXNlcl9pZBgBIAEoDFIGdXNlcklkEh4KCmlkZW50aWZpZXIYAiABKAxSCmlkZW50aWZpZXISJQoOcm91bmQxX3BhY2thZ2UYAyABKAlSDXJvdW5kMVBhY2thZ2USHQoKaXNfcmVzdG9yZRgEIAEoCFIJaXNSZXN0b3Jl');
 @$core.Deprecated('Use dKGStep1ResponseDescriptor instead')
 const DKGStep1Response$json = const {
   '1': 'DKGStep1Response',

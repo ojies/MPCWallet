@@ -33,6 +33,7 @@ pub struct SignerState {
     key_package: Option<KeyPackage>,
     public_key_package: Option<PublicKeyPackage>,
     pending_nonce: Option<SigningNonce>,
+    dkg_secret: Option<[u8; 32]>,
 }
 
 impl SignerState {
@@ -44,13 +45,15 @@ impl SignerState {
             key_package: None,
             public_key_package: None,
             pending_nonce: None,
+            dkg_secret: None,
         }
     }
 
     /// Restore key material loaded from flash.
-    pub fn restore_keys(&mut self, kp: KeyPackage, pkp: PublicKeyPackage) {
+    pub fn restore_keys(&mut self, kp: KeyPackage, pkp: PublicKeyPackage, dkg_secret: Option<[u8; 32]>) {
         self.key_package = Some(kp);
         self.public_key_package = Some(pkp);
+        self.dkg_secret = dkg_secret;
     }
 
     pub fn key_package(&self) -> Option<&KeyPackage> {
@@ -61,13 +64,20 @@ impl SignerState {
         self.public_key_package.as_ref()
     }
 
-    /// Returns true if DKG round 3 just completed (keys are freshly set).
+    pub fn dkg_secret(&self) -> Option<&[u8; 32]> {
+        self.dkg_secret.as_ref()
+    }
+
     pub fn handle(&mut self, req: Request) -> Response {
         match req {
             Request::DkgInit {
                 max_signers,
                 min_signers,
             } => self.handle_dkg_init(max_signers, min_signers),
+            Request::RestoreInit {
+                max_signers,
+                min_signers,
+            } => self.handle_restore_init(max_signers, min_signers),
             Request::DkgRound2 { round1_packages, receiver_identifiers } => {
                 self.handle_dkg_round2(round1_packages, receiver_identifiers)
             }
@@ -94,6 +104,9 @@ impl SignerState {
             coefficients.push(random_scalar(&mut self.rng));
         }
 
+        // Store the DKG secret for potential future restore
+        self.dkg_secret = Some(scalar_to_bytes(&secret));
+
         match dkg::dkg_part1(max_signers, min_signers, &secret, &coefficients, &mut self.rng) {
             Ok((secret_pkg, pub_pkg)) => {
                 let id_hex = hex_encode(&secret_pkg.identifier.serialize());
@@ -110,6 +123,48 @@ impl SignerState {
             }
             Err(e) => Response::Error {
                 error: format!("dkg_init failed: {}", e),
+            },
+        }
+    }
+
+    fn handle_restore_init(&mut self, max_signers: usize, min_signers: usize) -> Response {
+        let secret_bytes = match &self.dkg_secret {
+            Some(s) => *s,
+            None => {
+                return Response::Error {
+                    error: "no DKG secret stored; cannot restore (run initial DKG first)".into(),
+                }
+            }
+        };
+
+        // Reconstruct the same secret scalar from stored bytes
+        let secret = match scalar_from_bytes(&secret_bytes) {
+            Ok(s) => s,
+            Err(e) => return Response::Error { error: e },
+        };
+
+        // Generate fresh random coefficients (different polynomial, same constant term)
+        let mut coefficients = Vec::with_capacity(min_signers - 1);
+        for _ in 0..(min_signers - 1) {
+            coefficients.push(random_scalar(&mut self.rng));
+        }
+
+        match dkg::dkg_part1(max_signers, min_signers, &secret, &coefficients, &mut self.rng) {
+            Ok((secret_pkg, pub_pkg)) => {
+                let id_hex = hex_encode(&secret_pkg.identifier.serialize());
+                let vk_hex = hex_encode(&pub_pkg.verifying_key.serialize());
+                let r1_json = pub_pkg.to_json_value();
+
+                self.r1_secret = Some(secret_pkg);
+
+                Response::DkgInit {
+                    round1_package_json: r1_json,
+                    verifying_key_hex: vk_hex,
+                    identifier_hex: id_hex,
+                }
+            }
+            Err(e) => Response::Error {
+                error: format!("restore_init failed: {}", e),
             },
         }
     }
@@ -401,6 +456,17 @@ impl SignerState {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+fn scalar_from_bytes(bytes: &[u8; 32]) -> Result<Scalar, String> {
+    use k256::elliptic_curve::scalar::FromUintUnchecked;
+    use k256::U256;
+    let uint = U256::from_be_slice(bytes);
+    let s = Scalar::from_uint_unchecked(uint);
+    if bool::from(s.is_zero()) {
+        return Err("stored DKG secret is zero".into());
+    }
+    Ok(s)
+}
 
 fn random_scalar(rng: &mut impl rand_core::RngCore) -> Scalar {
     use k256::elliptic_curve::ops::Reduce;

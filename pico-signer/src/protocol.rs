@@ -21,6 +21,12 @@ pub enum Request {
         min_signers: usize,
     },
 
+    #[serde(rename = "restore_init")]
+    RestoreInit {
+        max_signers: usize,
+        min_signers: usize,
+    },
+
     #[serde(rename = "dkg_round2")]
     DkgRound2 {
         round1_packages: BTreeMap<String, serde_json::Value>,

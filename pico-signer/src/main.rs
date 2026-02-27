@@ -46,9 +46,9 @@ async fn main(_spawner: Spawner) {
 
     // 5. Initialize signer state
     let mut signer_state = handler::SignerState::new(pico_rng);
-    if let Some((kp, pkp)) = loaded_keys {
+    if let Some((kp, pkp, dkg_secret)) = loaded_keys {
         info!("Restored key material from flash");
-        signer_state.restore_keys(kp, pkp);
+        signer_state.restore_keys(kp, pkp, dkg_secret);
     } else {
         info!("No key material in flash -- awaiting DKG");
     }
@@ -173,7 +173,7 @@ fn process_message(
             // Persist keys after successful DKG round 3
             if is_dkg_round3 {
                 if let (Some(kp), Some(pkp)) = (state.key_package(), state.public_key_package()) {
-                    if let Err(()) = storage.save(kp, pkp) {
+                    if let Err(()) = storage.save(kp, pkp, state.dkg_secret()) {
                         warn!("Failed to persist key material to flash");
                     }
                 }
