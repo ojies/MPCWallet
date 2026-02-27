@@ -194,102 +194,126 @@ class MpcClient {
 
   // --- DKG ---
 
-  /// DKG: signing identity runs locally, recovery identity
-  /// runs on the hardware signer (secret never leaves the device).
+  /// DKG: only the hardware signer and server contribute secrets (dealers).
+  /// The wallet is a passive receiver — it gets a valid signing share
+  /// without contributing key material. Group key = s_hw + s_server.
   Future<void> doDkg() async {
     await _store.init();
     final signer = _hardwareSigner;
 
-    // 1. Generate signing secret locally (participant 1 — unchanged)
-    _signingSecret = threshold.SecretKey(threshold.modNRandom());
-    final coeffs1 = threshold.generateCoefficients(_minSigners - 1);
-    final (r1Sec1, r1Pub1) =
-        threshold.dkgPart1(_maxSigners, _minSigners, _signingSecret!, coeffs1);
-
-    // 2. Hardware signer generates recovery secret (participant 2)
+    // 1. Hardware signer generates secret (dealer)
     final dkgInit = await signer.dkgInit(_maxSigners, _minSigners);
+    final hwVerifyingKey = dkgInit.verifyingKeyBytes;
+    final hwIdentifier = dkgInit.identifier;
 
-    final userId = threshold.elemSerializeCompressed(r1Pub1.verifyingKey.E);
-    final recoveryId = dkgInit.verifyingKeyBytes;
+    // 2. Derive wallet identifier deterministically from HW signer's VK
+    final walletIdInput = Uint8List.fromList(
+      [...'wallet:'.codeUnits, ...hwVerifyingKey],
+    );
+    final walletIdentifier = threshold.Identifier.derive(walletIdInput);
 
-    _userId = userId;
-    _recoveryId = recoveryId;
+    // Use HW VK as temporary session key during DKG
+    final tempUserId = Uint8List.fromList(hwVerifyingKey);
 
-    final signingIdThresholdId = threshold.Identifier.derive(userId);
-    final recoveryIdThresholdId = dkgInit.identifier;
+    // 3. Send Round1 packages to server:
+    //    - Wallet: empty round1 = passive receiver
+    //    - HW signer: actual round1 = dealer
+    final hwR1Json = jsonEncode(dkgInit.round1Package.toJson());
 
-    // 3. Send both Round1Packages to server
-    final r1Json1 = jsonEncode(r1Pub1.toJson());
-    final r1Json2 = jsonEncode(dkgInit.round1Package.toJson());
+    final reqWallet = DKGStep1Request()
+      ..userId = tempUserId
+      ..identifier = walletIdentifier.serialize()
+      ..round1Package = ''; // passive receiver
 
-    final req1 = DKGStep1Request()
-      ..userId = userId
-      ..identifier = signingIdThresholdId.serialize()
-      ..round1Package = r1Json1;
+    final reqHw = DKGStep1Request()
+      ..userId = tempUserId
+      ..identifier = hwIdentifier.serialize()
+      ..round1Package = hwR1Json;
 
-    final req2 = DKGStep1Request()
-      ..userId = userId
-      ..identifier = recoveryIdThresholdId.serialize()
-      ..round1Package = r1Json2;
-
-    final step1Futures =
-        await Future.wait([_stub.dKGStep1(req1), _stub.dKGStep1(req2)]);
+    final step1Futures = await Future.wait(
+        [_stub.dKGStep1(reqWallet), _stub.dKGStep1(reqHw)]);
     final step1Resp = step1Futures[0];
 
-    // Trigger Step 2 on server
-    await _stub.dKGStep2(DKGStep2Request()..userId = userId);
+    // 4. Trigger Step 2 on server (server computes round2)
+    await _stub.dKGStep2(DKGStep2Request()..userId = tempUserId);
 
-    // Parse R1 packages for both identities
-    final round1PkgsMap1 = <threshold.Identifier, threshold.Round1Package>{};
-    final round1PkgsMap2 = <threshold.Identifier, threshold.Round1Package>{};
+    // 5. Parse dealer R1 packages (for HW signer and wallet)
+    final dealerR1ForHw = <threshold.Identifier, threshold.Round1Package>{};
+    final dealerR1ForWallet = <threshold.Identifier, threshold.Round1Package>{};
 
     step1Resp.round1Packages.forEach((k, v) {
-      if (v.isEmpty) {
-        throw FormatException('Empty round1 package for key $k');
-      }
+      if (v.isEmpty) return; // skip passive receiver entries
       final id = threshold.Identifier(BigInt.parse(k, radix: 16));
       final pkg = threshold.Round1Package.fromJson(jsonDecode(v));
-      if (id != signingIdThresholdId) round1PkgsMap1[id] = pkg;
-      if (id != recoveryIdThresholdId) round1PkgsMap2[id] = pkg;
+      // HW signer needs all other dealers' R1 (= server's)
+      if (id != hwIdentifier) dealerR1ForHw[id] = pkg;
+      // Wallet needs all dealers' R1 (= HW signer + server)
+      dealerR1ForWallet[id] = pkg;
     });
 
-    // 4. Compute shares: signing identity locally, recovery via hardware signer
-    final (r2Sec1, sharesFrom1) = threshold.dkgPart2(r1Sec1, round1PkgsMap1);
-    final sharesFrom2 = await signer.dkgRound2(round1PkgsMap2);
+    // 6. HW signer computes shares for server + wallet
+    final sharesFromHw = await signer.dkgRound2(
+      dealerR1ForHw,
+      receiverIdentifiers: [walletIdentifier],
+    );
 
-    // 5. Send shares to server
-    final req3_1 = DKGStep3Request()
-      ..userId = userId
-      ..identifier = threshold.bigIntToBytes(signingIdThresholdId.toScalar())
-      ..round2PackagesForOthers.addAll(_buildSharesMap(sharesFrom1));
+    // 7. Send Round2 packages to server
+    //    - HW signer: actual shares for others
+    //    - Wallet: empty (passive receiver)
+    final reqStep3Hw = DKGStep3Request()
+      ..userId = tempUserId
+      ..identifier = threshold.bigIntToBytes(hwIdentifier.toScalar())
+      ..round2PackagesForOthers.addAll(_buildSharesMap(sharesFromHw));
 
-    final req3_2 = DKGStep3Request()
-      ..userId = userId
-      ..identifier = threshold.bigIntToBytes(recoveryIdThresholdId.toScalar())
-      ..round2PackagesForOthers.addAll(_buildSharesMap(sharesFrom2));
+    final reqStep3Wallet = DKGStep3Request()
+      ..userId = tempUserId
+      ..identifier = threshold.bigIntToBytes(walletIdentifier.toScalar());
+    // wallet sends no round2 packages (passive receiver)
 
-    final step3Futures =
-        await Future.wait([_stub.dKGStep3(req3_1), _stub.dKGStep3(req3_2)]);
+    final step3Futures = await Future.wait(
+        [_stub.dKGStep3(reqStep3Wallet), _stub.dKGStep3(reqStep3Hw)]);
 
-    final sharesForMe1 = _parseShares(step3Futures[0].round2PackagesForMe);
-    final sharesForMe2 = _parseShares(step3Futures[1].round2PackagesForMe);
+    // 8. Wallet receives shares from dealers (HW signer + server)
+    final sharesForWallet = _parseShares(step3Futures[0].round2PackagesForMe);
+    final sharesForHw = _parseShares(step3Futures[1].round2PackagesForMe);
 
-    // 6. Finalize signing identity locally
-    final (keyPkg1, pubKeyPkg1) =
-        threshold.dkgPart3(r1Sec1, r2Sec1, round1PkgsMap1, sharesForMe1);
+    // 9. Wallet finalizes as passive receiver
+    final allParticipantIds = <threshold.Identifier>[
+      ...dealerR1ForWallet.keys,
+      walletIdentifier,
+    ];
+    final (walletKeyPkg, pubKeyPkg) = threshold.dkgPart3Receive(
+      walletIdentifier,
+      dealerR1ForWallet,
+      sharesForWallet,
+      _minSigners,
+      _maxSigners,
+      allParticipantIds,
+    );
 
-    // 7. Hardware signer finalizes recovery identity (stores key internally)
-    final dkgResult = await signer.dkgRound3(round1PkgsMap2, sharesForMe2);
+    // 10. HW signer finalizes (stores key internally)
+    final dkgResult = await signer.dkgRound3(
+      dealerR1ForHw,
+      sharesForHw,
+      receiverIdentifiers: [walletIdentifier],
+    );
 
-    // 8. Store policies
+    // 11. Wallet's DKG secret share becomes the auth key
+    _signingSecret = threshold.SecretKey(walletKeyPkg.secretShare);
+    _userId = threshold
+        .elemSerializeCompressed(walletKeyPkg.verifyingShare)
+        .toList();
+    _recoveryId = hwVerifyingKey.toList();
+
+    // 12. Store policies
     _normalPolicy = SpendingPolicy(
         id: "normal_policy_id",
-        keyPackage: keyPkg1,
-        publicKeyPackage: pubKeyPkg1);
+        keyPackage: walletKeyPkg,
+        publicKeyPackage: pubKeyPkg);
 
     // Recovery policy: secret share stays on hardware signer (store zero locally)
     final recoveryVerifyingShare =
-        pubKeyPkg1.verifyingShares[dkgResult.identifier];
+        pubKeyPkg.verifyingShares[dkgResult.identifier];
     if (recoveryVerifyingShare == null) {
       throw StateError("Recovery identifier not found in public key package");
     }
@@ -298,16 +322,15 @@ class MpcClient {
       dkgResult.identifier,
       BigInt.zero, // secret stays on hardware signer
       recoveryVerifyingShare,
-      pubKeyPkg1.verifyingKey,
+      pubKeyPkg.verifyingKey,
       _minSigners,
     );
 
     _recoveryPolicy = RecoveryPolicy(
         id: "recovery_policy_id",
         keyPackage: recoveryKeyPkg,
-        publicKeyPackage: pubKeyPkg1);
+        publicKeyPackage: pubKeyPkg);
 
-    _userId = userId.toList();
     _authHelper = ClientAuthHelper.fromSigningSecret(_signingSecret!, _userId!);
 
     await _saveState();

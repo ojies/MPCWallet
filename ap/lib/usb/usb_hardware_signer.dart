@@ -64,18 +64,26 @@ class UsbHardwareSigner implements HardwareSignerInterface {
 
   @override
   Future<Map<Identifier, Round2Package>> dkgRound2(
-    Map<Identifier, Round1Package> othersRound1,
-  ) async {
+    Map<Identifier, Round1Package> othersRound1, {
+    List<Identifier> receiverIdentifiers = const [],
+  }) async {
     final r1Map = <String, dynamic>{};
     for (final entry in othersRound1.entries) {
       final idHex = hex.encode(entry.key.serialize());
       r1Map[idHex] = entry.value.toJson();
     }
 
-    final resp = await _transport.sendCommand({
+    final cmd = <String, dynamic>{
       'cmd': 'dkg_round2',
       'round1_packages': r1Map,
-    });
+    };
+    if (receiverIdentifiers.isNotEmpty) {
+      cmd['receiver_identifiers'] = receiverIdentifiers
+          .map((id) => hex.encode(id.serialize()))
+          .toList();
+    }
+
+    final resp = await _transport.sendCommand(cmd);
 
     final r2Map = resp['round2_packages'] as Map<String, dynamic>;
     final result = <Identifier, Round2Package>{};
@@ -97,8 +105,9 @@ class UsbHardwareSigner implements HardwareSignerInterface {
   @override
   Future<DkgFinalResult> dkgRound3(
     Map<Identifier, Round1Package> round1Pkgs,
-    Map<Identifier, Round2Package> round2Pkgs,
-  ) async {
+    Map<Identifier, Round2Package> round2Pkgs, {
+    List<Identifier> receiverIdentifiers = const [],
+  }) async {
     final r1Map = <String, dynamic>{};
     for (final entry in round1Pkgs.entries) {
       final idHex = hex.encode(entry.key.serialize());
@@ -111,11 +120,18 @@ class UsbHardwareSigner implements HardwareSignerInterface {
       r2Map[idHex] = entry.value.toJson();
     }
 
-    final resp = await _transport.sendCommand({
+    final cmd = <String, dynamic>{
       'cmd': 'dkg_round3',
       'round1_packages': r1Map,
       'round2_packages': r2Map,
-    });
+    };
+    if (receiverIdentifiers.isNotEmpty) {
+      cmd['receiver_identifiers'] = receiverIdentifiers
+          .map((id) => hex.encode(id.serialize()))
+          .toList();
+    }
+
+    final resp = await _transport.sendCommand(cmd);
 
     final idHex = resp['identifier_hex'] as String;
     final idBytes = Uint8List.fromList(hex.decode(idHex));

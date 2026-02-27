@@ -18,12 +18,16 @@ pub enum Request {
     DkgRound2 {
         /// Keyed by identifier hex, value is Round1Package JSON
         round1_packages: HashMap<String, serde_json::Value>,
+        #[serde(default)]
+        receiver_identifiers: Vec<String>,
     },
 
     #[serde(rename = "dkg_round3")]
     DkgRound3 {
         round1_packages: HashMap<String, serde_json::Value>,
         round2_packages: HashMap<String, serde_json::Value>,
+        #[serde(default)]
+        receiver_identifiers: Vec<String>,
     },
 
     #[serde(rename = "generate_nonce")]
