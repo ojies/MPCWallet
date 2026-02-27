@@ -504,8 +504,7 @@ class MpcClient {
       throw StateError("Signing secret is null, cannot proceed with refresh.");
     }
 
-    final signingIdentifier =
-        threshold.Identifier.derive(Uint8List.fromList(_userId!));
+    final signingIdentifier = _normalPolicy!.keyPackage.identifier;
 
     final (r1Sec1, r1Pub1) = threshold.dkgRefreshPart1(
         signingIdentifier, refreshTotalParties, refreshThreshold,
@@ -619,8 +618,7 @@ class MpcClient {
       throw StateError("User ID is null, cannot proceed with signing.");
     }
 
-    final signingIdentifier =
-        threshold.Identifier.derive(Uint8List.fromList(_userId!));
+    final signingIdentifier = _normalPolicy!.keyPackage.identifier;
 
     if (policyId != null &&
         _protectedPolicies.containsKey(policyId) &&

@@ -119,12 +119,11 @@
     },
     {
       "name": "threshold",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "dependencies": [
         "convert",
         "crypto",
-        "pointycastle",
-        "secp256k1"
+        "ffi"
       ]
     },
     {
@@ -477,13 +476,9 @@
       ]
     },
     {
-      "name": "pointycastle",
-      "version": "3.9.1",
-      "dependencies": [
-        "collection",
-        "convert",
-        "js"
-      ]
+      "name": "ffi",
+      "version": "2.2.0",
+      "dependencies": []
     },
     {
       "name": "convert",
@@ -491,11 +486,6 @@
       "dependencies": [
         "typed_data"
       ]
-    },
-    {
-      "name": "secp256k1",
-      "version": "0.3.0",
-      "dependencies": []
     },
     {
       "name": "logging",
