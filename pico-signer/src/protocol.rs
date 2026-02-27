@@ -24,12 +24,16 @@ pub enum Request {
     #[serde(rename = "dkg_round2")]
     DkgRound2 {
         round1_packages: BTreeMap<String, serde_json::Value>,
+        #[serde(default)]
+        receiver_identifiers: alloc::vec::Vec<String>,
     },
 
     #[serde(rename = "dkg_round3")]
     DkgRound3 {
         round1_packages: BTreeMap<String, serde_json::Value>,
         round2_packages: BTreeMap<String, serde_json::Value>,
+        #[serde(default)]
+        receiver_identifiers: alloc::vec::Vec<String>,
     },
 
     #[serde(rename = "generate_nonce")]

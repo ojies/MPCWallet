@@ -68,11 +68,14 @@ impl SignerState {
                 max_signers,
                 min_signers,
             } => self.handle_dkg_init(max_signers, min_signers),
-            Request::DkgRound2 { round1_packages } => self.handle_dkg_round2(round1_packages),
+            Request::DkgRound2 { round1_packages, receiver_identifiers } => {
+                self.handle_dkg_round2(round1_packages, receiver_identifiers)
+            }
             Request::DkgRound3 {
                 round1_packages,
                 round2_packages,
-            } => self.handle_dkg_round3(round1_packages, round2_packages),
+                receiver_identifiers,
+            } => self.handle_dkg_round3(round1_packages, round2_packages, receiver_identifiers),
             Request::GenerateNonce => self.handle_generate_nonce(),
             Request::Sign {
                 message_hex,
@@ -114,6 +117,7 @@ impl SignerState {
     fn handle_dkg_round2(
         &mut self,
         round1_packages: BTreeMap<String, serde_json::Value>,
+        receiver_identifier_hexes: Vec<String>,
     ) -> Response {
         let r1_secret = match &self.r1_secret {
             Some(s) => s,
@@ -141,7 +145,15 @@ impl SignerState {
             r1_pkgs.insert(id, pkg);
         }
 
-        match dkg::dkg_part2(r1_secret, &r1_pkgs) {
+        let mut receiver_ids = Vec::new();
+        for hex_str in &receiver_identifier_hexes {
+            match parse_identifier(hex_str) {
+                Ok(id) => receiver_ids.push(id),
+                Err(e) => return Response::Error { error: e },
+            }
+        }
+
+        match dkg::dkg_part2(r1_secret, &r1_pkgs, &receiver_ids) {
             Ok((r2_secret, r2_out)) => {
                 let mut r2_map: BTreeMap<String, serde_json::Value> = BTreeMap::new();
                 for (id, pkg) in &r2_out {
@@ -165,6 +177,7 @@ impl SignerState {
         &mut self,
         round1_packages: BTreeMap<String, serde_json::Value>,
         round2_packages: BTreeMap<String, serde_json::Value>,
+        receiver_identifier_hexes: Vec<String>,
     ) -> Response {
         let r1_secret = match &self.r1_secret {
             Some(s) => s,
@@ -217,7 +230,15 @@ impl SignerState {
             r2_pkgs.insert(id, pkg);
         }
 
-        match dkg::dkg_part3(r1_secret, r2_secret, &r1_pkgs, &r2_pkgs) {
+        let mut receiver_ids = Vec::new();
+        for hex_str in &receiver_identifier_hexes {
+            match parse_identifier(hex_str) {
+                Ok(id) => receiver_ids.push(id),
+                Err(e) => return Response::Error { error: e },
+            }
+        }
+
+        match dkg::dkg_part3(r1_secret, r2_secret, &r1_pkgs, &r2_pkgs, &receiver_ids) {
             Ok((kp, pkp)) => {
                 let id_hex = hex_encode(&kp.identifier.serialize());
                 let pk_hex = hex_encode(&pkp.verifying_key.serialize());
