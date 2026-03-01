@@ -21,15 +21,7 @@ class MpcService extends ChangeNotifier {
 
   String? _storageId;
 
-  // Hardware signer settings
-  String _signerMode = 'hardware';
-  String _signerType = 'tcp'; // 'usb' or 'tcp'
-  String _signerHost = '10.0.2.2';
-  int _signerPort = 9090;
   HardwareSignerInterface? _hardwareSigner;
-
-  String get signerMode => _signerMode;
-  String get signerType => _signerType;
 
   /// Future that completes when init() finishes. Await this before
   /// checking dkgComplete or calling restoreSession().
@@ -97,12 +89,6 @@ class MpcService extends ChangeNotifier {
       _host = _identityBox!.get('serverHost', defaultValue: '10.0.2.2');
       print("MPC Service: Using host: $_host");
 
-      _signerMode = _identityBox!.get('signerMode', defaultValue: 'hardware');
-      _signerType = _identityBox!.get('signerType', defaultValue: 'tcp');
-      _signerHost = _identityBox!.get('signerHost', defaultValue: '10.0.2.2');
-      _signerPort = _identityBox!.get('signerPort', defaultValue: 9090);
-      print("MPC Service: Signer type: $_signerType");
-
       _dkgComplete = _identityBox!.get('dkgComplete', defaultValue: false);
       _storageId = _identityBox!.get('storageId') as String?;
       if (_storageId == null || _storageId!.isEmpty) {
@@ -148,31 +134,8 @@ class MpcService extends ChangeNotifier {
     await _identityBox!.put('serverHost', host);
   }
 
-  Future<void> setSignerType(String type) async {
-    _signerType = type;
-    await _ensurePersistenceInitialized();
-    if (_identityBox == null || !_identityBox!.isOpen) {
-      _identityBox = await Hive.openBox('mpc_service_identity');
-    }
-    await _identityBox!.put('signerType', type);
-  }
-
-  Future<void> setSignerHost(String host, int port) async {
-    _signerHost = host;
-    _signerPort = port;
-    await _ensurePersistenceInitialized();
-    if (_identityBox == null || !_identityBox!.isOpen) {
-      _identityBox = await Hive.openBox('mpc_service_identity');
-    }
-    await _identityBox!.put('signerHost', host);
-    await _identityBox!.put('signerPort', port);
-  }
-
   HardwareSignerInterface _createSigner() {
-    if (_signerType == 'usb') {
-      return UsbHardwareSigner();
-    }
-    return TcpHardwareSigner(host: _signerHost, port: _signerPort);
+    return UsbHardwareSigner();
   }
 
   Future<void> doDkg() async {

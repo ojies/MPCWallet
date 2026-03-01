@@ -83,7 +83,7 @@ void main() {
       throw Exception("Docker started but RPC unreachable: $e");
     }
 
-    // 2. Server
+    // 2. Server (Rust)
     print('Starting MPC Server...');
     final portSocket = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
     serverPort = portSocket.port;
@@ -92,9 +92,11 @@ void main() {
     final serverReady = Completer<void>();
     final serverFailed = Completer<void>();
     serverProcess = await Process.start(
-      'dart',
-      ['bin/server.dart'],
-      workingDirectory: '../server',
+      '../server/target/release/server',
+      [
+        '--wasm', '../cosigner/target/wasm32-wasip1/release/cosigner.wasm',
+        '--port', serverPort.toString(),
+      ],
       mode: ProcessStartMode.normal,
       environment: {
         'ELECTRUM_URL': '127.0.0.1',
@@ -102,7 +104,6 @@ void main() {
         'BITCOIN_RPC_USER': 'admin1',
         'BITCOIN_RPC_PASSWORD': '123',
         'HOME': serverTempDir.path,
-        'PORT': serverPort.toString(),
       },
     );
     final stdoutBuffer = StringBuffer();
@@ -110,7 +111,7 @@ void main() {
       stdoutBuffer.write(data);
       print('[Server]: $data');
       if (!serverReady.isCompleted &&
-          stdoutBuffer.toString().contains('Server listening on port')) {
+          stdoutBuffer.toString().contains('MPC Wallet Server listening on')) {
         serverReady.complete();
       }
     }, onDone: () {
@@ -118,13 +119,14 @@ void main() {
         serverFailed.complete();
       }
     });
+    // Server uses tracing which outputs to stderr
     final stderrBuffer = StringBuffer();
     serverProcess!.stderr.transform(utf8.decoder).listen((data) {
       stderrBuffer.write(data);
-      print('[Server Error]: $data');
-      if (!serverFailed.isCompleted &&
-          stderrBuffer.toString().contains('Unhandled exception')) {
-        serverFailed.complete();
+      print('[Server]: $data');
+      if (!serverReady.isCompleted &&
+          stderrBuffer.toString().contains('MPC Wallet Server listening on')) {
+        serverReady.complete();
       }
     }, onDone: () {
       if (!serverReady.isCompleted && !serverFailed.isCompleted) {

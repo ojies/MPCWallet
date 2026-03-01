@@ -8,7 +8,7 @@ import 'package:convert/convert.dart';
 import 'package:client/persistence/wallet_store.dart';
 import 'package:client/coin_selection.dart';
 import 'package:client/fees.dart';
-import 'package:threshold/threshold.dart' as threshold; // Access bigIntToBytes
+import 'package:client/threshold/threshold.dart' as threshold; // Access bigIntToBytes
 import 'package:protocol/protocol.dart';
 
 class UnsignedTransaction {

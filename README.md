@@ -38,15 +38,14 @@ Any 2-of-3 can produce a valid Taproot (BIP-340) signature. The server alone can
 ```
 MPCWallet/
 +-- ap/                 Flutter mobile app (Merlin Wallet)
-+-- client/             Dart client library (DKG, signing, UTXO management)
-+-- server/             gRPC coordination server
-+-- threshold/          FROST & DKG cryptography (Dart, secp256k1)
-+-- threshold-rs/       Same crypto in Rust (no_std, for embedded targets)
++-- client/             Dart client library (DKG, signing, UTXO management, FFI wrapper)
++-- threshold/          FROST & DKG cryptography (Rust, no_std, secp256k1)
++-- threshold-ffi/      C-ABI shared library wrapping threshold for Dart FFI
++-- server/             Rust gRPC coordination server (Wasmtime + cosigner WASM)
++-- cosigner/           WASM cosigner component (server-side threshold crypto)
 +-- pico-signer/        Raspberry Pi Pico 2 firmware (Embassy + USB HID)
-+-- signer-server/      TCP test server simulating the hardware signer
-+-- protocol/           Generated gRPC stubs
-+-- protos/             Protocol Buffer definitions
-+-- e2e/                End-to-end integration tests
++-- protocol/           gRPC stubs and proto definitions
++-- e2e/                End-to-end integration tests (includes signer-server)
 +-- scripts/            Utilities (bitcoin.sh, test_pico.py, udev rules)
 +-- docker-compose.yml  Bitcoin regtest environment (bitcoind + electrs)
 +-- Makefile            Build, flash, and run targets
@@ -58,27 +57,23 @@ Android wallet UI built with Provider state management and GoRouter navigation. 
 
 ### Client Library (`client/`)
 
-High-level Dart API that orchestrates the full MPC protocol. Manages two local identities (signing + recovery), communicates with the coordination server over gRPC, drives the hardware signer over USB HID, and handles Taproot address derivation, UTXO tracking, coin selection, and PSBT construction.
-
-### Coordination Server (`server/`)
-
-Stateless gRPC server that participates as the third identity in DKG and signing. Routes packages between participants, aggregates signature shares, enforces spending policies (time-windowed thresholds), and interfaces with Bitcoin Core (RPC) and Electrs (UTXO indexing).
+High-level Dart API that orchestrates the full MPC protocol. Manages two local identities (signing + recovery), communicates with the coordination server over gRPC, drives the hardware signer over USB HID, and handles Taproot address derivation, UTXO tracking, coin selection, and PSBT construction. Includes the Dart FFI wrapper for the threshold crypto library.
 
 ### Threshold Library (`threshold/`)
 
-Pure Dart implementation of FROST (Flexible Round-Optimized Schnorr Threshold Signatures) over secp256k1. Includes the full 3-round DKG protocol, Pedersen VSS, nonce commitment generation, signature share computation, Lagrange interpolation, Taproot key tweaking, and key refresh.
+`#![no_std]` Rust implementation of FROST (Flexible Round-Optimized Schnorr Threshold Signatures) over secp256k1 using the `k256` crate. Includes the full 3-round DKG protocol, Pedersen VSS, nonce commitment generation, signature share computation, Lagrange interpolation, Taproot key tweaking, and key refresh. Compiles for both `std` targets and bare-metal ARM (Pico 2).
 
-### Threshold Rust (`threshold-rs/`)
+### Coordination Server (`server/`)
 
-`#![no_std]` Rust port of the threshold library using the `k256` crate. Compiles for both `std` targets (signer-server) and bare-metal ARM (Pico 2). Supports JSON serialization of all DKG/signing structures via `serde`.
+Rust gRPC server that participates as the third identity in DKG and signing. Uses Wasmtime to run the cosigner WASM component for threshold crypto operations. Routes packages between participants, aggregates signature shares, enforces spending policies, and interfaces with Bitcoin Core (RPC) and Electrs (UTXO indexing).
 
 ### Pico Signer Firmware (`pico-signer/`)
 
 Embassy-based async firmware for the RP2350 (Raspberry Pi Pico 2). Communicates over vendor-defined USB HID (64-byte reports) using a chunking protocol for JSON messages up to 8KB. Persists key material to the last 4KB flash sector after DKG. Handles all six commands: `dkg_init`, `dkg_round2`, `dkg_round3`, `generate_nonce`, `sign`, `get_info`.
 
-### Signer Server (`signer-server/`)
+### Signer Server (`e2e/signer-server/`)
 
-Standalone Rust TCP server that implements the same JSON command protocol as the Pico firmware. Used for development and testing without physical hardware — the Flutter app's emulator connects to it over TCP instead of USB.
+Standalone Rust TCP server that implements the same JSON command protocol as the Pico firmware. Used in E2E and integration tests to simulate the hardware signer without physical hardware.
 
 ## Protocol
 
@@ -134,7 +129,7 @@ make bitcoin-init     # Mine 150 blocks
 ### 2. Run the coordination server
 
 ```bash
-make server-run       # gRPC server on :50051
+make server-run           # Builds cosigner WASM + server, runs on :50051
 ```
 
 ### 3a. Emulator testing (no hardware)
@@ -142,8 +137,7 @@ make server-run       # gRPC server on :50051
 In a second terminal:
 
 ```bash
-make signer-run       # TCP signer-server on :9090
-cd ap && flutter run   # Launch on emulator (select "Signing Server" in onboarding)
+cd ap && flutter run   # Launch on emulator
 ```
 
 ### 3b. Physical device + Pico hardware signer
@@ -206,14 +200,16 @@ make pico-test ARGS="--full-dkg"
 |--------|-------------|
 | `regtest-up` | Start bitcoind + electrs via Docker Compose |
 | `regtest-down` | Stop Docker containers and kill server processes |
-| `server-run` | Start MPC coordination server (foreground) |
-| `server-run-bg` | Start MPC coordination server (background) |
+| `server-run` | Build and run Rust gRPC server on :50051 |
+| `server-stop` | Stop the Rust gRPC server |
+| `cosigner-build` | Build WASM cosigner component |
 | `bitcoin-init` | Mine 150 regtest blocks |
-| `signer-build` | Build the TCP signer-server |
-| `signer-run` | Build and run signer-server on port 9090 |
+| `signer-build` | Build the TCP signer-server (in e2e/) |
+| `signer-run` | Build and run signer-server on port 9090 (for e2e tests) |
+| `e2e-test` | Run full E2E test (builds all deps, requires Docker) |
+| `threshold-ffi-build` | Build threshold FFI shared library |
 | `pico-build` | Build Pico 2 firmware |
 | `pico-flash` | Build, convert to UF2, and copy to RP2350 drive |
-| `pico-flash-probe` | Flash via SWD debug probe |
 | `pico-test` | Test Pico over USB HID (`ARGS="--full-dkg"` for full test) |
 | `adb-reverse` | Forward ports 50051 + 50001 from phone to PC |
 | `regtest-hardware` | Full stack: Docker + init + ADB + server |

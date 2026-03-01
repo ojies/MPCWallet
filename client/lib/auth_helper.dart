@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:threshold/threshold.dart' as threshold;
+import 'package:client/threshold/threshold.dart' as threshold;
 import 'package:convert/convert.dart';
 import 'package:fixnum/fixnum.dart';
 
