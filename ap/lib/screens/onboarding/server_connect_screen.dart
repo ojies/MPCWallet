@@ -18,12 +18,8 @@ class _ServerConnectionScreenState extends State<ServerConnectionScreen> {
   @override
   void initState() {
     super.initState();
-    final signerType = context.read<MpcService>().signerType;
-    // Physical device (USB signer) uses ADB reverse → 127.0.0.1
-    // Emulator (TCP signer) uses Android's host alias → 10.0.2.2
-    _urlController = TextEditingController(
-      text: signerType == 'usb' ? '127.0.0.1' : '10.0.2.2',
-    );
+    // Physical device with USB signer uses ADB reverse → 127.0.0.1
+    _urlController = TextEditingController(text: '127.0.0.1');
   }
 
   void _connect() async {

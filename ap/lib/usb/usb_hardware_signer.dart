@@ -10,10 +10,10 @@ import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
 import 'package:client/hardware_signer.dart';
-import 'package:threshold/core/dkg.dart';
-import 'package:threshold/core/identifier.dart';
-import 'package:threshold/core/utils.dart';
-import 'package:threshold/frost/commitment.dart' as frost_comm;
+import 'package:client/threshold/core/dkg.dart';
+import 'package:client/threshold/core/identifier.dart';
+import 'package:client/threshold/core/utils.dart';
+import 'package:client/threshold/frost/commitment.dart' as frost_comm;
 
 import 'usb_hid_transport.dart';
 

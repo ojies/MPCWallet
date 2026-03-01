@@ -9,10 +9,6 @@ environment:
 dependencies:
   client:
     path: ../client
-  server:
-    path: ../server
-  threshold:
-    path: ../threshold
   protocol:
     path: ../protocol
   grpc: ^3.2.4

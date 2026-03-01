@@ -1,4 +1,4 @@
-import 'package:threshold/threshold.dart' as threshold;
+import 'package:client/threshold/threshold.dart' as threshold;
 
 class SpendingPolicy {
   final String id;

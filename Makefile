@@ -1,4 +1,4 @@
-.PHONY: regtest-up regtest-down server-run server-run-bg regtest regtest-hardware proto bitcoin-init signer-build signer-run signer-stop pico-build pico-flash pico-test flutter-run threshold-ffi-build threshold-rs-test threshold-ffi-test e2e-test
+.PHONY: regtest-up regtest-down regtest regtest-hardware proto bitcoin-init signer-build signer-run signer-stop pico-build pico-flash pico-test flutter-run threshold-ffi-build threshold-test threshold-ffi-test e2e-test cosigner-build server-build server-run server-stop
 
 # Start Docker environment (Bitcoind + Electrs)
 regtest-up:
@@ -12,29 +12,19 @@ regtest-down:
 	@echo "Stopping Regtest environment..."
 	cd e2e && docker compose down
 	-pkill -f "signer-server" || true
-
-# Run the MPC Server attached to the Regtest environment
-# Using host networking for Docker on Linux implies 127.0.0.1 works
-# ELECTRUM_URL=127.0.0.1 ELECTRUM_PORT=50001 (mapped in docker-compose)
-server-run:
-	@echo "Starting MPC Server..."
-	export ELECTRUM_URL=127.0.0.1 && \
-	export ELECTRUM_PORT=50001 && \
-	export BITCOIN_RPC_USER=admin1 && \
-	export BITCOIN_RPC_PASSWORD=123 && \
-	dart server/bin/server.dart
+	-pkill -f "target/release/server" || true
 
 # Build the hardware signer test server
 signer-build:
 	@echo "Building Hardware Signer Test Server..."
 	export PATH="$$HOME/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin:$$PATH" && \
-	cd signer-server && cargo build --release
+	cd e2e/signer-server && cargo build --release
 
 # Run the hardware signer test server (background, default port 9090)
 signer-run: signer-build
 	@echo "Starting Hardware Signer Test Server on port 9090..."
 	export PATH="$$HOME/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin:$$PATH" && \
-	cd signer-server && cargo run --release -- --port 9090 &
+	cd e2e/signer-server && cargo run --release -- --port 9090 &
 	@sleep 2
 
 # Stop the hardware signer test server
@@ -42,24 +32,12 @@ signer-stop:
 	@echo "Stopping Hardware Signer Test Server..."
 	-pkill -f "signer-server" || true
 
-# Helper to start everything (includes hardware signer test server)
+# Helper to start everything
 regtest: regtest-up bitcoin-init signer-run server-run
 
 # Initialize regtest chain (mine 150 blocks)
 bitcoin-init:
 	./scripts/bitcoin.sh init
-
-# Run MPC Server in background
-server-run-bg:
-	@echo "Starting MPC Server (background)..."
-	@export ELECTRUM_URL=127.0.0.1 && \
-	export ELECTRUM_PORT=50001 && \
-	export BITCOIN_RPC_USER=admin1 && \
-	export BITCOIN_RPC_PASSWORD=123 && \
-	dart server/bin/server.dart &
-	@sleep 2
-	@echo "MPC Server running in background."
-
 
 # Hardware device setup: regtest + ADB reverse + server (bg), then run flutter separately
 regtest-hardware: regtest-up bitcoin-init adb-reverse server-run
@@ -113,10 +91,10 @@ threshold-ffi-build:
 	cd threshold-ffi && cargo build --release
 	@echo "Built: threshold-ffi/target/release/libthreshold_ffi.so"
 
-# Run threshold-rs tests
-threshold-rs-test:
-	@echo "Running threshold-rs tests..."
-	cd threshold-rs && cargo test --features std
+# Run threshold tests
+threshold-test:
+	@echo "Running threshold tests..."
+	cd threshold && cargo test --features std
 
 # Run threshold-ffi tests
 threshold-ffi-test:
@@ -124,12 +102,41 @@ threshold-ffi-test:
 	cd threshold-ffi && cargo test
 
 # Run the full E2E test (requires Docker running)
-e2e-test: threshold-ffi-build signer-run
+e2e-test: threshold-ffi-build cosigner-build server-build signer-run
 	@echo "Running E2E test..."
 	cd e2e && dart test test/full_system_test.dart
 	-pkill -f "signer-server" || true
 
+# Build WASM cosigner component
+cosigner-build:
+	@echo "Building cosigner WASM component..."
+	cd cosigner && cargo component build --release
+	@echo "Built: cosigner/target/wasm32-wasip1/release/cosigner.wasm"
+
+# Build MPC Wallet Server
+server-build:
+	@echo "Building server..."
+	cd server && cargo build --release
+
+# Run MPC Wallet Server (Rust, background, port 50051)
+server-run: cosigner-build server-build
+	@echo "Starting MPC Wallet Server on port 50051..."
+	export ELECTRUM_URL=127.0.0.1 && \
+	export ELECTRUM_PORT=50001 && \
+	export BITCOIN_RPC_USER=admin1 && \
+	export BITCOIN_RPC_PASSWORD=123 && \
+	cd server && cargo run --release -- \
+		--wasm ../cosigner/target/wasm32-wasip1/release/cosigner.wasm \
+		--port 50051 &
+	@sleep 2
+	@echo "MPC Wallet Server running in background."
+
+# Stop MPC Wallet Server
+server-stop:
+	@echo "Stopping MPC Wallet Server..."
+	-pkill -f "target/release/server" || true
+
 # Generate Dart gRPC stubs from protos
 proto:
 	@echo "Generating Dart gRPC stubs..."
-	protoc -I protos --dart_out=grpc:protocol/lib/src/generated protos/mpc_wallet.proto
+	protoc -I protocol/protos --dart_out=grpc:protocol/lib/src/generated protocol/protos/mpc_wallet.proto

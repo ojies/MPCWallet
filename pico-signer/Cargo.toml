@@ -17,7 +17,7 @@ cortex-m = { version = "0.7", features = ["critical-section-single-core"] }
 cortex-m-rt = "0.7"
 
 # Threshold crypto (no_std, no default features)
-threshold = { path = "../threshold-rs", default-features = false }
+threshold = { path = "../threshold", default-features = false }
 
 # Crypto primitives (match threshold-rs versions)
 k256 = { version = "0.13", default-features = false, features = ["arithmetic"] }

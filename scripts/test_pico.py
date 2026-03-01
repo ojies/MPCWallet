@@ -36,7 +36,7 @@ CONT_PAYLOAD = 59   # 64 - 5 header
 # Path to signer-server binary
 SIGNER_SERVER = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "signer-server", "target", "release", "signer-server"
+    "e2e", "signer-server", "target", "release", "signer-server"
 )
 
 # ---------------------------------------------------------------------------
@@ -182,7 +182,7 @@ def run_full_dkg(device):
     # Start signer-server subprocess
     if not os.path.exists(SIGNER_SERVER):
         print(f"ERROR: signer-server not found at {SIGNER_SERVER}")
-        print("Build it first: cd signer-server && cargo build --release")
+        print("Build it first: cd e2e/signer-server && cargo build --release")
         sys.exit(1)
 
     print(f"Starting signer-server on port {port}...")
