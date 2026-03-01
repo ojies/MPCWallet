@@ -9,7 +9,7 @@ Three independent identities — your phone, a hardware signer, and a coordinati
 ```
                         +-----------------------+
                         |   Coordination Server |
-                        |   (Dart, gRPC)        |
+                        |   (Rust, gRPC)        |
                         |   Identity 3/3        |
                         +-----------+-----------+
                                     |
@@ -53,7 +53,7 @@ MPCWallet/
 
 ### Flutter App (`ap/`)
 
-Android wallet UI built with Provider state management and GoRouter navigation. Onboarding flow guides the user through signer selection (USB hardware or TCP test server), server connection, and DKG key generation. Supports sending/receiving Bitcoin, spending policies, and QR codes.
+Android wallet UI built with Provider state management and GoRouter navigation. Onboarding flow guides the user through server connection, hardware signer pairing, and DKG key generation. Supports sending/receiving Bitcoin, spending policies, and QR codes.
 
 ### Client Library (`client/`)
 
@@ -61,11 +61,19 @@ High-level Dart API that orchestrates the full MPC protocol. Manages two local i
 
 ### Threshold Library (`threshold/`)
 
-`#![no_std]` Rust implementation of FROST (Flexible Round-Optimized Schnorr Threshold Signatures) over secp256k1 using the `k256` crate. Includes the full 3-round DKG protocol, Pedersen VSS, nonce commitment generation, signature share computation, Lagrange interpolation, Taproot key tweaking, and key refresh. Compiles for both `std` targets and bare-metal ARM (Pico 2).
+`#![no_std]` Rust implementation of FROST (Flexible Round-Optimized Schnorr Threshold Signatures) over secp256k1 using the `k256` crate. Includes the full 3-round DKG protocol, Pedersen VSS, nonce commitment generation, signature share computation, Lagrange interpolation, Taproot key tweaking, and key refresh. Compiles for four targets: native (tests & server), `wasm32-wasip1` (cosigner), `thumbv8m.main-none-eabihf` (Pico 2), and Dart FFI (`libthreshold_ffi.so`).
+
+### Threshold FFI (`threshold-ffi/`)
+
+C-ABI shared library that wraps the threshold crate for consumption by Dart via `dart:ffi`. Exposes handle-based functions for DKG, nonce generation, signing, and key refresh. The Dart FFI bindings live inside `client/lib/threshold/`.
 
 ### Coordination Server (`server/`)
 
-Rust gRPC server that participates as the third identity in DKG and signing. Uses Wasmtime to run the cosigner WASM component for threshold crypto operations. Routes packages between participants, aggregates signature shares, enforces spending policies, and interfaces with Bitcoin Core (RPC) and Electrs (UTXO indexing).
+Rust gRPC server that participates as the third identity in DKG and signing. Each user gets an isolated WASI sandbox — the server uses Wasmtime to instantiate a per-user cosigner WASM component that holds the server's key share and performs threshold crypto operations. Routes packages between participants, aggregates signature shares, enforces spending policies, and interfaces with Bitcoin Core (RPC) and Electrs (UTXO indexing).
+
+### Cosigner (`cosigner/`)
+
+WASI P2 Component Model guest that encapsulates all threshold cryptography on the server side. Compiled to `wasm32-wasip1` and loaded by the server into per-user Wasmtime instances. Exposes DKG, nonce generation, signing, and key refresh operations through a WIT interface. Shares no memory between users.
 
 ### Pico Signer Firmware (`pico-signer/`)
 
@@ -104,14 +112,18 @@ Channel `0x0101`, command `0x05` (MSG). Sequence numbers are big-endian `u16`. L
 
 - **Dart** >= 3.3
 - **Flutter** >= 3.4 (Android SDK configured)
-- **Rust** (stable toolchain + `thumbv8m.main-none-eabihf` target for Pico)
+- **Rust** (stable toolchain)
 - **Docker** & Docker Compose
 - **protoc** with Dart plugin (only if regenerating gRPC stubs)
 - **Android device** with USB OTG support (for hardware signer testing)
 
 ```bash
-# Install Rust embedded target for Pico 2
-rustup target add thumbv8m.main-none-eabihf
+# Install Rust targets
+rustup target add wasm32-wasip1                  # Cosigner WASM component
+rustup target add thumbv8m.main-none-eabihf      # Pico 2 firmware
+
+# Install cargo-component for building WASI components
+cargo install cargo-component
 
 # Install probe-rs for Pico flashing (optional, UF2 also supported)
 cargo install probe-rs-tools
@@ -184,11 +196,14 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 ## Testing
 
 ```bash
-# Threshold library unit tests
-cd threshold && dart test
+# Threshold library unit tests (Rust)
+cd threshold && cargo test --features std
 
-# End-to-end (requires regtest running)
-cd e2e && dart test
+# Threshold FFI tests
+cd threshold-ffi && cargo test
+
+# End-to-end (builds all deps, starts Docker automatically)
+make e2e-test
 
 # Pico firmware over USB HID
 make pico-test ARGS="--full-dkg"
@@ -200,19 +215,23 @@ make pico-test ARGS="--full-dkg"
 |--------|-------------|
 | `regtest-up` | Start bitcoind + electrs via Docker Compose |
 | `regtest-down` | Stop Docker containers and kill server processes |
-| `server-run` | Build and run Rust gRPC server on :50051 |
+| `server-build` | Build the Rust gRPC server |
+| `server-run` | Build cosigner WASM + server and run on :50051 |
 | `server-stop` | Stop the Rust gRPC server |
-| `cosigner-build` | Build WASM cosigner component |
+| `cosigner-build` | Build WASM cosigner component (`wasm32-wasip1`) |
 | `bitcoin-init` | Mine 150 regtest blocks |
-| `signer-build` | Build the TCP signer-server (in e2e/) |
+| `signer-build` | Build the TCP signer-server in `e2e/signer-server/` |
 | `signer-run` | Build and run signer-server on port 9090 (for e2e tests) |
 | `e2e-test` | Run full E2E test (builds all deps, requires Docker) |
-| `threshold-ffi-build` | Build threshold FFI shared library |
+| `threshold-ffi-build` | Build threshold FFI shared library (`libthreshold_ffi.so`) |
+| `threshold-test` | Run threshold Rust unit tests |
+| `threshold-ffi-test` | Run threshold-ffi tests |
 | `pico-build` | Build Pico 2 firmware |
 | `pico-flash` | Build, convert to UF2, and copy to RP2350 drive |
 | `pico-test` | Test Pico over USB HID (`ARGS="--full-dkg"` for full test) |
 | `adb-reverse` | Forward ports 50051 + 50001 from phone to PC |
-| `regtest-hardware` | Full stack: Docker + init + ADB + server |
+| `regtest` | Full dev stack: Docker + init + signer + server |
+| `regtest-hardware` | Hardware dev stack: Docker + init + ADB + server |
 | `proto` | Regenerate Dart gRPC stubs from `.proto` files |
 
 ## Security Model
@@ -220,6 +239,8 @@ make pico-test ARGS="--full-dkg"
 - The **full private key never exists** on any single device.
 - The **hardware signer's secret share** never leaves the Pico's flash memory.
 - The **server cannot unilaterally sign** — it always needs cooperation from the phone or Pico.
+- The server is designed to run inside a **Trusted Execution Environment (TEE)**, ensuring the server operator cannot access key shares in memory.
+- Each user's server-side key share runs in an **isolated WASM sandbox** (Wasmtime) with no shared memory between users.
 - Signing requests are **authenticated** with Schnorr signatures over timestamped messages to prevent replay attacks.
 - Policy changes (update/delete spending limits) require a **recovery signature** from the hardware signer.
 - The Pico uses the RP2350's **hardware TRNG** for all randomness.
@@ -230,6 +251,7 @@ make pico-test ARGS="--full-dkg"
 - [BIP-340: Schnorr Signatures for secp256k1](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki)
 - [BIP-341: Taproot](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki)
 - [Pedersen's Verifiable Secret Sharing](https://link.springer.com/chapter/10.1007/3-540-46766-1_9)
+- [WASI Component Model](https://component-model.bytecodealliance.org/)
 - [Embassy: Async embedded framework for Rust](https://embassy.dev/)
 
 ## License

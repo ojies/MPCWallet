@@ -290,8 +290,8 @@ void main() {
     print('Normal Spend Broadcast: $tx2Id');
     await btc.generateToAddress(1, minerAddr);
 
-    // Verify Balance
-    await Future.delayed(Duration(seconds: 2));
+    // Wait for Electrs to index the new block
+    await waitForUtxoByTxId(wallet, tx2Id);
     await wallet.sync();
 
     final balance = await wallet.store
@@ -301,6 +301,60 @@ void main() {
     print('Final Balance: ${balance}');
     final res = await btc.getRawTransaction(tx2Id);
     expect(res['confirmations'], 1);
+
+    // 9. Restore wallet (simulate new phone)
+    print('8. Restoring wallet via re-DKG');
+    final originalAddress = address;
+    final client2 = MpcClient(channel, hardwareSigner: signer, storageId: 'restore_e2e');
+    await client2.doRestore();
+    print('   Restore Complete');
+
+    final wallet2 = MpcBitcoinWallet(client2, isTestnet: true);
+    await wallet2.init();
+    final restoredAddress = wallet2.toAddressCustom(hrp: 'bcrt');
+    print('   Restored Address: $restoredAddress');
+    expect(restoredAddress, equals(originalAddress),
+        reason: "Restored wallet must have the same Bitcoin address");
+
+    // 10. Sync restored wallet
+    // Wait for init()'s background sync to settle to avoid auth replay
+    await Future.delayed(Duration(seconds: 2));
+    print('9. Syncing restored wallet');
+    int syncRetries = 30;
+    while (syncRetries > 0) {
+      try {
+        await wallet2.sync();
+      } catch (e) {
+        print('   Sync error (retrying): $e');
+        syncRetries--;
+        if (syncRetries > 0) await Future.delayed(Duration(seconds: 2));
+        continue;
+      }
+      final utxos = await wallet2.store.getUtxos();
+      if (utxos.isNotEmpty) break;
+      print('   Waiting for UTXO... ($syncRetries left)');
+      syncRetries--;
+      if (syncRetries > 0) await Future.delayed(Duration(seconds: 2));
+    }
+    final restoredUtxos = await wallet2.store.getUtxos();
+    expect(restoredUtxos.length, greaterThanOrEqualTo(1),
+        reason: "Restored wallet should see existing UTXOs");
+    print('   Balance: ${restoredUtxos.fold(BigInt.zero, (s, u) => s + u.utxo.value)} sats');
+
+    // 11. Sign with restored wallet
+    print('10. Signing transaction with restored wallet');
+    final dest4 = await btc.getNewAddress();
+    final unsignedTx3 = await wallet2.createTransaction(
+        destination: dest4, amount: BigInt.from(10000), feeRate: 1);
+    final hexTx3 = await wallet2.signTransaction(unsignedTx3);
+    final tx3Id = await wallet2.broadcast(hexTx3);
+    print('    Broadcast: $tx3Id');
+    await btc.generateToAddress(1, minerAddr);
+
+    await Future.delayed(Duration(seconds: 2));
+    final res2 = await btc.getRawTransaction(tx3Id);
+    expect(res2['confirmations'], 1,
+        reason: "Post-restore transaction should be confirmed");
 
     print('Testing Complete.');
   }, timeout: Timeout(Duration(minutes: 10)));
