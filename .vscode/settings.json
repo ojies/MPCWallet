@@ -1,0 +1,9 @@
+{
+  "rust-analyzer.linkedProjects": [
+    "server/Cargo.toml",
+    "threshold/Cargo.toml",
+    "threshold-ffi/Cargo.toml",
+
+    "e2e/signer-server/Cargo.toml"
+  ]
+}
