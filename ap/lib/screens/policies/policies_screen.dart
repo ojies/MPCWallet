@@ -75,9 +75,57 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
+        final isHardwareError = e.toString().contains('No Pico Signer device found') ||
+            e.toString().contains('USB') ||
+            e.toString().contains('transport');
+        if (isHardwareError) {
+          final retry = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              backgroundColor: Colors.grey[900],
+              icon: const Icon(Icons.usb_off, color: Colors.amber, size: 48),
+              title: Text(
+                'Hardware Key Required',
+                style: GoogleFonts.inter(
+                    color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              content: Text(
+                'Connect your Pico Signer via USB OTG, then tap Retry.',
+                style: GoogleFonts.inter(color: Colors.white70),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text('Cancel',
+                      style: GoogleFonts.inter(color: Colors.white54)),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
+          if (retry == true && mounted) {
+            try {
+              await context.read<MpcService>().reconnectHardwareSigner();
+              _deletePolicy(policyId);
+            } catch (_) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Still unable to connect. Check your device.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          );
+        }
       }
     } finally {
       if (mounted) setState(() => _isDeleting = false);

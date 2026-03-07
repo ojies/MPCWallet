@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:grpc/grpc.dart';
 import 'package:path_provider/path_provider.dart';
@@ -43,6 +44,15 @@ class MpcService extends ChangeNotifier {
 
   void policyUpdated() {
     notifyListeners();
+  }
+
+  Future<void> reconnectHardwareSigner() async {
+    try {
+      await _hardwareSigner?.disconnect();
+    } catch (_) {}
+    _hardwareSigner = _createSigner();
+    await _hardwareSigner!.connect();
+    _client?.hardwareSigner = _hardwareSigner!;
   }
 
   String? get receiveAddress {
@@ -175,6 +185,53 @@ class MpcService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Restore wallet via re-DKG using the hardware signer's stored secrets.
+  /// The group public key (and Bitcoin address) is preserved.
+  Future<void> doRestore() async {
+    if (!_isInitialized) throw StateError("MPC Service not initialized");
+
+    final storageId = _storageId ?? 'mpc_wallet_state_default';
+
+    debugPrint("[RESTORE] Connecting hardware signer...");
+    _hardwareSigner = _createSigner();
+    await _hardwareSigner!.connect();
+    debugPrint("[RESTORE] Hardware signer connected.");
+
+    _channel = ClientChannel(
+      _host,
+      port: _port,
+      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
+    );
+
+    _client = MpcClient(
+      _channel!,
+      storageId: storageId,
+      hardwareSigner: _hardwareSigner!,
+    );
+
+    debugPrint("[RESTORE] Starting re-DKG...");
+    // Re-DKG: derive new shares from existing secrets on HW + server
+    await _client!.doRestore().timeout(
+      const Duration(seconds: 30),
+      onTimeout: () => throw StateError(
+          'Restore timed out. Check that the server is running and ADB reverse is set up.'),
+    );
+    debugPrint("[RESTORE] Re-DKG complete.");
+
+    _wallet = MpcBitcoinWallet(_client!, isTestnet: true, storageId: storageId);
+    _wallet!.onSyncComplete = _onWalletSyncComplete;
+
+    // init() will find restored state and skip DKG, then sync
+    await _wallet!.init();
+    _balance = await _wallet!.getBalance();
+
+    _dkgComplete = true;
+    _isConnected = true;
+    await _identityBox!.put('dkgComplete', true);
+
+    notifyListeners();
+  }
+
   /// Restores a previously completed session without re-running DKG.
   /// Creates gRPC channel + MpcClient + MpcBitcoinWallet, then calls
   /// wallet.init() which restores keys from Hive persistence.
@@ -184,10 +241,14 @@ class MpcService extends ChangeNotifier {
 
     final storageId = _storageId ?? 'mpc_wallet_state_default';
 
-    // Reconnect hardware signer
+    // Reconnect hardware signer (non-fatal if device not plugged in yet)
     if (_hardwareSigner == null) {
       _hardwareSigner = _createSigner();
-      await _hardwareSigner!.connect();
+      try {
+        await _hardwareSigner!.connect();
+      } catch (e) {
+        debugPrint("Hardware signer not available: $e");
+      }
     }
 
     _channel = ClientChannel(

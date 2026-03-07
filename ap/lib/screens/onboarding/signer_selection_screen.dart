@@ -7,6 +7,9 @@ class SignerSelectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final extras = GoRouterState.of(context).extra as Map<String, dynamic>? ?? {};
+    final isRestore = extras['isRestore'] == true;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Recovery Signer')),
       body: Padding(
@@ -57,7 +60,8 @@ class SignerSelectionScreen extends StatelessWidget {
             ),
             const Spacer(),
             ElevatedButton(
-              onPressed: () => context.push('/onboarding/server'),
+              onPressed: () => context.push('/onboarding/server',
+                  extra: {'isRestore': isRestore}),
               child: const Text('Continue'),
             ),
           ],

@@ -47,7 +47,8 @@ class MpcClient {
   RecoveryPolicy? _recoveryPolicy;
 
   // Hardware signer for recovery identity
-  final HardwareSignerInterface _hardwareSigner;
+  HardwareSignerInterface _hardwareSigner;
+  set hardwareSigner(HardwareSignerInterface s) => _hardwareSigner = s;
 
   /// Creates a client that manages two shares (identities).
   ///

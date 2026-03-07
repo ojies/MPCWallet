@@ -60,7 +60,8 @@ class WelcomeScreen extends StatelessWidget {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
-                  // TODO: Implement restore flow
+                  context.push('/onboarding/signer-selection',
+                      extra: {'isRestore': true});
                 },
                 child: Text(
                   'Restore existing wallet',
