@@ -1,14 +1,35 @@
-e2e/hive_db
-*/.dart_tool
-*/build
+# Dart
+**/.dart_tool/
+**/.packages
+**/pubspec.lock
 *.log
 
-*/.venv
+# Rust
+**/target/
 
+# Flutter
+**/build/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+
+# Android
+**/.gradle/
+**/local.properties
+**/*.jks
+**/*.keystore
+
+# Python
+**/.venv/
+**/__pycache__/
+
+# Pico firmware
 */pico-signer.elf
 */pico-signer.uf2
-threshold/target
-threshold-ffi/target
-cosigner/target
-server/target
-e2e/signer-server/target
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Data
+e2e/hive_db
