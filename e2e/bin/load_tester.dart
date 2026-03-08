@@ -143,7 +143,10 @@ Future<void> runSession({
       storageId: 'load_test_session_$sessionId',
     );
 
-    await client.doDkg();
+    await client.doDkg().timeout(
+      const Duration(minutes: 3),
+      onTimeout: () => throw TimeoutException('doDkg timed out after 3 minutes'),
+    );
   } finally {
     try {
       await signer.disconnect().timeout(const Duration(seconds: 5));
@@ -172,15 +175,17 @@ class _Semaphore {
     }
     final c = Completer<void>();
     _waiters.add(c);
+    // The slot is transferred by release() — _count is unchanged on our end.
     await c.future;
-    _count++;
   }
 
   void release() {
-    _count--;
     if (_waiters.isNotEmpty) {
+      // Transfer the slot directly to the next waiter; _count stays the same.
       final c = _waiters.removeAt(0);
       c.complete();
+    } else {
+      _count--;
     }
   }
 }
@@ -214,7 +219,13 @@ Future<void> main(List<String> argv) async {
   final concurrency = int.parse(args['concurrency'] as String);
   final hiveDir = args['hive-dir'] as String;
 
-  await Directory(hiveDir).create(recursive: true);
+  // Clean up stale Hive state from previous runs so each session starts fresh.
+  final hiveDirObj = Directory(hiveDir);
+  if (await hiveDirObj.exists()) {
+    await hiveDirObj.delete(recursive: true);
+    _info('Cleared stale Hive dir: $hiveDir');
+  }
+  await hiveDirObj.create(recursive: true);
   Hive.init(hiveDir);
 
   _header('MPC Wallet Dart Load Tester');
@@ -295,7 +306,7 @@ Future<void> main(List<String> argv) async {
     print(_row('Latency p99',   '${p99}ms'));
   }
 
-  if (totalTime.inSeconds > 0) {
+  if (totalTime.inMilliseconds > 0) {
     final rps = sessions / totalTime.inMilliseconds * 1000;
     print(_row('Sessions/sec',  rps.toStringAsFixed(2)));
   }

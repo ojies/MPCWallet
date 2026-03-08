@@ -39,10 +39,11 @@ void main() {
       options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
     );
 
-    // 1. Setup two hardware signers
+    // 1. Setup two hardware signers (both connect to the same signer-server;
+    //    each TCP connection gets its own independent SignerState).
     Log.step(1, 'Connecting hardware signers');
     final signerA = TcpHardwareSigner(host: '127.0.0.1', port: 9090);
-    final signerB = TcpHardwareSigner(host: '127.0.0.1', port: 9091);
+    final signerB = TcpHardwareSigner(host: '127.0.0.1', port: 9090);
     await Future.wait([signerA.connect(), signerB.connect()]);
     Log.ok('Both signers connected.');
 
@@ -126,10 +127,12 @@ Future<void> _waitForBalance(
       await wallet.sync();
       final newBalance = await wallet.getBalance();
       if (newBalance != currentBalance) return;
-    } catch (_) {}
+    } catch (e) {
+      Log.warn('_waitForBalance sync error (retries left: $retries): $e');
+    }
     retries--;
     if (retries > 0) await Future.delayed(Duration(seconds: 2));
   }
   throw Exception(
-      "Timeout waiting for balance change. Current: $currentBalance");
+      "Timeout waiting for balance change from $currentBalance sats");
 }
