@@ -47,7 +47,8 @@ class MpcClient {
   RecoveryPolicy? _recoveryPolicy;
 
   // Hardware signer for recovery identity
-  final HardwareSignerInterface _hardwareSigner;
+  HardwareSignerInterface _hardwareSigner;
+  set hardwareSigner(HardwareSignerInterface s) => _hardwareSigner = s;
 
   /// Creates a client that manages two shares (identities).
   ///
@@ -827,8 +828,8 @@ class MpcClient {
       ..policyId = policyId
       ..thresholdSats = Int64(newThreshold)
       ..intervalSeconds = Int64(newInterval)
-      ..frostSignatureR = threshold.elemSerializeCompressed(signature.R)
-      ..frostSignatureZ = threshold.bigIntToBytes(signature.Z)
+      ..frostSignatureR = signature.serialize().sublist(0, 32)
+      ..frostSignatureZ = signature.serialize().sublist(32, 64)
       ..timestampMs = Int64(timestampMs));
 
     // Update local state
@@ -864,8 +865,8 @@ class MpcClient {
     await _stub.deletePolicy(DeletePolicyRequest()
       ..userId = _userId!
       ..policyId = policyId
-      ..frostSignatureR = threshold.elemSerializeCompressed(signature.R)
-      ..frostSignatureZ = threshold.bigIntToBytes(signature.Z)
+      ..frostSignatureR = signature.serialize().sublist(0, 32)
+      ..frostSignatureZ = signature.serialize().sublist(32, 64)
       ..timestampMs = Int64(timestampMs));
 
     // Update local state

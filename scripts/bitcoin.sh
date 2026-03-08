@@ -99,12 +99,27 @@ cmd_utxos() {
   bcli scantxoutset start "[{\"desc\": \"addr($address)\"}]"
 }
 
+cmd_fund() {
+  local address="$1"
+  local amount="${2:-0.001}"
+  if [ -z "$address" ]; then
+    echo -n "Paste wallet address: "
+    read -r address
+  fi
+  if [ -z "$address" ] || [[ ! "$address" =~ ^(bc|tb|bcrt) ]]; then
+    echo "Invalid address. Usage: bitcoin.sh fund <address> [amount_btc]"
+    exit 1
+  fi
+  cmd_send "$address" "$amount"
+}
+
 cmd_help() {
   echo "Bitcoin regtest helper for MPC Wallet"
   echo ""
   echo "Commands:"
   echo "  init                        Mine 150 blocks to initialize the chain"
   echo "  send <address> <amount>     Send BTC and auto-confirm with 1 block"
+  echo "  fund <address> [amount]     Send BTC to wallet address (default: 0.001 BTC)"
   echo "  balance                     Show wallet balance"
   echo "  mine [count]                Mine blocks (default: 1)"
   echo "  newaddr                     Generate a new bech32m address"
@@ -117,6 +132,7 @@ cmd_help() {
 case "${1:-help}" in
   init)    cmd_init ;;
   send)    cmd_send "${2:-}" "${3:-}" ;;
+  fund)    cmd_fund "${2:-}" "${3:-}" ;;
   balance) cmd_balance ;;
   mine)    cmd_mine "${2:-}" ;;
   newaddr) cmd_newaddr ;;

@@ -23,6 +23,9 @@ class _ServerConnectionScreenState extends State<ServerConnectionScreen> {
   }
 
   void _connect() async {
+    final extras = GoRouterState.of(context).extra as Map<String, dynamic>? ?? {};
+    final isRestore = extras['isRestore'] == true;
+
     setState(() {
       _isChecking = true;
     });
@@ -40,7 +43,7 @@ class _ServerConnectionScreenState extends State<ServerConnectionScreen> {
       setState(() {
         _isChecking = false;
       });
-      context.push('/onboarding/dkg');
+      context.push('/onboarding/dkg', extra: {'isRestore': isRestore});
     }
   }
 
