@@ -1,4 +1,4 @@
-.PHONY: regtest-up regtest-down regtest regtest-hardware proto bitcoin-init signer-build signer-run signer-stop pico-build pico-flash pico-test flutter-run threshold-ffi-build threshold-test threshold-ffi-test e2e-test cosigner-build server-build server-run server-stop
+.PHONY: regtest-up regtest-down regtest regtest-hardware proto bitcoin-init signer-build signer-run signer-stop pico-build pico-flash pico-test flutter-run threshold-ffi-build ark-ffi-build threshold-test threshold-ffi-test e2e-test e2e-ark-test cosigner-build server-build server-run server-stop arkd-up arkd-down arkd-init
 
 # Start Docker environment (Bitcoind + Electrs)
 regtest-up:
@@ -91,6 +91,12 @@ threshold-ffi-build:
 	cd threshold-ffi && cargo build --release
 	@echo "Built: threshold-ffi/target/release/libthreshold_ffi.so"
 
+# Build ark FFI shared library
+ark-ffi-build:
+	@echo "Building ark-ffi..."
+	cd ark-ffi && cargo build --release
+	@echo "Built: ark-ffi/target/release/libark_ffi.so"
+
 # Run threshold tests
 threshold-test:
 	@echo "Running threshold tests..."
@@ -135,6 +141,31 @@ server-run: cosigner-build server-build
 server-stop:
 	@echo "Stopping MPC Wallet Server..."
 	-pkill -f "target/release/server" || true
+
+# --- Ark (ASP) ---
+
+# Start arkd + dependencies (requires regtest-up first)
+arkd-up: regtest-up
+	@echo "Starting arkd (ASP) services..."
+	docker compose -f docker-compose.yml -f docker-compose.ark.yml up -d
+	@echo "Waiting for arkd to start (30s)..."
+	@sleep 30
+
+# Initialize arkd wallet and fund it
+arkd-init:
+	@echo "Initializing arkd wallet..."
+	./scripts/arkd_init.sh --fund
+
+# Stop arkd services (keeps bitcoind/electrs)
+arkd-down:
+	@echo "Stopping arkd services..."
+	docker compose -f docker-compose.yml -f docker-compose.ark.yml down
+
+# Run Ark E2E test (requires arkd running)
+e2e-ark-test: threshold-ffi-build cosigner-build server-build signer-run
+	@echo "Running Ark E2E test..."
+	cd e2e && dart test test/ark_e2e_test.dart
+	-pkill -f "signer-server" || true
 
 # Generate Dart gRPC stubs from protos
 proto:

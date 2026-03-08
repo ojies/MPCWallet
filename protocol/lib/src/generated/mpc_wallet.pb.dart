@@ -10,6 +10,10 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'mpc_wallet.pbenum.dart';
+
+export 'mpc_wallet.pbenum.dart';
+
 class DKGStep1Request extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'DKGStep1Request', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
@@ -375,6 +379,7 @@ class SignStep1Request extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(6, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'fullTransaction', $pb.PbFieldType.OY)
     ..aInt64(7, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..aOB(8, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'scriptPathSpend')
     ..hasRequiredFields = false
   ;
 
@@ -387,6 +392,7 @@ class SignStep1Request extends $pb.GeneratedMessage {
     $core.List<$core.int>? signature,
     $core.List<$core.int>? fullTransaction,
     $fixnum.Int64? timestampMs,
+    $core.bool? scriptPathSpend,
   }) {
     final _result = create();
     if (userId != null) {
@@ -409,6 +415,9 @@ class SignStep1Request extends $pb.GeneratedMessage {
     }
     if (timestampMs != null) {
       _result.timestampMs = timestampMs;
+    }
+    if (scriptPathSpend != null) {
+      _result.scriptPathSpend = scriptPathSpend;
     }
     return _result;
   }
@@ -495,6 +504,15 @@ class SignStep1Request extends $pb.GeneratedMessage {
   $core.bool hasTimestampMs() => $_has(6);
   @$pb.TagNumber(7)
   void clearTimestampMs() => clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.bool get scriptPathSpend => $_getBF(7);
+  @$pb.TagNumber(8)
+  set scriptPathSpend($core.bool v) { $_setBool(7, v); }
+  @$pb.TagNumber(8)
+  $core.bool hasScriptPathSpend() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearScriptPathSpend() => clearField(8);
 }
 
 class SignStep1Response_Commitment extends $pb.GeneratedMessage {
@@ -2513,5 +2531,1462 @@ class TransactionNotification extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(4)
   $core.List<UtxoInfo> get spentUtxos => $_getList(3);
+}
+
+class GetArkInfoRequest extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'GetArkInfoRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..hasRequiredFields = false
+  ;
+
+  GetArkInfoRequest._() : super();
+  factory GetArkInfoRequest({
+    $core.List<$core.int>? userId,
+    $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
+  }) {
+    final _result = create();
+    if (userId != null) {
+      _result.userId = userId;
+    }
+    if (signature != null) {
+      _result.signature = signature;
+    }
+    if (timestampMs != null) {
+      _result.timestampMs = timestampMs;
+    }
+    return _result;
+  }
+  factory GetArkInfoRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetArkInfoRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetArkInfoRequest clone() => GetArkInfoRequest()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetArkInfoRequest copyWith(void Function(GetArkInfoRequest) updates) => super.copyWith((message) => updates(message as GetArkInfoRequest)) as GetArkInfoRequest; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static GetArkInfoRequest create() => GetArkInfoRequest._();
+  GetArkInfoRequest createEmptyInstance() => create();
+  static $pb.PbList<GetArkInfoRequest> createRepeated() => $pb.PbList<GetArkInfoRequest>();
+  @$core.pragma('dart2js:noInline')
+  static GetArkInfoRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetArkInfoRequest>(create);
+  static GetArkInfoRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get userId => $_getN(0);
+  @$pb.TagNumber(1)
+  set userId($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get signature => $_getN(1);
+  @$pb.TagNumber(2)
+  set signature($core.List<$core.int> v) { $_setBytes(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasSignature() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSignature() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get timestampMs => $_getI64(2);
+  @$pb.TagNumber(3)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasTimestampMs() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTimestampMs() => clearField(3);
+}
+
+class GetArkInfoResponse extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'GetArkInfoResponse', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signerPubkey')
+    ..aOS(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'forfeitPubkey')
+    ..aOS(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'network')
+    ..aInt64(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'sessionDuration')
+    ..aInt64(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'unilateralExitDelay')
+    ..aInt64(6, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'boardingExitDelay')
+    ..aInt64(7, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'vtxoMinAmount')
+    ..aInt64(8, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'dust')
+    ..hasRequiredFields = false
+  ;
+
+  GetArkInfoResponse._() : super();
+  factory GetArkInfoResponse({
+    $core.String? signerPubkey,
+    $core.String? forfeitPubkey,
+    $core.String? network,
+    $fixnum.Int64? sessionDuration,
+    $fixnum.Int64? unilateralExitDelay,
+    $fixnum.Int64? boardingExitDelay,
+    $fixnum.Int64? vtxoMinAmount,
+    $fixnum.Int64? dust,
+  }) {
+    final _result = create();
+    if (signerPubkey != null) {
+      _result.signerPubkey = signerPubkey;
+    }
+    if (forfeitPubkey != null) {
+      _result.forfeitPubkey = forfeitPubkey;
+    }
+    if (network != null) {
+      _result.network = network;
+    }
+    if (sessionDuration != null) {
+      _result.sessionDuration = sessionDuration;
+    }
+    if (unilateralExitDelay != null) {
+      _result.unilateralExitDelay = unilateralExitDelay;
+    }
+    if (boardingExitDelay != null) {
+      _result.boardingExitDelay = boardingExitDelay;
+    }
+    if (vtxoMinAmount != null) {
+      _result.vtxoMinAmount = vtxoMinAmount;
+    }
+    if (dust != null) {
+      _result.dust = dust;
+    }
+    return _result;
+  }
+  factory GetArkInfoResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetArkInfoResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetArkInfoResponse clone() => GetArkInfoResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetArkInfoResponse copyWith(void Function(GetArkInfoResponse) updates) => super.copyWith((message) => updates(message as GetArkInfoResponse)) as GetArkInfoResponse; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static GetArkInfoResponse create() => GetArkInfoResponse._();
+  GetArkInfoResponse createEmptyInstance() => create();
+  static $pb.PbList<GetArkInfoResponse> createRepeated() => $pb.PbList<GetArkInfoResponse>();
+  @$core.pragma('dart2js:noInline')
+  static GetArkInfoResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetArkInfoResponse>(create);
+  static GetArkInfoResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get signerPubkey => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set signerPubkey($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasSignerPubkey() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSignerPubkey() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get forfeitPubkey => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set forfeitPubkey($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasForfeitPubkey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearForfeitPubkey() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get network => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set network($core.String v) { $_setString(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasNetwork() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearNetwork() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get sessionDuration => $_getI64(3);
+  @$pb.TagNumber(4)
+  set sessionDuration($fixnum.Int64 v) { $_setInt64(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasSessionDuration() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSessionDuration() => clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get unilateralExitDelay => $_getI64(4);
+  @$pb.TagNumber(5)
+  set unilateralExitDelay($fixnum.Int64 v) { $_setInt64(4, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasUnilateralExitDelay() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearUnilateralExitDelay() => clearField(5);
+
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get boardingExitDelay => $_getI64(5);
+  @$pb.TagNumber(6)
+  set boardingExitDelay($fixnum.Int64 v) { $_setInt64(5, v); }
+  @$pb.TagNumber(6)
+  $core.bool hasBoardingExitDelay() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearBoardingExitDelay() => clearField(6);
+
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get vtxoMinAmount => $_getI64(6);
+  @$pb.TagNumber(7)
+  set vtxoMinAmount($fixnum.Int64 v) { $_setInt64(6, v); }
+  @$pb.TagNumber(7)
+  $core.bool hasVtxoMinAmount() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearVtxoMinAmount() => clearField(7);
+
+  @$pb.TagNumber(8)
+  $fixnum.Int64 get dust => $_getI64(7);
+  @$pb.TagNumber(8)
+  set dust($fixnum.Int64 v) { $_setInt64(7, v); }
+  @$pb.TagNumber(8)
+  $core.bool hasDust() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearDust() => clearField(8);
+}
+
+class GetArkAddressRequest extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'GetArkAddressRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..hasRequiredFields = false
+  ;
+
+  GetArkAddressRequest._() : super();
+  factory GetArkAddressRequest({
+    $core.List<$core.int>? userId,
+    $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
+  }) {
+    final _result = create();
+    if (userId != null) {
+      _result.userId = userId;
+    }
+    if (signature != null) {
+      _result.signature = signature;
+    }
+    if (timestampMs != null) {
+      _result.timestampMs = timestampMs;
+    }
+    return _result;
+  }
+  factory GetArkAddressRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetArkAddressRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetArkAddressRequest clone() => GetArkAddressRequest()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetArkAddressRequest copyWith(void Function(GetArkAddressRequest) updates) => super.copyWith((message) => updates(message as GetArkAddressRequest)) as GetArkAddressRequest; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static GetArkAddressRequest create() => GetArkAddressRequest._();
+  GetArkAddressRequest createEmptyInstance() => create();
+  static $pb.PbList<GetArkAddressRequest> createRepeated() => $pb.PbList<GetArkAddressRequest>();
+  @$core.pragma('dart2js:noInline')
+  static GetArkAddressRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetArkAddressRequest>(create);
+  static GetArkAddressRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get userId => $_getN(0);
+  @$pb.TagNumber(1)
+  set userId($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get signature => $_getN(1);
+  @$pb.TagNumber(2)
+  set signature($core.List<$core.int> v) { $_setBytes(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasSignature() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSignature() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get timestampMs => $_getI64(2);
+  @$pb.TagNumber(3)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasTimestampMs() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTimestampMs() => clearField(3);
+}
+
+class GetArkAddressResponse extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'GetArkAddressResponse', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'arkAddress')
+    ..hasRequiredFields = false
+  ;
+
+  GetArkAddressResponse._() : super();
+  factory GetArkAddressResponse({
+    $core.String? arkAddress,
+  }) {
+    final _result = create();
+    if (arkAddress != null) {
+      _result.arkAddress = arkAddress;
+    }
+    return _result;
+  }
+  factory GetArkAddressResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetArkAddressResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetArkAddressResponse clone() => GetArkAddressResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetArkAddressResponse copyWith(void Function(GetArkAddressResponse) updates) => super.copyWith((message) => updates(message as GetArkAddressResponse)) as GetArkAddressResponse; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static GetArkAddressResponse create() => GetArkAddressResponse._();
+  GetArkAddressResponse createEmptyInstance() => create();
+  static $pb.PbList<GetArkAddressResponse> createRepeated() => $pb.PbList<GetArkAddressResponse>();
+  @$core.pragma('dart2js:noInline')
+  static GetArkAddressResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetArkAddressResponse>(create);
+  static GetArkAddressResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get arkAddress => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set arkAddress($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasArkAddress() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearArkAddress() => clearField(1);
+}
+
+class GetBoardingAddressRequest extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'GetBoardingAddressRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..hasRequiredFields = false
+  ;
+
+  GetBoardingAddressRequest._() : super();
+  factory GetBoardingAddressRequest({
+    $core.List<$core.int>? userId,
+    $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
+  }) {
+    final _result = create();
+    if (userId != null) {
+      _result.userId = userId;
+    }
+    if (signature != null) {
+      _result.signature = signature;
+    }
+    if (timestampMs != null) {
+      _result.timestampMs = timestampMs;
+    }
+    return _result;
+  }
+  factory GetBoardingAddressRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetBoardingAddressRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetBoardingAddressRequest clone() => GetBoardingAddressRequest()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetBoardingAddressRequest copyWith(void Function(GetBoardingAddressRequest) updates) => super.copyWith((message) => updates(message as GetBoardingAddressRequest)) as GetBoardingAddressRequest; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static GetBoardingAddressRequest create() => GetBoardingAddressRequest._();
+  GetBoardingAddressRequest createEmptyInstance() => create();
+  static $pb.PbList<GetBoardingAddressRequest> createRepeated() => $pb.PbList<GetBoardingAddressRequest>();
+  @$core.pragma('dart2js:noInline')
+  static GetBoardingAddressRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetBoardingAddressRequest>(create);
+  static GetBoardingAddressRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get userId => $_getN(0);
+  @$pb.TagNumber(1)
+  set userId($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get signature => $_getN(1);
+  @$pb.TagNumber(2)
+  set signature($core.List<$core.int> v) { $_setBytes(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasSignature() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSignature() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get timestampMs => $_getI64(2);
+  @$pb.TagNumber(3)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasTimestampMs() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTimestampMs() => clearField(3);
+}
+
+class GetBoardingAddressResponse extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'GetBoardingAddressResponse', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'boardingAddress')
+    ..hasRequiredFields = false
+  ;
+
+  GetBoardingAddressResponse._() : super();
+  factory GetBoardingAddressResponse({
+    $core.String? boardingAddress,
+  }) {
+    final _result = create();
+    if (boardingAddress != null) {
+      _result.boardingAddress = boardingAddress;
+    }
+    return _result;
+  }
+  factory GetBoardingAddressResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetBoardingAddressResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetBoardingAddressResponse clone() => GetBoardingAddressResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetBoardingAddressResponse copyWith(void Function(GetBoardingAddressResponse) updates) => super.copyWith((message) => updates(message as GetBoardingAddressResponse)) as GetBoardingAddressResponse; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static GetBoardingAddressResponse create() => GetBoardingAddressResponse._();
+  GetBoardingAddressResponse createEmptyInstance() => create();
+  static $pb.PbList<GetBoardingAddressResponse> createRepeated() => $pb.PbList<GetBoardingAddressResponse>();
+  @$core.pragma('dart2js:noInline')
+  static GetBoardingAddressResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetBoardingAddressResponse>(create);
+  static GetBoardingAddressResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get boardingAddress => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set boardingAddress($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasBoardingAddress() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearBoardingAddress() => clearField(1);
+}
+
+class VtxoInfo extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'VtxoInfo', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..aOS(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'txid')
+    ..a<$core.int>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'vout', $pb.PbFieldType.OU3)
+    ..a<$fixnum.Int64>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'amount', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aInt64(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'createdAt')
+    ..aInt64(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'expiresAt')
+    ..aOS(6, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'status')
+    ..aOB(7, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'isPreconfirmed')
+    ..hasRequiredFields = false
+  ;
+
+  VtxoInfo._() : super();
+  factory VtxoInfo({
+    $core.String? txid,
+    $core.int? vout,
+    $fixnum.Int64? amount,
+    $fixnum.Int64? createdAt,
+    $fixnum.Int64? expiresAt,
+    $core.String? status,
+    $core.bool? isPreconfirmed,
+  }) {
+    final _result = create();
+    if (txid != null) {
+      _result.txid = txid;
+    }
+    if (vout != null) {
+      _result.vout = vout;
+    }
+    if (amount != null) {
+      _result.amount = amount;
+    }
+    if (createdAt != null) {
+      _result.createdAt = createdAt;
+    }
+    if (expiresAt != null) {
+      _result.expiresAt = expiresAt;
+    }
+    if (status != null) {
+      _result.status = status;
+    }
+    if (isPreconfirmed != null) {
+      _result.isPreconfirmed = isPreconfirmed;
+    }
+    return _result;
+  }
+  factory VtxoInfo.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory VtxoInfo.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  VtxoInfo clone() => VtxoInfo()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  VtxoInfo copyWith(void Function(VtxoInfo) updates) => super.copyWith((message) => updates(message as VtxoInfo)) as VtxoInfo; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static VtxoInfo create() => VtxoInfo._();
+  VtxoInfo createEmptyInstance() => create();
+  static $pb.PbList<VtxoInfo> createRepeated() => $pb.PbList<VtxoInfo>();
+  @$core.pragma('dart2js:noInline')
+  static VtxoInfo getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<VtxoInfo>(create);
+  static VtxoInfo? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get txid => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set txid($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasTxid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTxid() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get vout => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set vout($core.int v) { $_setUnsignedInt32(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasVout() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearVout() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get amount => $_getI64(2);
+  @$pb.TagNumber(3)
+  set amount($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasAmount() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAmount() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get createdAt => $_getI64(3);
+  @$pb.TagNumber(4)
+  set createdAt($fixnum.Int64 v) { $_setInt64(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasCreatedAt() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCreatedAt() => clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get expiresAt => $_getI64(4);
+  @$pb.TagNumber(5)
+  set expiresAt($fixnum.Int64 v) { $_setInt64(4, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasExpiresAt() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearExpiresAt() => clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get status => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set status($core.String v) { $_setString(5, v); }
+  @$pb.TagNumber(6)
+  $core.bool hasStatus() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearStatus() => clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.bool get isPreconfirmed => $_getBF(6);
+  @$pb.TagNumber(7)
+  set isPreconfirmed($core.bool v) { $_setBool(6, v); }
+  @$pb.TagNumber(7)
+  $core.bool hasIsPreconfirmed() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearIsPreconfirmed() => clearField(7);
+}
+
+class ListVtxosRequest extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'ListVtxosRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..hasRequiredFields = false
+  ;
+
+  ListVtxosRequest._() : super();
+  factory ListVtxosRequest({
+    $core.List<$core.int>? userId,
+    $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
+  }) {
+    final _result = create();
+    if (userId != null) {
+      _result.userId = userId;
+    }
+    if (signature != null) {
+      _result.signature = signature;
+    }
+    if (timestampMs != null) {
+      _result.timestampMs = timestampMs;
+    }
+    return _result;
+  }
+  factory ListVtxosRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ListVtxosRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ListVtxosRequest clone() => ListVtxosRequest()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ListVtxosRequest copyWith(void Function(ListVtxosRequest) updates) => super.copyWith((message) => updates(message as ListVtxosRequest)) as ListVtxosRequest; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static ListVtxosRequest create() => ListVtxosRequest._();
+  ListVtxosRequest createEmptyInstance() => create();
+  static $pb.PbList<ListVtxosRequest> createRepeated() => $pb.PbList<ListVtxosRequest>();
+  @$core.pragma('dart2js:noInline')
+  static ListVtxosRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ListVtxosRequest>(create);
+  static ListVtxosRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get userId => $_getN(0);
+  @$pb.TagNumber(1)
+  set userId($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get signature => $_getN(1);
+  @$pb.TagNumber(2)
+  set signature($core.List<$core.int> v) { $_setBytes(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasSignature() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSignature() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get timestampMs => $_getI64(2);
+  @$pb.TagNumber(3)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasTimestampMs() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTimestampMs() => clearField(3);
+}
+
+class ListVtxosResponse extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'ListVtxosResponse', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..pc<VtxoInfo>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'vtxos', $pb.PbFieldType.PM, subBuilder: VtxoInfo.create)
+    ..a<$fixnum.Int64>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'totalBalance', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false
+  ;
+
+  ListVtxosResponse._() : super();
+  factory ListVtxosResponse({
+    $core.Iterable<VtxoInfo>? vtxos,
+    $fixnum.Int64? totalBalance,
+  }) {
+    final _result = create();
+    if (vtxos != null) {
+      _result.vtxos.addAll(vtxos);
+    }
+    if (totalBalance != null) {
+      _result.totalBalance = totalBalance;
+    }
+    return _result;
+  }
+  factory ListVtxosResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ListVtxosResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ListVtxosResponse clone() => ListVtxosResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ListVtxosResponse copyWith(void Function(ListVtxosResponse) updates) => super.copyWith((message) => updates(message as ListVtxosResponse)) as ListVtxosResponse; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static ListVtxosResponse create() => ListVtxosResponse._();
+  ListVtxosResponse createEmptyInstance() => create();
+  static $pb.PbList<ListVtxosResponse> createRepeated() => $pb.PbList<ListVtxosResponse>();
+  @$core.pragma('dart2js:noInline')
+  static ListVtxosResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ListVtxosResponse>(create);
+  static ListVtxosResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<VtxoInfo> get vtxos => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get totalBalance => $_getI64(1);
+  @$pb.TagNumber(2)
+  set totalBalance($fixnum.Int64 v) { $_setInt64(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasTotalBalance() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTotalBalance() => clearField(2);
+}
+
+class SendVtxoRequest extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'SendVtxoRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..aOS(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'recipientArkAddress')
+    ..a<$fixnum.Int64>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'amount', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$core.List<$core.int>>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..p<$core.List<$core.int>>(6, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signedMessages', $pb.PbFieldType.PY)
+    ..hasRequiredFields = false
+  ;
+
+  SendVtxoRequest._() : super();
+  factory SendVtxoRequest({
+    $core.List<$core.int>? userId,
+    $core.String? recipientArkAddress,
+    $fixnum.Int64? amount,
+    $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
+    $core.Iterable<$core.List<$core.int>>? signedMessages,
+  }) {
+    final _result = create();
+    if (userId != null) {
+      _result.userId = userId;
+    }
+    if (recipientArkAddress != null) {
+      _result.recipientArkAddress = recipientArkAddress;
+    }
+    if (amount != null) {
+      _result.amount = amount;
+    }
+    if (signature != null) {
+      _result.signature = signature;
+    }
+    if (timestampMs != null) {
+      _result.timestampMs = timestampMs;
+    }
+    if (signedMessages != null) {
+      _result.signedMessages.addAll(signedMessages);
+    }
+    return _result;
+  }
+  factory SendVtxoRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory SendVtxoRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  SendVtxoRequest clone() => SendVtxoRequest()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  SendVtxoRequest copyWith(void Function(SendVtxoRequest) updates) => super.copyWith((message) => updates(message as SendVtxoRequest)) as SendVtxoRequest; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static SendVtxoRequest create() => SendVtxoRequest._();
+  SendVtxoRequest createEmptyInstance() => create();
+  static $pb.PbList<SendVtxoRequest> createRepeated() => $pb.PbList<SendVtxoRequest>();
+  @$core.pragma('dart2js:noInline')
+  static SendVtxoRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SendVtxoRequest>(create);
+  static SendVtxoRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get userId => $_getN(0);
+  @$pb.TagNumber(1)
+  set userId($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get recipientArkAddress => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set recipientArkAddress($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasRecipientArkAddress() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRecipientArkAddress() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get amount => $_getI64(2);
+  @$pb.TagNumber(3)
+  set amount($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasAmount() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAmount() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get signature => $_getN(3);
+  @$pb.TagNumber(4)
+  set signature($core.List<$core.int> v) { $_setBytes(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasSignature() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSignature() => clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get timestampMs => $_getI64(4);
+  @$pb.TagNumber(5)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(4, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasTimestampMs() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearTimestampMs() => clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.List<$core.List<$core.int>> get signedMessages => $_getList(5);
+}
+
+class SendVtxoResponse extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'SendVtxoResponse', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..e<SendVtxoResponse_Status>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'status', $pb.PbFieldType.OE, defaultOrMaker: SendVtxoResponse_Status.SIGNING_REQUIRED, valueOf: SendVtxoResponse_Status.valueOf, enumValues: SendVtxoResponse_Status.values)
+    ..p<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'messagesToSign', $pb.PbFieldType.PY)
+    ..aOB(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'scriptPathSpend')
+    ..aOS(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'arkTxid')
+    ..aOS(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'errorMessage')
+    ..hasRequiredFields = false
+  ;
+
+  SendVtxoResponse._() : super();
+  factory SendVtxoResponse({
+    SendVtxoResponse_Status? status,
+    $core.Iterable<$core.List<$core.int>>? messagesToSign,
+    $core.bool? scriptPathSpend,
+    $core.String? arkTxid,
+    $core.String? errorMessage,
+  }) {
+    final _result = create();
+    if (status != null) {
+      _result.status = status;
+    }
+    if (messagesToSign != null) {
+      _result.messagesToSign.addAll(messagesToSign);
+    }
+    if (scriptPathSpend != null) {
+      _result.scriptPathSpend = scriptPathSpend;
+    }
+    if (arkTxid != null) {
+      _result.arkTxid = arkTxid;
+    }
+    if (errorMessage != null) {
+      _result.errorMessage = errorMessage;
+    }
+    return _result;
+  }
+  factory SendVtxoResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory SendVtxoResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  SendVtxoResponse clone() => SendVtxoResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  SendVtxoResponse copyWith(void Function(SendVtxoResponse) updates) => super.copyWith((message) => updates(message as SendVtxoResponse)) as SendVtxoResponse; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static SendVtxoResponse create() => SendVtxoResponse._();
+  SendVtxoResponse createEmptyInstance() => create();
+  static $pb.PbList<SendVtxoResponse> createRepeated() => $pb.PbList<SendVtxoResponse>();
+  @$core.pragma('dart2js:noInline')
+  static SendVtxoResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SendVtxoResponse>(create);
+  static SendVtxoResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  SendVtxoResponse_Status get status => $_getN(0);
+  @$pb.TagNumber(1)
+  set status(SendVtxoResponse_Status v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasStatus() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearStatus() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.List<$core.int>> get messagesToSign => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $core.bool get scriptPathSpend => $_getBF(2);
+  @$pb.TagNumber(3)
+  set scriptPathSpend($core.bool v) { $_setBool(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasScriptPathSpend() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearScriptPathSpend() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get arkTxid => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set arkTxid($core.String v) { $_setString(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasArkTxid() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearArkTxid() => clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get errorMessage => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set errorMessage($core.String v) { $_setString(4, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasErrorMessage() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearErrorMessage() => clearField(5);
+}
+
+class RedeemVtxoRequest extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'RedeemVtxoRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..aOS(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'onChainAddress')
+    ..a<$fixnum.Int64>(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'amount', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$core.List<$core.int>>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..hasRequiredFields = false
+  ;
+
+  RedeemVtxoRequest._() : super();
+  factory RedeemVtxoRequest({
+    $core.List<$core.int>? userId,
+    $core.String? onChainAddress,
+    $fixnum.Int64? amount,
+    $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
+  }) {
+    final _result = create();
+    if (userId != null) {
+      _result.userId = userId;
+    }
+    if (onChainAddress != null) {
+      _result.onChainAddress = onChainAddress;
+    }
+    if (amount != null) {
+      _result.amount = amount;
+    }
+    if (signature != null) {
+      _result.signature = signature;
+    }
+    if (timestampMs != null) {
+      _result.timestampMs = timestampMs;
+    }
+    return _result;
+  }
+  factory RedeemVtxoRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory RedeemVtxoRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  RedeemVtxoRequest clone() => RedeemVtxoRequest()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  RedeemVtxoRequest copyWith(void Function(RedeemVtxoRequest) updates) => super.copyWith((message) => updates(message as RedeemVtxoRequest)) as RedeemVtxoRequest; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static RedeemVtxoRequest create() => RedeemVtxoRequest._();
+  RedeemVtxoRequest createEmptyInstance() => create();
+  static $pb.PbList<RedeemVtxoRequest> createRepeated() => $pb.PbList<RedeemVtxoRequest>();
+  @$core.pragma('dart2js:noInline')
+  static RedeemVtxoRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RedeemVtxoRequest>(create);
+  static RedeemVtxoRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get userId => $_getN(0);
+  @$pb.TagNumber(1)
+  set userId($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get onChainAddress => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set onChainAddress($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasOnChainAddress() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearOnChainAddress() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get amount => $_getI64(2);
+  @$pb.TagNumber(3)
+  set amount($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasAmount() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAmount() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get signature => $_getN(3);
+  @$pb.TagNumber(4)
+  set signature($core.List<$core.int> v) { $_setBytes(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasSignature() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSignature() => clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get timestampMs => $_getI64(4);
+  @$pb.TagNumber(5)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(4, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasTimestampMs() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearTimestampMs() => clearField(5);
+}
+
+class RedeemVtxoResponse extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'RedeemVtxoResponse', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..aOB(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'success')
+    ..aOS(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'txid')
+    ..hasRequiredFields = false
+  ;
+
+  RedeemVtxoResponse._() : super();
+  factory RedeemVtxoResponse({
+    $core.bool? success,
+    $core.String? txid,
+  }) {
+    final _result = create();
+    if (success != null) {
+      _result.success = success;
+    }
+    if (txid != null) {
+      _result.txid = txid;
+    }
+    return _result;
+  }
+  factory RedeemVtxoResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory RedeemVtxoResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  RedeemVtxoResponse clone() => RedeemVtxoResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  RedeemVtxoResponse copyWith(void Function(RedeemVtxoResponse) updates) => super.copyWith((message) => updates(message as RedeemVtxoResponse)) as RedeemVtxoResponse; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static RedeemVtxoResponse create() => RedeemVtxoResponse._();
+  RedeemVtxoResponse createEmptyInstance() => create();
+  static $pb.PbList<RedeemVtxoResponse> createRepeated() => $pb.PbList<RedeemVtxoResponse>();
+  @$core.pragma('dart2js:noInline')
+  static RedeemVtxoResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RedeemVtxoResponse>(create);
+  static RedeemVtxoResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get success => $_getBF(0);
+  @$pb.TagNumber(1)
+  set success($core.bool v) { $_setBool(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasSuccess() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSuccess() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get txid => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set txid($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasTxid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTxid() => clearField(2);
+}
+
+class SettleRequest extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'SettleRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..p<$core.List<$core.int>>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signedMessages', $pb.PbFieldType.PY)
+    ..hasRequiredFields = false
+  ;
+
+  SettleRequest._() : super();
+  factory SettleRequest({
+    $core.List<$core.int>? userId,
+    $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
+    $core.Iterable<$core.List<$core.int>>? signedMessages,
+  }) {
+    final _result = create();
+    if (userId != null) {
+      _result.userId = userId;
+    }
+    if (signature != null) {
+      _result.signature = signature;
+    }
+    if (timestampMs != null) {
+      _result.timestampMs = timestampMs;
+    }
+    if (signedMessages != null) {
+      _result.signedMessages.addAll(signedMessages);
+    }
+    return _result;
+  }
+  factory SettleRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory SettleRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  SettleRequest clone() => SettleRequest()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  SettleRequest copyWith(void Function(SettleRequest) updates) => super.copyWith((message) => updates(message as SettleRequest)) as SettleRequest; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static SettleRequest create() => SettleRequest._();
+  SettleRequest createEmptyInstance() => create();
+  static $pb.PbList<SettleRequest> createRepeated() => $pb.PbList<SettleRequest>();
+  @$core.pragma('dart2js:noInline')
+  static SettleRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SettleRequest>(create);
+  static SettleRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get userId => $_getN(0);
+  @$pb.TagNumber(1)
+  set userId($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get signature => $_getN(1);
+  @$pb.TagNumber(2)
+  set signature($core.List<$core.int> v) { $_setBytes(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasSignature() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSignature() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get timestampMs => $_getI64(2);
+  @$pb.TagNumber(3)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasTimestampMs() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTimestampMs() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.List<$core.int>> get signedMessages => $_getList(3);
+}
+
+class SettleResponse extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'SettleResponse', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..e<SettleResponse_Status>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'status', $pb.PbFieldType.OE, defaultOrMaker: SettleResponse_Status.SIGNING_REQUIRED, valueOf: SettleResponse_Status.valueOf, enumValues: SettleResponse_Status.values)
+    ..p<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'messagesToSign', $pb.PbFieldType.PY)
+    ..aOB(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'scriptPathSpend')
+    ..aOS(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'commitmentTxid')
+    ..aOS(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'errorMessage')
+    ..hasRequiredFields = false
+  ;
+
+  SettleResponse._() : super();
+  factory SettleResponse({
+    SettleResponse_Status? status,
+    $core.Iterable<$core.List<$core.int>>? messagesToSign,
+    $core.bool? scriptPathSpend,
+    $core.String? commitmentTxid,
+    $core.String? errorMessage,
+  }) {
+    final _result = create();
+    if (status != null) {
+      _result.status = status;
+    }
+    if (messagesToSign != null) {
+      _result.messagesToSign.addAll(messagesToSign);
+    }
+    if (scriptPathSpend != null) {
+      _result.scriptPathSpend = scriptPathSpend;
+    }
+    if (commitmentTxid != null) {
+      _result.commitmentTxid = commitmentTxid;
+    }
+    if (errorMessage != null) {
+      _result.errorMessage = errorMessage;
+    }
+    return _result;
+  }
+  factory SettleResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory SettleResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  SettleResponse clone() => SettleResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  SettleResponse copyWith(void Function(SettleResponse) updates) => super.copyWith((message) => updates(message as SettleResponse)) as SettleResponse; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static SettleResponse create() => SettleResponse._();
+  SettleResponse createEmptyInstance() => create();
+  static $pb.PbList<SettleResponse> createRepeated() => $pb.PbList<SettleResponse>();
+  @$core.pragma('dart2js:noInline')
+  static SettleResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SettleResponse>(create);
+  static SettleResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  SettleResponse_Status get status => $_getN(0);
+  @$pb.TagNumber(1)
+  set status(SettleResponse_Status v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasStatus() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearStatus() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.List<$core.int>> get messagesToSign => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $core.bool get scriptPathSpend => $_getBF(2);
+  @$pb.TagNumber(3)
+  set scriptPathSpend($core.bool v) { $_setBool(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasScriptPathSpend() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearScriptPathSpend() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get commitmentTxid => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set commitmentTxid($core.String v) { $_setString(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasCommitmentTxid() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCommitmentTxid() => clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get errorMessage => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set errorMessage($core.String v) { $_setString(4, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasErrorMessage() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearErrorMessage() => clearField(5);
+}
+
+class SettleDelegateRequest extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'SettleDelegateRequest', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'userId', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aInt64(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'timestampMs')
+    ..p<$core.List<$core.int>>(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'signedMessages', $pb.PbFieldType.PY)
+    ..hasRequiredFields = false
+  ;
+
+  SettleDelegateRequest._() : super();
+  factory SettleDelegateRequest({
+    $core.List<$core.int>? userId,
+    $core.List<$core.int>? signature,
+    $fixnum.Int64? timestampMs,
+    $core.Iterable<$core.List<$core.int>>? signedMessages,
+  }) {
+    final _result = create();
+    if (userId != null) {
+      _result.userId = userId;
+    }
+    if (signature != null) {
+      _result.signature = signature;
+    }
+    if (timestampMs != null) {
+      _result.timestampMs = timestampMs;
+    }
+    if (signedMessages != null) {
+      _result.signedMessages.addAll(signedMessages);
+    }
+    return _result;
+  }
+  factory SettleDelegateRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory SettleDelegateRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  SettleDelegateRequest clone() => SettleDelegateRequest()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  SettleDelegateRequest copyWith(void Function(SettleDelegateRequest) updates) => super.copyWith((message) => updates(message as SettleDelegateRequest)) as SettleDelegateRequest; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static SettleDelegateRequest create() => SettleDelegateRequest._();
+  SettleDelegateRequest createEmptyInstance() => create();
+  static $pb.PbList<SettleDelegateRequest> createRepeated() => $pb.PbList<SettleDelegateRequest>();
+  @$core.pragma('dart2js:noInline')
+  static SettleDelegateRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SettleDelegateRequest>(create);
+  static SettleDelegateRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get userId => $_getN(0);
+  @$pb.TagNumber(1)
+  set userId($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get signature => $_getN(1);
+  @$pb.TagNumber(2)
+  set signature($core.List<$core.int> v) { $_setBytes(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasSignature() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSignature() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get timestampMs => $_getI64(2);
+  @$pb.TagNumber(3)
+  set timestampMs($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasTimestampMs() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTimestampMs() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.List<$core.int>> get signedMessages => $_getList(3);
+}
+
+class SettleDelegateResponse extends $pb.GeneratedMessage {
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'SettleDelegateResponse', package: const $pb.PackageName(const $core.bool.fromEnvironment('protobuf.omit_message_names') ? '' : 'mpc_wallet'), createEmptyInstance: create)
+    ..e<SettleDelegateResponse_Status>(1, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'status', $pb.PbFieldType.OE, defaultOrMaker: SettleDelegateResponse_Status.SIGNING_REQUIRED, valueOf: SettleDelegateResponse_Status.valueOf, enumValues: SettleDelegateResponse_Status.values)
+    ..p<$core.List<$core.int>>(2, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'messagesToSign', $pb.PbFieldType.PY)
+    ..aOB(3, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'scriptPathSpend')
+    ..aOS(4, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'commitmentTxid')
+    ..aOS(5, const $core.bool.fromEnvironment('protobuf.omit_field_names') ? '' : 'errorMessage')
+    ..hasRequiredFields = false
+  ;
+
+  SettleDelegateResponse._() : super();
+  factory SettleDelegateResponse({
+    SettleDelegateResponse_Status? status,
+    $core.Iterable<$core.List<$core.int>>? messagesToSign,
+    $core.bool? scriptPathSpend,
+    $core.String? commitmentTxid,
+    $core.String? errorMessage,
+  }) {
+    final _result = create();
+    if (status != null) {
+      _result.status = status;
+    }
+    if (messagesToSign != null) {
+      _result.messagesToSign.addAll(messagesToSign);
+    }
+    if (scriptPathSpend != null) {
+      _result.scriptPathSpend = scriptPathSpend;
+    }
+    if (commitmentTxid != null) {
+      _result.commitmentTxid = commitmentTxid;
+    }
+    if (errorMessage != null) {
+      _result.errorMessage = errorMessage;
+    }
+    return _result;
+  }
+  factory SettleDelegateResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory SettleDelegateResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  SettleDelegateResponse clone() => SettleDelegateResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  SettleDelegateResponse copyWith(void Function(SettleDelegateResponse) updates) => super.copyWith((message) => updates(message as SettleDelegateResponse)) as SettleDelegateResponse; // ignore: deprecated_member_use
+  $pb.BuilderInfo get info_ => _i;
+  @$core.pragma('dart2js:noInline')
+  static SettleDelegateResponse create() => SettleDelegateResponse._();
+  SettleDelegateResponse createEmptyInstance() => create();
+  static $pb.PbList<SettleDelegateResponse> createRepeated() => $pb.PbList<SettleDelegateResponse>();
+  @$core.pragma('dart2js:noInline')
+  static SettleDelegateResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SettleDelegateResponse>(create);
+  static SettleDelegateResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  SettleDelegateResponse_Status get status => $_getN(0);
+  @$pb.TagNumber(1)
+  set status(SettleDelegateResponse_Status v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasStatus() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearStatus() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.List<$core.int>> get messagesToSign => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $core.bool get scriptPathSpend => $_getBF(2);
+  @$pb.TagNumber(3)
+  set scriptPathSpend($core.bool v) { $_setBool(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasScriptPathSpend() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearScriptPathSpend() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get commitmentTxid => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set commitmentTxid($core.String v) { $_setString(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasCommitmentTxid() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCommitmentTxid() => clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get errorMessage => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set errorMessage($core.String v) { $_setString(4, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasErrorMessage() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearErrorMessage() => clearField(5);
 }
 

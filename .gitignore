@@ -12,3 +12,5 @@ threshold-ffi/target
 cosigner/target
 server/target
 e2e/signer-server/target
+ark/target
+ark-ffi/target

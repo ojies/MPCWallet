@@ -1,0 +1,11 @@
+[package]
+name = "ark-ffi"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "ark_ffi"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+ark = { path = "../ark", features = ["std"] }

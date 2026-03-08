@@ -21,7 +21,7 @@ RPC_USER="admin1"
 RPC_PASS="123"
 
 bcli() {
-  docker exec "$CONTAINER" bitcoin-cli -regtest -rpcuser="$RPC_USER" -rpcpassword="$RPC_PASS" "$@"
+  docker exec "$CONTAINER" bitcoin-cli -regtest -rpcuser="$RPC_USER" -rpcpassword="$RPC_PASS" -rpcwallet=default "$@"
 }
 
 cmd_init() {
