@@ -20,6 +20,10 @@ CONTAINER="mpc_bitcoind"
 RPC_USER="admin1"
 RPC_PASS="123"
 
+bcli_no_wallet() {
+  docker exec "$CONTAINER" bitcoin-cli -regtest -rpcuser="$RPC_USER" -rpcpassword="$RPC_PASS" "$@"
+}
+
 bcli() {
   docker exec "$CONTAINER" bitcoin-cli -regtest -rpcuser="$RPC_USER" -rpcpassword="$RPC_PASS" -rpcwallet=default "$@"
 }
@@ -27,9 +31,11 @@ bcli() {
 cmd_init() {
   echo "Initializing regtest chain..."
 
-  # Create default wallet if it doesn't exist
-  if ! bcli listwallets 2>/dev/null | grep -q '"default"'; then
-    bcli createwallet "default" 2>/dev/null || true
+  # Ensure default wallet is loaded
+  if ! bcli_no_wallet listwallets 2>/dev/null | grep -q '"default"'; then
+    bcli_no_wallet loadwallet "default" 2>/dev/null \
+      || bcli_no_wallet createwallet "default" 2>/dev/null \
+      || true
   fi
 
   local addr
@@ -113,6 +119,23 @@ cmd_fund() {
   cmd_send "$address" "$amount"
 }
 
+cmd_ark_fund() {
+  local address="$1"
+  local amount="${2:-0.001}"
+  if [ -z "$address" ]; then
+    echo "Usage: bitcoin.sh ark-fund <boarding_address> [amount_btc]"
+    echo ""
+    echo "Sends BTC to a boarding address and mines a block to confirm."
+    echo "Get the boarding address from the app's Ark > Receive > Boarding Address tab."
+    exit 1
+  fi
+  echo "Funding boarding address: $address"
+  echo "Amount: $amount BTC"
+  cmd_send "$address" "$amount"
+  echo ""
+  echo "Boarding address funded! Now use the app to Board the funds into Ark."
+}
+
 cmd_help() {
   echo "Bitcoin regtest helper for MPC Wallet"
   echo ""
@@ -120,6 +143,7 @@ cmd_help() {
   echo "  init                        Mine 150 blocks to initialize the chain"
   echo "  send <address> <amount>     Send BTC and auto-confirm with 1 block"
   echo "  fund <address> [amount]     Send BTC to wallet address (default: 0.001 BTC)"
+  echo "  ark-fund <address> [amount] Fund an Ark boarding address (default: 0.001 BTC)"
   echo "  balance                     Show wallet balance"
   echo "  mine [count]                Mine blocks (default: 1)"
   echo "  newaddr                     Generate a new bech32m address"
@@ -130,15 +154,16 @@ cmd_help() {
 }
 
 case "${1:-help}" in
-  init)    cmd_init ;;
-  send)    cmd_send "${2:-}" "${3:-}" ;;
-  fund)    cmd_fund "${2:-}" "${3:-}" ;;
-  balance) cmd_balance ;;
-  mine)    cmd_mine "${2:-}" ;;
-  newaddr) cmd_newaddr ;;
-  txinfo)  cmd_txinfo "${2:-}" ;;
-  mempool) cmd_mempool ;;
-  utxos)   cmd_utxos "${2:-}" ;;
-  address) cmd_address "${2:-}" ;;
-  help|*)  cmd_help ;;
+  init)      cmd_init ;;
+  send)      cmd_send "${2:-}" "${3:-}" ;;
+  fund)      cmd_fund "${2:-}" "${3:-}" ;;
+  ark-fund)  cmd_ark_fund "${2:-}" "${3:-}" ;;
+  balance)   cmd_balance ;;
+  mine)      cmd_mine "${2:-}" ;;
+  newaddr)   cmd_newaddr ;;
+  txinfo)    cmd_txinfo "${2:-}" ;;
+  mempool)   cmd_mempool ;;
+  utxos)     cmd_utxos "${2:-}" ;;
+  address)   cmd_address "${2:-}" ;;
+  help|*)    cmd_help ;;
 esac

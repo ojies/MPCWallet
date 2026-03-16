@@ -42,6 +42,20 @@ class MpcService extends ChangeNotifier {
   ProtectedPolicy? get activePolicy => _client?.activeSpendingPolicy;
   List<ProtectedPolicy> get policies => _client?.spendingPolicies ?? [];
 
+  // --- Ark state ---
+  GetArkInfoResponse? _arkInfo;
+  GetArkInfoResponse? get arkInfo => _arkInfo;
+  String? _arkAddress;
+  String? get arkAddress => _arkAddress;
+  String? _boardingAddress;
+  String? get boardingAddress => _boardingAddress;
+  List<VtxoInfo> _vtxos = [];
+  List<VtxoInfo> get vtxos => _vtxos;
+  BigInt _arkBalance = BigInt.zero;
+  BigInt get arkBalance => _arkBalance;
+  bool _arkAvailable = false;
+  bool get arkAvailable => _arkAvailable;
+
   void policyUpdated() {
     notifyListeners();
   }
@@ -182,6 +196,7 @@ class MpcService extends ChangeNotifier {
     _isConnected = true;
     await _identityBox!.put('dkgComplete', true);
 
+    await initArk();
     notifyListeners();
   }
 
@@ -229,6 +244,7 @@ class MpcService extends ChangeNotifier {
     _isConnected = true;
     await _identityBox!.put('dkgComplete', true);
 
+    await initArk();
     notifyListeners();
   }
 
@@ -269,6 +285,7 @@ class MpcService extends ChangeNotifier {
     _balance = await _wallet!.getBalance();
     _isConnected = true;
 
+    await initArk();
     notifyListeners();
   }
 
@@ -310,6 +327,56 @@ class MpcService extends ChangeNotifier {
       print("Post-sync balance update failed: $e");
     }
     notifyListeners();
+  }
+
+  // --- Ark methods ---
+
+  Future<void> initArk() async {
+    if (_client == null) return;
+    try {
+      _arkInfo = await _client!.getArkInfo();
+      _arkAddress = await _client!.getArkAddress();
+      _boardingAddress = await _client!.getBoardingAddress();
+      _arkAvailable = true;
+      await refreshVtxos();
+    } catch (e) {
+      debugPrint("Ark init failed (ASP may not be configured): $e");
+      _arkAvailable = false;
+    }
+    notifyListeners();
+  }
+
+  Future<void> refreshVtxos() async {
+    if (_client == null) return;
+    try {
+      final resp = await _client!.listVtxos();
+      _vtxos = resp.vtxos;
+      _arkBalance = BigInt.from(resp.totalBalance.toInt());
+    } catch (e) {
+      debugPrint("Refresh VTXOs failed: $e");
+    }
+    notifyListeners();
+  }
+
+  Future<String> boardFunds() async {
+    if (_client == null) throw StateError("Client not initialized");
+    final txid = await _client!.settle();
+    await refreshVtxos();
+    return txid;
+  }
+
+  Future<String> sendArk(String recipientArkAddress, int amountSats) async {
+    if (_client == null) throw StateError("Client not initialized");
+    final arkTxid = await _client!.sendVtxo(recipientArkAddress, amountSats);
+    await refreshVtxos();
+    return arkTxid;
+  }
+
+  Future<String> settleDelegate() async {
+    if (_client == null) throw StateError("Client not initialized");
+    final txid = await _client!.settleDelegate();
+    await refreshVtxos();
+    return txid;
   }
 
   String _generateSessionId() {

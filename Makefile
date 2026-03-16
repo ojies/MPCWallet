@@ -1,4 +1,4 @@
-.PHONY: regtest-up regtest-down regtest regtest-hardware proto bitcoin-init mine-loop signer-build signer-run signer-stop pico-build pico-flash pico-test flutter-run threshold-ffi-build threshold-ffi-android ark-ffi-build threshold-test threshold-ffi-test e2e-test e2e-ark-test cosigner-build server-build server-run server-stop arkd-up arkd-down arkd-init
+.PHONY: regtest-up regtest-down regtest regtest-hardware regtest-hardware-ark regtest-hardware-ark-down proto bitcoin-init mine-loop signer-build signer-run signer-stop pico-build pico-flash pico-test flutter-run threshold-ffi-build threshold-ffi-android ark-ffi-build threshold-test threshold-ffi-test e2e-test e2e-ark-test cosigner-build server-build server-run server-stop arkd-up arkd-down arkd-init
 # Start Docker environment (Bitcoind + Electrs)
 regtest-up:
 	@echo "Starting Regtest environment..."
@@ -58,6 +58,45 @@ regtest-hardware: regtest-up bitcoin-init adb-reverse cosigner-build server-buil
 	cd server && cargo run --release -- \
 		--wasm ../cosigner/target/wasm32-wasip1/release/cosigner.wasm \
 		--port 50051
+
+# Hardware device setup with Ark: regtest + arkd + ADB reverse + mine loop (bg) + server (foreground)
+regtest-hardware-ark: cosigner-build server-build
+	@echo "=== Starting regtest + arkd ==="
+	docker compose -f docker-compose.yml -f docker-compose.ark.yml up -d
+	@echo "Waiting for services to stabilize (10s)..."
+	@sleep 10
+	@echo "=== Initializing Bitcoin chain ==="
+	./scripts/bitcoin.sh init
+	@echo "=== Initializing arkd ==="
+	./scripts/arkd_init.sh --fund
+	@echo "=== Setting up ADB reverse ==="
+	-adb reverse tcp:50051 tcp:50051
+	-adb reverse tcp:50001 tcp:50001
+	@echo ""
+	@echo "Starting mine loop in background..."
+	@(while true; do ./scripts/bitcoin.sh mine 2>/dev/null; sleep 10; done) &
+	@echo ""
+	@echo "==> Run Flutter in a separate terminal:  cd ap && flutter run"
+	@echo "==> Server logs below (Ctrl+C to stop):"
+	@echo ""
+	export ELECTRUM_URL=127.0.0.1 && \
+	export ELECTRUM_PORT=50001 && \
+	export BITCOIN_RPC_USER=admin1 && \
+	export BITCOIN_RPC_PASSWORD=123 && \
+	export ASP_URL=http://127.0.0.1:7070 && \
+	cd server && cargo run --release -- \
+		--wasm ../cosigner/target/wasm32-wasip1/release/cosigner.wasm \
+		--port 50051
+
+# Stop everything (arkd + regtest + server + mine loop)
+regtest-hardware-ark-down:
+	@echo "Stopping MPC server..."
+	-pkill -f "target/release/server" || true
+	@echo "Stopping mine loop..."
+	-pkill -f "bitcoin.sh mine" || true
+	@echo "Stopping Docker services..."
+	docker compose -f docker-compose.yml -f docker-compose.ark.yml down
+	@echo "All stopped."
 
 # Set up ADB reverse port forwarding for physical device
 adb-reverse:
@@ -122,6 +161,16 @@ threshold-ffi-android:
 		ap/android/app/src/main/jniLibs/arm64-v8a/
 	@echo "Installed: ap/android/app/src/main/jniLibs/arm64-v8a/libthreshold_ffi.so"
 
+# Build ark FFI for Android (arm64) and bundle into Flutter app
+ark-ffi-android:
+	@echo "Building ark-ffi for Android arm64..."
+	export PATH="$(NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64/bin:$$PATH" && \
+	cd ark-ffi && cargo build --release --target aarch64-linux-android
+	mkdir -p ap/android/app/src/main/jniLibs/arm64-v8a
+	cp ark-ffi/target/aarch64-linux-android/release/libark_ffi.so \
+		ap/android/app/src/main/jniLibs/arm64-v8a/
+	@echo "Installed: ap/android/app/src/main/jniLibs/arm64-v8a/libark_ffi.so"
+
 # Run threshold tests
 threshold-test:
 	@echo "Running threshold tests..."
@@ -169,9 +218,9 @@ server-stop:
 
 # --- Ark (ASP) ---
 
-# Start arkd + dependencies (requires regtest-up first)
-arkd-up: regtest-up
-	@echo "Starting arkd (ASP) services..."
+# Start arkd + dependencies (brings up regtest + ark together)
+arkd-up:
+	@echo "Starting regtest + arkd (ASP) services..."
 	docker compose -f docker-compose.yml -f docker-compose.ark.yml up -d
 	@echo "Waiting for arkd to start (30s)..."
 	@sleep 30
@@ -191,6 +240,10 @@ e2e-ark-test: threshold-ffi-build cosigner-build server-build signer-run
 	@echo "Running Ark E2E test..."
 	cd e2e && dart test test/ark_e2e_test.dart
 	-pkill -f "signer-server" || true
+
+# Generate a new Ark address (requires MPC server + signer-server running)
+ark-newaddress:
+	@cd e2e && dart run bin/ark_newaddress.dart
 
 # Generate Dart gRPC stubs from protos
 proto:
