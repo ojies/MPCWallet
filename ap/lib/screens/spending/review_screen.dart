@@ -10,11 +10,11 @@ class ReviewScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final address = extras['address'] as String? ?? 'Unknown';
-    final amount = extras['amount'] as String? ?? '0.0';
-    final isBtc = extras['isBtc'] as bool? ?? true;
+    final amount = extras['amount'] as String? ?? '0';
+    final isArk = extras['isArk'] as bool? ?? false;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Review Transaction')),
+      appBar: AppBar(title: Text(isArk ? 'Review Ark Send' : 'Review Transaction')),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -24,27 +24,37 @@ class ReviewScreen extends StatelessWidget {
             const Divider(color: Colors.white24, height: 32),
             _buildDetailRow('Amount', '$amount Sats'),
             const SizedBox(height: 16),
-            _buildDetailRow(
-                'Network Fee', 'Calculated at signing'), // Dynamic fee
-            const Divider(color: Colors.white24, height: 32),
-            _buildDetailRow('Total', '$amount + Fee', isTotal: true),
+            if (isArk)
+              _buildDetailRow('Fee', 'None (off-chain)')
+            else ...[
+              _buildDetailRow('Network Fee', 'Calculated at signing'),
+              const Divider(color: Colors.white24, height: 32),
+              _buildDetailRow('Total', '$amount + Fee', isTotal: true),
+            ],
 
             const Spacer(),
 
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: (isArk ? Colors.blue : Colors.blue).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blueAccent.withOpacity(0.5)),
+                border: Border.all(
+                    color: (isArk ? Colors.blueAccent : Colors.blueAccent)
+                        .withOpacity(0.5)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, color: Colors.blueAccent),
+                  Icon(
+                    isArk ? Icons.account_tree : Icons.info_outline,
+                    color: Colors.blueAccent,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'This transaction requires 2 signatures to be valid.',
+                      isArk
+                          ? 'This is an off-chain Ark transfer. It requires FROST signing.'
+                          : 'This transaction requires 2 signatures to be valid.',
                       style: GoogleFonts.inter(
                           color: Colors.blueAccent, fontSize: 12),
                     ),
@@ -57,7 +67,7 @@ class ReviewScreen extends StatelessWidget {
               onPressed: () {
                 context.push('/spending/signing', extra: extras);
               },
-              child: const Text('Sign Transaction'),
+              child: Text(isArk ? 'Sign & Send' : 'Sign Transaction'),
             ),
           ],
         ),

@@ -9,6 +9,7 @@ import 'package:convert/convert.dart';
 import 'package:client/persistence/wallet_store.dart';
 import 'package:client/coin_selection.dart';
 import 'package:client/fees.dart';
+import 'package:client/ark/ark.dart';
 import 'package:client/threshold/threshold.dart' as threshold; // Access bigIntToBytes
 import 'package:protocol/protocol.dart';
 
@@ -17,6 +18,39 @@ class UnsignedTransaction {
   final List<List<int>> sighashes;
 
   UnsignedTransaction(this.btcTransaction, this.sighashes);
+}
+
+/// A VTXO input for script-path spending.
+class VtxoInput {
+  final String txHash;
+  final int vout;
+  final BigInt value;
+  final ArkVtxo vtxo;
+
+  const VtxoInput({
+    required this.txHash,
+    required this.vout,
+    required this.value,
+    required this.vtxo,
+  });
+}
+
+/// Which taproot script-path leaf to spend through.
+enum ScriptPathType { forfeit, exit }
+
+/// An unsigned transaction that spends Ark VTXOs via a taproot script path.
+class UnsignedScriptPathTransaction {
+  final BtcTransaction btcTransaction;
+  final List<List<int>> sighashes;
+  final List<SpendInfo> spendInfos;
+  final ScriptPathType spendType;
+
+  UnsignedScriptPathTransaction(
+    this.btcTransaction,
+    this.sighashes,
+    this.spendInfos,
+    this.spendType,
+  );
 }
 
 class MpcBitcoinWallet {
@@ -360,6 +394,209 @@ class MpcBitcoinWallet {
     }, onError: (e) {
       stderr.writeln('[WARN] bitcoin: history subscription error: $e');
     });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Script-path (Ark VTXO) transaction building
+  // ---------------------------------------------------------------------------
+
+  /// Parses a P2TR destination address into a [BitcoinBaseAddress].
+  BitcoinBaseAddress _parseP2trDestination(String destination) {
+    if (destination.startsWith('bcrt')) {
+      final decoded = SegwitBech32Decoder.decode("bcrt", destination);
+      final program = decoded.item2;
+      return P2trAddress.fromProgram(program: hex.encode(program));
+    }
+    return P2trAddress.fromAddress(
+      address: destination,
+      network: isTestnet ? BitcoinNetwork.testnet : BitcoinNetwork.mainnet,
+    );
+  }
+
+  /// Encode a block-height CSV delay as a 4-byte little-endian nSequence
+  /// value per BIP-68 (type flag clear = block-based relative lock-time).
+  static List<int> _csvSequence(int blocks) {
+    final v = blocks & 0xFFFF; // lower 16 bits, type-flag bit 22 = 0
+    return [v & 0xFF, (v >> 8) & 0xFF, 0x00, 0x00];
+  }
+
+  /// Builds an unsigned script-path transaction spending one or more Ark VTXOs.
+  ///
+  /// [vtxoInputs] — the VTXOs to spend.
+  /// [spendType]  — which leaf to use (forfeit = cooperative, exit = unilateral).
+  /// [feeRate]    — fee rate in sat/vB.
+  Future<UnsignedScriptPathTransaction> createScriptPathTransaction({
+    required List<VtxoInput> vtxoInputs,
+    required String destination,
+    required BigInt amount,
+    required int feeRate,
+    required ScriptPathType spendType,
+  }) async {
+    if (vtxoInputs.isEmpty) {
+      throw ArgumentError('vtxoInputs must not be empty');
+    }
+
+    // 1. Derive spend info for each input
+    final spendInfos = vtxoInputs.map((input) {
+      return spendType == ScriptPathType.forfeit
+          ? input.vtxo.forfeitSpendInfo()
+          : input.vtxo.exitSpendInfo();
+    }).toList();
+
+    // 2. Estimate fee
+    final sigCount = spendType == ScriptPathType.forfeit ? 2 : 1;
+    int totalInputVBytes = 0;
+    for (final info in spendInfos) {
+      totalInputVBytes += P2trFeeEstimator.estimateScriptPathVBytes(
+        scriptSize: info.scriptHex.length ~/ 2,
+        controlBlockSize: info.controlBlockHex.length ~/ 2,
+        stackItemCount: sigCount,
+        totalStackSize: sigCount * 64,
+      );
+    }
+    // Assume destination + change output
+    final estVBytes = P2trFeeEstimator.overhead +
+        totalInputVBytes +
+        2 * P2trFeeEstimator.outputVBytes;
+    final fee = BigInt.from(estVBytes * feeRate);
+
+    final totalIn =
+        vtxoInputs.fold<BigInt>(BigInt.zero, (sum, i) => sum + i.value);
+    if (totalIn < amount + fee) {
+      throw Exception(
+          'Insufficient VTXO funds. Available: $totalIn, Required: ${amount + fee}');
+    }
+
+    // 3. Build inputs (set nSequence for CSV on exit path)
+    final txInputs = vtxoInputs.map((input) {
+      return TxInput(
+        txId: input.txHash,
+        txIndex: input.vout,
+        sequance: spendType == ScriptPathType.exit
+            ? _csvSequence(input.vtxo.exitDelay)
+            : null, // default 0xFFFFFFFF
+      );
+    }).toList();
+
+    // 4. Build outputs
+    final outputAddress = _parseP2trDestination(destination);
+
+    final txOutputs = <TxOutput>[
+      TxOutput(amount: amount, scriptPubKey: outputAddress.toScriptPubKey()),
+    ];
+
+    final changeValue = totalIn - amount - fee;
+    if (changeValue > BigInt.from(546)) {
+      txOutputs.add(
+        TxOutput(amount: changeValue, scriptPubKey: address.toScriptPubKey()),
+      );
+    }
+
+    // 5. Assemble unsigned transaction
+    final btcTx = BtcTransaction(inputs: txInputs, outputs: txOutputs);
+
+    // 6. Compute script-path sighashes (BIP-341 with tapleaf)
+    final scriptPubKeys = vtxoInputs.map((input) {
+      return Script.deserialize(
+          bytes: hex.decode(input.vtxo.scriptPubkeyHex()));
+    }).toList();
+    final amounts = vtxoInputs.map((i) => i.value).toList();
+
+    final sighashes = <List<int>>[];
+    for (int i = 0; i < vtxoInputs.length; i++) {
+      final leafScript =
+          Script.deserialize(bytes: hex.decode(spendInfos[i].scriptHex));
+      final tapleaf = TaprootLeaf(script: leafScript);
+
+      final digest = btcTx.getTransactionTaprootDigset(
+        txIndex: i,
+        scriptPubKeys: scriptPubKeys,
+        amounts: amounts,
+        tapleafScript: tapleaf,
+      );
+      sighashes.add(digest);
+    }
+
+    return UnsignedScriptPathTransaction(
+        btcTx, sighashes, spendInfos, spendType);
+  }
+
+  /// Signs a script-path transaction using MPC (no taproot tweak).
+  ///
+  /// For **forfeit** (cooperative) spending, [serverSignatures] must supply one
+  /// 64-byte hex signature per input (the Ark server's Schnorr signature).
+  ///
+  /// For **exit** (unilateral) spending, only the owner's MPC signature is
+  /// required; [serverSignatures] is ignored.
+  Future<String> signScriptPathTransaction(
+    UnsignedScriptPathTransaction unsigned, {
+    List<String>? serverSignatures,
+    String? pin,
+    String? policyId,
+  }) async {
+    final tx = unsigned.btcTransaction;
+    final sighashes = unsigned.sighashes;
+    final spendInfos = unsigned.spendInfos;
+
+    if (sighashes.length != tx.inputs.length) {
+      throw StateError('Sighash count mismatch');
+    }
+
+    if (unsigned.spendType == ScriptPathType.forfeit &&
+        (serverSignatures == null ||
+            serverSignatures.length != sighashes.length)) {
+      throw ArgumentError(
+          'Forfeit spending requires one server signature per input');
+    }
+
+    final witnesses = <TxWitnessInput>[];
+
+    for (int i = 0; i < tx.inputs.length; i++) {
+      final sighashUint8 = Uint8List.fromList(sighashes[i]);
+
+      // MPC sign without taproot tweak (script-path)
+      final signature = await client.sign(
+        sighashUint8,
+        pin: pin,
+        policyId: policyId,
+        applyTweak: false,
+      );
+
+      final sigBytes = signature.serialize();
+      final ownerSigHex =
+          sigBytes.map((e) => e.toRadixString(16).padLeft(2, '0')).join();
+
+      // Witness stack: [witness items..., leaf_script, control_block]
+      //
+      // Forfeit script: <server_pk> CHECKSIGVERIFY <owner_pk> CHECKSIG
+      //   → stack consumed bottom-to-top: owner_sig then server_sig
+      //   → witness order: [owner_sig, server_sig, script, control_block]
+      //
+      // Exit script: <owner_pk> CHECKSIGVERIFY <sequence> CSV DROP
+      //   → witness order: [owner_sig, script, control_block]
+      final stack = <String>[];
+
+      if (unsigned.spendType == ScriptPathType.forfeit) {
+        stack.add(ownerSigHex);
+        stack.add(serverSignatures![i]);
+      } else {
+        stack.add(ownerSigHex);
+      }
+
+      stack.add(spendInfos[i].scriptHex);
+      stack.add(spendInfos[i].controlBlockHex);
+
+      witnesses.add(TxWitnessInput(stack: stack));
+    }
+
+    final signedTx = BtcTransaction(
+      inputs: tx.inputs,
+      outputs: tx.outputs,
+      witnesses: witnesses,
+      version: tx.version,
+    );
+
+    return signedTx.serialize();
   }
 
   /// Broadcasts a signed transaction hex to the network via the MPC Server.

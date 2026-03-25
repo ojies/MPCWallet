@@ -17,14 +17,28 @@ class _SendScreenState extends State<SendScreen> {
   final TextEditingController _amountController = TextEditingController();
   bool _isBtc = true;
 
+  bool _isArkAddress(String address) {
+    return address.startsWith('tark1') || address.startsWith('ark1');
+  }
+
+  bool _isBitcoinAddress(String address) {
+    return RegExp(r'^(bc1|tb1|bcrt1)[a-zA-Z0-9]{25,90}$').hasMatch(address);
+  }
+
   @override
   Widget build(BuildContext context) {
     final mpcService = context.watch<MpcService>();
-    final balanceSats = mpcService.balance;
-    final formattedBalance = NumberFormat('#,###').format(balanceSats.toInt());
+    final onChainBalance = mpcService.balance;
+    final arkBalance = mpcService.arkBalance;
+    final formattedOnChain = NumberFormat('#,###').format(onChainBalance.toInt());
+    final formattedArk = NumberFormat('#,###').format(arkBalance.toInt());
+
+    // Detect address type for dynamic hint
+    final address = _addressController.text.trim();
+    final isArk = _isArkAddress(address);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Send Bitcoin')),
+      appBar: AppBar(title: const Text('Send')),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -32,16 +46,37 @@ class _SendScreenState extends State<SendScreen> {
           children: [
             TextField(
               controller: _addressController,
+              onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 labelText: 'Recipient Address',
-                hintText: 'bc1q...',
+                hintText: 'bc1q... or tark1...',
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.qr_code_scanner),
-                  onPressed: () {}, // TODO: Scanner
+                  onPressed: () {},
                 ),
               ),
               style: GoogleFonts.inter(),
             ),
+            if (address.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    isArk ? Icons.account_tree : Icons.link,
+                    size: 14,
+                    color: isArk ? Colors.blueAccent : Colors.white38,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    isArk ? 'Ark (off-chain)' : 'Bitcoin (on-chain)',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: isArk ? Colors.blueAccent : Colors.white38,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 24),
             Row(
               children: [
@@ -70,68 +105,62 @@ class _SendScreenState extends State<SendScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Available Balance: $formattedBalance Sats',
+              'On-chain: $formattedOnChain Sats  |  Ark: $formattedArk Sats',
               style: GoogleFonts.inter(color: Colors.white54, fontSize: 12),
             ),
             const Spacer(),
             ElevatedButton(
-              onPressed: () {
-                final address = _addressController.text.trim();
-                final amountText = _amountController.text.trim();
-
-                if (address.isEmpty || amountText.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please fill all fields')));
-                  return;
-                }
-
-                // Basic address validation (Bech32/Segwit)
-                // Accepts bc1, tb1, bcrt1
-                if (!RegExp(r'^(bc1|tb1|bcrt1)[a-zA-Z0-9]{25,60}$')
-                    .hasMatch(address)) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Invalid Bitcoin address format')));
-                  return;
-                }
-
-                try {
-                  // If _isBtc is true, the label is 'Sats', so we expect an Integer.
-                  // If we were supporting BTC unit, we'd multiply by 1e8.
-                  // Current UI: suffixText: _isBtc ? 'Sats' : 'USD'
-
-                  if (_isBtc) {
-                    // Validating SATS (must be integer-like, but user might type 100.0)
-                    final amountDouble = double.parse(amountText);
-                    if (amountDouble <= 0) throw Exception();
-
-                    // Allow 100.0 but not 100.5 for Sats
-                    if (amountDouble % 1 != 0) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Sats must be an integer')));
-                      return;
-                    }
-
-                    // Pass strict clean string to next screen
-                    context.push('/spending/review', extra: {
-                      'address': address,
-                      'amount': amountDouble.toInt().toString(),
-                      'isBtc': true, // Treating as Sats
-                    });
-                  } else {
-                    // USD Logic (Placeholder)
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text('USD mode not supported yet')));
-                  }
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Invalid amount')));
-                }
-              },
+              onPressed: _onReview,
               child: const Text('Review Transaction'),
             ),
           ],
         ),
       ),
     );
+  }
+
+  void _onReview() {
+    final address = _addressController.text.trim();
+    final amountText = _amountController.text.trim();
+
+    if (address.isEmpty || amountText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please fill all fields')));
+      return;
+    }
+
+    final isArk = _isArkAddress(address);
+
+    if (!isArk && !_isBitcoinAddress(address)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Invalid address format')));
+      return;
+    }
+
+    if (!_isBtc) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('USD mode not supported yet')));
+      return;
+    }
+
+    try {
+      final amountDouble = double.parse(amountText);
+      if (amountDouble <= 0) throw Exception();
+      if (amountDouble % 1 != 0) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Sats must be an integer')));
+        return;
+      }
+
+      context.push('/spending/review', extra: {
+        'address': address,
+        'amount': amountDouble.toInt().toString(),
+        'isBtc': true,
+        'isArk': isArk,
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid amount')));
+    }
   }
 }

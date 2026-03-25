@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:client/policy.dart';
 import 'package:client/auth_helper.dart';
+import 'package:client/ark/ark_send.dart';
 import 'package:grpc/grpc.dart';
 import 'package:client/threshold/core/dkg.dart';
 import 'package:client/threshold/threshold.dart' as threshold;
@@ -32,6 +33,17 @@ class MpcClient {
   // Recovey Id
   List<int>? _recoveryId;
   List<int>? get recoveryId => _recoveryId;
+
+  /// The FROST group x-only public key (64 hex chars).
+  /// This is the owner key for Ark VTXOs — NOT the same as userId.
+  String? get groupXOnlyPubKey {
+    final pkp = _normalPolicy?.publicKeyPackage;
+    if (pkp == null) return null;
+    final compressed = threshold.elemSerializeCompressed(pkp.verifyingKey.E);
+    final compressedHex = hex.encode(compressed);
+    // Strip 02/03 prefix to get x-only
+    return compressedHex.length == 66 ? compressedHex.substring(2) : compressedHex;
+  }
 
   final int _maxSigners;
   final int _minSigners;
@@ -611,7 +623,10 @@ class MpcClient {
   }
 
   Future<threshold.Signature> sign(Uint8List message,
-      {String? pin, String? policyId, List<int>? fullTransaction}) async {
+      {String? pin,
+      String? policyId,
+      List<int>? fullTransaction,
+      bool applyTweak = true}) async {
     var keyPackage = _normalPolicy!.keyPackage;
     var groupPubKey = _normalPolicy!.publicKeyPackage;
 
@@ -657,6 +672,7 @@ class MpcClient {
       keyPackage,
       groupPubKey,
       fullTransaction,
+      applyTweak: applyTweak,
     );
   }
 
@@ -664,8 +680,9 @@ class MpcClient {
     Uint8List message,
     threshold.KeyPackage keyPkg,
     threshold.PublicKeyPackage groupPubKey,
-    List<int>? fullTransaction,
-  ) async {
+    List<int>? fullTransaction, {
+    bool applyTweak = true,
+  }) async {
     final nonce = frost_comm.newNonce(keyPkg.secretShare);
 
     if (_userId == null) {
@@ -687,7 +704,9 @@ class MpcClient {
     if (fullTransaction != null) {
       req.fullTransaction = fullTransaction;
     }
-
+    if (!applyTweak) {
+      req.scriptPathSpend = true;
+    }
     final signStep1Resp = await _stub.signStep1(req);
 
     // Parse Commitments
@@ -705,9 +724,14 @@ class MpcClient {
     // 3. Step 2: Sign
     final signingPkg = frost_comm.SigningPackage(commitmentsMap, message);
 
-    // Explicitly apply Taproot tweak (Key Path Spending)
-    keyPkg = keyPkg.tweak(null);
-    final pubPackage = groupPubKey.tweak(null);
+    // Apply Taproot tweak for key-path spending; skip for script-path spending.
+    threshold.PublicKeyPackage pubPackage;
+    if (applyTweak) {
+      keyPkg = keyPkg.tweak(null);
+      pubPackage = groupPubKey.tweak(null);
+    } else {
+      pubPackage = groupPubKey;
+    }
 
     final sigShare = frost.sign(signingPkg, nonce, keyPkg);
 
@@ -882,6 +906,359 @@ class MpcClient {
           threshold.Round2Package.fromJson(jsonDecode(v));
     });
     return m;
+  }
+
+  // --- ARK ---
+
+  Future<GetArkInfoResponse> getArkInfo() async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot get Ark info.");
+    }
+    final auth = _authHelper!.signForGetArkInfo();
+    return await _stub.getArkInfo(GetArkInfoRequest()
+      ..userId = _userId!
+      ..signature = auth.signature
+      ..timestampMs = auth.timestampMs);
+  }
+
+  Future<String> getArkAddress() async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot get Ark address.");
+    }
+    final auth = _authHelper!.signForGetArkAddress();
+    final response = await _stub.getArkAddress(GetArkAddressRequest()
+      ..userId = _userId!
+      ..signature = auth.signature
+      ..timestampMs = auth.timestampMs);
+    return response.arkAddress;
+  }
+
+  Future<String> getBoardingAddress() async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot get boarding address.");
+    }
+    final auth = _authHelper!.signForGetBoardingAddress();
+    final response = await _stub.getBoardingAddress(GetBoardingAddressRequest()
+      ..userId = _userId!
+      ..signature = auth.signature
+      ..timestampMs = auth.timestampMs);
+    return response.boardingAddress;
+  }
+
+  Future<ListVtxosResponse> listVtxos() async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot list VTXOs.");
+    }
+    final auth = _authHelper!.signForListVtxos();
+    return await _stub.listVtxos(ListVtxosRequest()
+      ..userId = _userId!
+      ..signature = auth.signature
+      ..timestampMs = auth.timestampMs);
+  }
+
+  Future<ListArkTransactionsResponse> listArkTransactions() async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot list Ark transactions.");
+    }
+    final auth = _authHelper!.signForListArkTransactions();
+    return await _stub.listArkTransactions(ListArkTransactionsRequest()
+      ..userId = _userId!
+      ..signature = auth.signature
+      ..timestampMs = auth.timestampMs);
+  }
+
+  Future<CheckBoardingBalanceResponse> checkBoardingBalance() async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot check boarding balance.");
+    }
+    final auth = _authHelper!.signForCheckBoardingBalance();
+    return await _stub.checkBoardingBalance(CheckBoardingBalanceRequest()
+      ..userId = _userId!
+      ..signature = auth.signature
+      ..timestampMs = auth.timestampMs);
+  }
+
+  /// Send VTXOs off-chain to a recipient Ark address.
+  ///
+  /// 2-round flow:
+  /// Phase 1: get sighashes (ark tx + checkpoint tx inputs)
+  /// Phase 2: send FROST signatures, server submits to ASP + finalizes
+  Future<String> sendVtxo(String recipientArkAddress, int amountSats,
+      {String? policyId, String? pin}) async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot send VTXO.");
+    }
+
+    // 1. Get ArkInfo (includes checkpoint_tapscript, forfeit_address)
+    final arkInfo = await getArkInfo();
+
+    // 2. Get VTXOs from server
+    final vtxosResp = await listVtxos();
+    if (vtxosResp.vtxos.isEmpty) {
+      throw Exception('No VTXOs available for sending');
+    }
+
+    // 3. Get change address (our own Ark address)
+    final changeAddr = await getArkAddress();
+
+    // 4. Get owner x-only pubkey (strip 02/03 prefix from userId)
+    final userIdHex = hex.encode(_userId!);
+    final ownerPk = userIdHex.length == 66 ? userIdHex.substring(2) : userIdHex;
+
+    // Use exit_delay from first VTXO (all should be same type)
+    // VTXOs from server don't carry exit_delay, so use unilateral_exit_delay
+    final exitDelay = arkInfo.unilateralExitDelay.toInt();
+
+    // 5. Build Ark send transaction via FFI (client-side)
+    final vtxoInputs = vtxosResp.vtxos.map((v) => {
+      'txid': v.txid,
+      'vout': v.vout,
+      'amount': v.amount.toInt(),
+    }).toList();
+
+    final arkInfoMap = {
+      'signer_pubkey': arkInfo.signerPubkey,
+      'forfeit_pubkey': arkInfo.forfeitPubkey,
+      'forfeit_address': arkInfo.forfeitAddress,
+      'checkpoint_tapscript': arkInfo.checkpointTapscript,
+      'network': arkInfo.network,
+      'session_duration': arkInfo.sessionDuration.toInt(),
+      'unilateral_exit_delay': arkInfo.unilateralExitDelay.toInt(),
+      'boarding_exit_delay': arkInfo.boardingExitDelay.toInt(),
+      'vtxo_min_amount': arkInfo.vtxoMinAmount.toInt(),
+      'dust': arkInfo.dust.toInt(),
+    };
+
+    final session = ArkSendSession.build(
+      ownerPk: ownerPk,
+      vtxoInputs: vtxoInputs,
+      recipientArkAddress: recipientArkAddress,
+      amountSats: amountSats,
+      changeArkAddress: changeAddr,
+      exitDelay: exitDelay,
+      arkInfo: arkInfoMap,
+    );
+
+    try {
+      // 6. FROST sign each sighash via sign() which handles client-side policy
+      //    key correction. Pass real PSBT bytes as fullTransaction so the server
+      //    independently evaluates the same net spend for policy selection.
+      final sigHexes = <String>[];
+      for (final sighash in session.sighashes) {
+        final sig = await sign(
+          sighash,
+          policyId: policyId,
+          pin: pin,
+          fullTransaction: session.arkTxBytes,
+          applyTweak: false, // script-path spend
+        );
+
+        final rBytes = threshold.elemSerializeCompressed(sig.R);
+        final xOnly = rBytes.sublist(1);
+        final zBytes = threshold.bigIntToBytes(sig.Z);
+
+        final schnorrSig = Uint8List(64);
+        schnorrSig.setRange(0, 32, xOnly);
+        schnorrSig.setRange(32, 64, zBytes);
+
+        sigHexes.add(hex.encode(schnorrSig));
+      }
+
+      // 7. Insert signatures into PSBTs via FFI
+      final signed = ArkSendSession.insertSignatures(session.handle, sigHexes);
+
+      // 8. Submit via server proxy (server forwards to ASP + counter-signs)
+      final spentOutpoints = vtxosResp.vtxos.map((v) => '${v.txid}:${v.vout}').toList();
+
+      final auth = _authHelper!.signForSendVtxo();
+      final resp = await _stub.submitArkSend(SubmitArkSendRequest()
+        ..userId = _userId!
+        ..signature = auth.signature
+        ..timestampMs = auth.timestampMs
+        ..signedArkTxB64 = signed.signedArkTxB64
+        ..signedCheckpointTxsB64.addAll(signed.signedCheckpointTxsB64)
+        ..spentOutpoints.addAll(spentOutpoints));
+
+      return resp.arkTxid;
+    } finally {
+      ArkSendSession.free(session.handle);
+    }
+  }
+
+  /// Submits signed Ark PSBTs to the ASP via the server proxy.
+  Future<String> submitArkSend({
+    required String signedArkTxB64,
+    required List<String> signedCheckpointTxsB64,
+    required List<String> spentOutpoints,
+  }) async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot submit Ark send.");
+    }
+    final auth = _authHelper!.signForSendVtxo();
+    final resp = await _stub.submitArkSend(SubmitArkSendRequest()
+      ..userId = _userId!
+      ..signature = auth.signature
+      ..timestampMs = auth.timestampMs
+      ..signedArkTxB64 = signedArkTxB64
+      ..signedCheckpointTxsB64.addAll(signedCheckpointTxsB64)
+      ..spentOutpoints.addAll(spentOutpoints));
+    return resp.arkTxid;
+  }
+
+  Future<RedeemVtxoResponse> redeemVtxo(String onChainAddress, int amountSats) async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot redeem VTXO.");
+    }
+    final auth = _authHelper!.signForRedeemVtxo();
+    return await _stub.redeemVtxo(RedeemVtxoRequest()
+      ..userId = _userId!
+      ..onChainAddress = onChainAddress
+      ..amount = Int64(amountSats)
+      ..signature = auth.signature
+      ..timestampMs = auth.timestampMs);
+  }
+
+  /// Settle on-chain boarding UTXOs into Ark VTXOs.
+  /// Returns the commitment txid when settled.
+  Future<String> settle() async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot settle.");
+    }
+
+    List<List<int>> signedMessages = [];
+
+    while (true) {
+      final auth = _authHelper!.signForSettle();
+      final request = SettleRequest()
+        ..userId = _userId!
+        ..signature = auth.signature
+        ..timestampMs = auth.timestampMs;
+      if (signedMessages.isNotEmpty) {
+        request.signedMessages.addAll(signedMessages);
+      }
+
+      final response = await _stub.settle(request);
+      final status = response.status;
+
+      if (status == SettleResponse_Status.SETTLED) {
+        return response.commitmentTxid;
+      }
+
+      if (status == SettleResponse_Status.ERROR) {
+        throw Exception('Settle error: ${response.errorMessage}');
+      }
+
+      if (status == SettleResponse_Status.SIGNING_REQUIRED) {
+        signedMessages = [];
+        final scriptPath = response.scriptPathSpend;
+
+        for (final sighash in response.messagesToSign) {
+          final sighashBytes = Uint8List.fromList(sighash);
+
+          // FROST sign - script path means no taproot tweak
+          final sig = await signWithContext(
+            sighashBytes,
+            _normalPolicy!.keyPackage,
+            _normalPolicy!.publicKeyPackage,
+            null,
+            applyTweak: !scriptPath,
+          );
+
+          // Convert threshold.Signature to 64-byte BIP-340 Schnorr sig
+          // R: compressed point (33 bytes) -> x-only (32 bytes, drop prefix)
+          final rBytes = threshold.elemSerializeCompressed(sig.R);
+          final xOnly = rBytes.sublist(1);
+          // Z: scalar -> 32 bytes big-endian
+          final zBytes = threshold.bigIntToBytes(sig.Z);
+
+          final schnorrSig = Uint8List(64);
+          schnorrSig.setRange(0, 32, xOnly);
+          schnorrSig.setRange(32, 64, zBytes);
+
+          signedMessages.add(schnorrSig.toList());
+        }
+        // Loop back to call Settle again with signatures
+        continue;
+      }
+
+      if (status == SettleResponse_Status.WAITING_FOR_BATCH) {
+        // Server is still processing, wait and retry
+        await Future.delayed(Duration(seconds: 2));
+        signedMessages = []; // No signatures to send when polling
+        continue;
+      }
+    }
+  }
+
+  /// Settle existing VTXOs using the delegate pattern.
+  ///
+  /// Only 2 rounds vs 4 for boarding:
+  /// Phase 1: get all sighashes (intent proof + forfeit PSBTs)
+  /// Phase 2: send FROST signatures, server drives batch autonomously
+  Future<String> settleDelegate() async {
+    if (_userId == null) {
+      throw StateError("User ID is null, cannot settleDelegate.");
+    }
+
+    // Phase 1: request sighashes
+    final auth1 = _authHelper!.signForSettleDelegate();
+    final req1 = SettleDelegateRequest()
+      ..userId = _userId!
+      ..signature = auth1.signature
+      ..timestampMs = auth1.timestampMs;
+
+    final resp1 = await _stub.settleDelegate(req1);
+
+    if (resp1.status == SettleDelegateResponse_Status.ERROR) {
+      throw Exception('SettleDelegate error: ${resp1.errorMessage}');
+    }
+    if (resp1.status != SettleDelegateResponse_Status.SIGNING_REQUIRED) {
+      throw Exception('Expected SIGNING_REQUIRED, got ${resp1.status}');
+    }
+
+    // FROST sign all sighashes
+    List<List<int>> signedMessages = [];
+    final scriptPath = resp1.scriptPathSpend;
+
+    for (final sighash in resp1.messagesToSign) {
+      final sighashBytes = Uint8List.fromList(sighash);
+      final sig = await signWithContext(
+        sighashBytes,
+        _normalPolicy!.keyPackage,
+        _normalPolicy!.publicKeyPackage,
+        null,
+        applyTweak: !scriptPath,
+      );
+
+      final rBytes = threshold.elemSerializeCompressed(sig.R);
+      final xOnly = rBytes.sublist(1);
+      final zBytes = threshold.bigIntToBytes(sig.Z);
+
+      final schnorrSig = Uint8List(64);
+      schnorrSig.setRange(0, 32, xOnly);
+      schnorrSig.setRange(32, 64, zBytes);
+
+      signedMessages.add(schnorrSig.toList());
+    }
+
+    // Phase 2: send signatures, server settles autonomously
+    final auth2 = _authHelper!.signForSettleDelegate();
+    final req2 = SettleDelegateRequest()
+      ..userId = _userId!
+      ..signature = auth2.signature
+      ..timestampMs = auth2.timestampMs;
+    req2.signedMessages.addAll(signedMessages);
+
+    final resp2 = await _stub.settleDelegate(req2);
+
+    if (resp2.status == SettleDelegateResponse_Status.ERROR) {
+      throw Exception('SettleDelegate error: ${resp2.errorMessage}');
+    }
+    if (resp2.status != SettleDelegateResponse_Status.SETTLED) {
+      throw Exception('Expected SETTLED, got ${resp2.status}');
+    }
+
+    return resp2.commitmentTxid;
   }
 
   // --- BROADCAST ---

@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../services/mpc_service.dart';
 
+
+
 class PoliciesScreen extends StatefulWidget {
   const PoliciesScreen({super.key});
 
@@ -144,6 +146,30 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Scope banner
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline,
+                      color: Colors.blueAccent, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Policies apply to all transactions — both on-chain Bitcoin and off-chain Ark sends.',
+                      style: GoogleFonts.inter(
+                          color: Colors.blueAccent, fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             if (policies.isEmpty)
               Expanded(
                 child: Center(
@@ -158,7 +184,7 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
                               fontSize: 18, color: Colors.white54)),
                       const SizedBox(height: 8),
                       Text(
-                          'Add a policy to set spending limits that require PIN authorization.',
+                          'Add a policy to set spending limits that require PIN authorization for Bitcoin and Ark transactions.',
                           style: GoogleFonts.inter(
                               fontSize: 12, color: Colors.white24),
                           textAlign: TextAlign.center),

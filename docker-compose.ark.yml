@@ -1,0 +1,115 @@
+# Extends the base docker-compose.yml with arkd (ASP) services.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.ark.yml up -d
+
+services:
+  # Add a "bitcoin" network alias so nbxplorer can find our bitcoind.
+  bitcoind:
+    networks:
+      default:
+        aliases:
+          - bitcoin
+
+  # PostgreSQL for nbxplorer
+  pg:
+    image: postgres:16
+    container_name: mpc_pg
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    volumes:
+      - type: tmpfs
+        target: /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1 -p 5432"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    restart: unless-stopped
+
+  # NBXplorer — blockchain indexer for arkd-wallet
+  nbxplorer:
+    image: nicolasdorier/nbxplorer:2.5.30
+    container_name: mpc_nbxplorer
+    ports:
+      - "32838:32838"
+    environment:
+      - NBXPLORER_NETWORK=regtest
+      - NBXPLORER_CHAINS=btc
+      - NBXPLORER_BTCRPCURL=http://bitcoin:18443
+      - NBXPLORER_BTCNODEENDPOINT=bitcoin:18444
+      - NBXPLORER_BTCRPCUSER=admin1
+      - NBXPLORER_BTCRPCPASSWORD=123
+      - NBXPLORER_VERBOSE=1
+      - NBXPLORER_BIND=0.0.0.0:32838
+      - NBXPLORER_TRIMEVENTS=10000
+      - NBXPLORER_SIGNALFILESDIR=/datadir
+      - NBXPLORER_POSTGRES=User ID=postgres;Host=mpc_pg;Port=5432;Application Name=nbxplorer;MaxPoolSize=20;Database=nbxplorer
+      - NBXPLORER_EXPOSERPC=1
+      - NBXPLORER_NOAUTH=1
+    volumes:
+      - type: tmpfs
+        target: /datadir
+    depends_on:
+      pg:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Redis for arkd
+  redis:
+    image: redis:7-alpine
+    container_name: mpc_redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    restart: unless-stopped
+
+  # arkd wallet service
+  arkd-wallet:
+    image: ghcr.io/arkade-os/arkd-wallet:latest
+    container_name: mpc_arkd_wallet
+    depends_on:
+      - nbxplorer
+    ports:
+      - "6060:6060"
+    environment:
+      - ARKD_WALLET_LOG_LEVEL=5
+      - ARKD_WALLET_NBXPLORER_URL=http://mpc_nbxplorer:32838
+      - ARKD_WALLET_DATADIR=./data/regtest
+      - ARKD_WALLET_NETWORK=regtest
+      # Hardcoded regtest signer key (same as arkd's official test setup)
+      - ARKD_WALLET_SIGNER_KEY=afcd3fa10f82a05fddc9574fdb13b3991b568e89cc39a72ba4401df8abef35f0
+    restart: unless-stopped
+
+  # arkd — Ark Service Provider
+  arkd:
+    image: ghcr.io/arkade-os/arkd:latest
+    container_name: mpc_arkd
+    depends_on:
+      - arkd-wallet
+      - pg
+      - redis
+    ports:
+      - "7070:7070"
+      - "7071:7071"
+    environment:
+      - ARKD_LOG_LEVEL=5
+      - ARKD_NO_MACAROONS=true
+      - ARKD_VTXO_TREE_EXPIRY=3600
+      - ARKD_SCHEDULER_TYPE=gocron
+      - ARKD_UNILATERAL_EXIT_DELAY=512
+      - ARKD_BOARDING_EXIT_DELAY=1024
+      - ARKD_CHECKPOINT_EXIT_DELAY=10
+      - ARKD_DATADIR=./data/regtest
+      - ARKD_WALLET_ADDR=mpc_arkd_wallet:6060
+      # Our electrs serves the Esplora REST API on port 30000
+      - ARKD_ESPLORA_URL=http://mpc_electrs:30000
+      - ARKD_ROUND_MIN_PARTICIPANTS_COUNT=1
+      - ARKD_ROUND_MAX_PARTICIPANTS_COUNT=128
+      - ARKD_VTXO_MIN_AMOUNT=1
+      - ARKD_DB_TYPE=sqlite
+      - ARKD_EVENT_DB_TYPE=badger
+      - ARKD_LIVE_STORE_TYPE=inmemory
+      - ARKD_SESSION_DURATION=10
+      - ARKD_BAN_THRESHOLD=1
+    restart: unless-stopped

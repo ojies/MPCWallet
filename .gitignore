@@ -26,6 +26,13 @@
 # Pico firmware
 */pico-signer.elf
 */pico-signer.uf2
+threshold/target
+threshold-ffi/target
+cosigner/target
+server/target
+e2e/signer-server/target
+ark/target
+ark-ffi/target
 
 # IDE
 .vscode/

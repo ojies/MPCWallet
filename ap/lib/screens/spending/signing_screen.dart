@@ -15,12 +15,16 @@ class SigningScreen extends StatefulWidget {
 
 class _SigningScreenState extends State<SigningScreen> {
   int _currentStep = 0;
-  final List<String> _steps = ['Build', 'Sign', 'Broadcast'];
-  String _statusText = 'Building transaction...';
+  late final List<String> _steps;
+  String _statusText = '';
+
+  bool get _isArk => widget.extras['isArk'] as bool? ?? false;
 
   @override
   void initState() {
     super.initState();
+    _steps = _isArk ? ['Build', 'Sign', 'Submit'] : ['Build', 'Sign', 'Broadcast'];
+    _statusText = 'Building transaction...';
     _startSigning();
   }
 
@@ -78,6 +82,140 @@ class _SigningScreenState extends State<SigningScreen> {
   }
 
   void _startSigning() async {
+    if (_isArk) {
+      await _startArkSend();
+    } else {
+      await _startBitcoinSend();
+    }
+  }
+
+  Future<void> _startArkSend() async {
+    final mpcService = context.read<MpcService>();
+    final arkWallet = mpcService.arkWallet;
+
+    if (arkWallet == null || !mpcService.arkAvailable) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ark wallet not initialized!')),
+        );
+        context.pop();
+      }
+      return;
+    }
+
+    final destination = widget.extras['address'] as String?;
+    final amountStr = widget.extras['amount'] as String?;
+
+    if (destination == null || amountStr == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid transaction details!')),
+        );
+        context.pop();
+      }
+      return;
+    }
+
+    final amount = int.tryParse(amountStr);
+    if (amount == null || amount <= 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid amount!')),
+        );
+        context.pop();
+      }
+      return;
+    }
+
+    try {
+      // Step 0: Build transaction
+      setState(() {
+        _currentStep = 0;
+        _statusText = 'Building transaction...';
+      });
+
+      final unsigned = await arkWallet.createTransaction(
+        destination: destination,
+        amountSats: amount,
+      );
+
+      // Step 1: Sign — check if policy is triggered
+      setState(() {
+        _currentStep = 1;
+        _statusText = 'Checking spending policy...';
+      });
+
+      String? pin;
+      String? policyId;
+
+      try {
+        final resolvedPolicyId = await arkWallet.getPolicyId(unsigned);
+        if (resolvedPolicyId.isNotEmpty) {
+          setState(() {
+            _statusText = 'Policy triggered — PIN required';
+          });
+
+          if (!mounted) return;
+          pin = await _showPinDialog();
+          if (pin == null || pin.isEmpty) {
+            unsigned.dispose();
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Signing cancelled')),
+              );
+              context.pop();
+            }
+            return;
+          }
+          policyId = resolvedPolicyId;
+        }
+      } catch (e) {
+        debugPrint("getPolicyId failed: $e — proceeding without policy");
+      }
+
+      setState(() {
+        _statusText = 'Signing with your Key Share...';
+      });
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      final signed = await arkWallet.signTransaction(
+        unsigned,
+        pin: pin,
+        policyId: policyId,
+      );
+
+      // Step 2: Submit
+      setState(() {
+        _currentStep = 2;
+        _statusText = 'Submitting to Ark...';
+      });
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      final arkTxid = await arkWallet.submit(signed);
+      await mpcService.refreshVtxos();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ark send complete! TX: ${arkTxid.substring(0, 16)}...'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.go('/ark');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Ark Send Failed: $e'),
+              backgroundColor: Colors.red),
+        );
+        context.pop();
+      }
+    }
+  }
+
+  Future<void> _startBitcoinSend() async {
     final mpcService = context.read<MpcService>();
     final wallet = mpcService.wallet;
 
@@ -155,11 +293,9 @@ class _SigningScreenState extends State<SigningScreen> {
       String? pin;
       String? policyId;
 
-      // Ask the server which policy applies to this transaction
       try {
         final resolvedPolicyId = await wallet.getPolicyId(unsigned);
         if (resolvedPolicyId.isNotEmpty) {
-          // Policy triggered — need PIN
           setState(() {
             _statusText = 'Policy triggered — PIN required';
           });
@@ -229,7 +365,8 @@ class _SigningScreenState extends State<SigningScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Signing Transaction')),
+      appBar: AppBar(
+          title: Text(_isArk ? 'Sending (Ark)' : 'Signing Transaction')),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
