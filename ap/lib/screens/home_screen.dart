@@ -109,25 +109,28 @@ class HomeScreen extends StatelessWidget {
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor:
-            const Color(0xFF1E1E1E), // Slightly lighter than background
+            const Color(0xFF1E1E1E),
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white38,
         showSelectedLabels: true,
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
-        currentIndex: 0, // Home is always active in this view
+        currentIndex: 0,
         onTap: (index) {
-          if (index == 1) {
-            context.push('/spending/send');
-          } else if (index == 2) {
-            context.push('/policies');
-          }
+          if (index == 1) context.go('/ark');
+          if (index == 2) context.push('/spending/send');
+          if (index == 3) context.push('/policies');
         },
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.account_balance_wallet_outlined),
             activeIcon: Icon(Icons.account_balance_wallet),
             label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_tree_outlined),
+            activeIcon: Icon(Icons.account_tree),
+            label: 'Ark',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.send_outlined),

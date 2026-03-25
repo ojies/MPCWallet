@@ -16,36 +16,52 @@ class _DkgProgressScreenState extends State<DkgProgressScreen> {
   int _currentStep = 0;
   final List<String> _steps = ['Session', 'Generate', 'Finalize'];
   final List<String> _logs = [];
+  bool _started = false;
 
   @override
-  void initState() {
-    super.initState();
-    _startDkg();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_started) {
+      _started = true;
+      _startDkg();
+    }
   }
 
   void _startDkg() async {
     final mpcService = context.read<MpcService>();
+    final extras = GoRouterState.of(context).extra as Map<String, dynamic>? ?? {};
+    final isRestore = extras['isRestore'] == true;
 
     // Wait for Init
     if (!mpcService.isInitialized) {
       await _addLog('Client init failed or slow. Retrying...');
-      // TODO: (Joshua) Ensure retrying works. await mpcService.init();
     }
 
     await _addLog('Connected to server.');
     setState(() => _currentStep = 0);
 
     try {
-      await _addLog('Starting Distributed Key Generation...');
+      if (isRestore) {
+        await _addLog('Restoring wallet from hardware key...');
+      } else {
+        await _addLog('Starting Distributed Key Generation...');
+      }
       setState(() => _currentStep = 1);
 
-      // Perform DKG
       await Future.delayed(const Duration(milliseconds: 500)); // UI pacing
-      await _addLog('Generating secrets and exchanging packages...');
+      await _addLog(isRestore
+          ? 'Re-deriving shares from stored secrets...'
+          : 'Generating secrets and exchanging packages...');
 
-      await mpcService.doDkg();
+      if (isRestore) {
+        await mpcService.doRestore();
+      } else {
+        await mpcService.doDkg();
+      }
 
-      await _addLog('DKG Finalized successfully.');
+      await _addLog(isRestore
+          ? 'Wallet restored successfully.'
+          : 'DKG Finalized successfully.');
       setState(() => _currentStep = 2);
       await Future.delayed(const Duration(seconds: 1));
 
@@ -53,8 +69,7 @@ class _DkgProgressScreenState extends State<DkgProgressScreen> {
         context.push('/onboarding/ready');
       }
     } catch (e) {
-      await _addLog('Error during DKG: $e');
-      // In real app, offer retry button.
+      await _addLog('Error: $e');
     }
   }
 
@@ -68,8 +83,11 @@ class _DkgProgressScreenState extends State<DkgProgressScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final extras = GoRouterState.of(context).extra as Map<String, dynamic>? ?? {};
+    final isRestore = extras['isRestore'] == true;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Creating Wallet')),
+      appBar: AppBar(title: Text(isRestore ? 'Restoring Wallet' : 'Creating Wallet')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),

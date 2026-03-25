@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:grpc/grpc.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:client/ark_wallet.dart';
 import 'package:client/bitcoin.dart';
 import 'package:client/client.dart';
 import 'package:client/hardware_signer.dart';
@@ -35,14 +37,46 @@ class MpcService extends ChangeNotifier {
   MpcBitcoinWallet? _wallet;
   MpcBitcoinWallet? get wallet => _wallet;
 
+  MpcArkWallet? _arkWallet;
+  MpcArkWallet? get arkWallet => _arkWallet;
+
   BigInt _balance = BigInt.zero;
   BigInt get balance => _balance;
   List<TransactionSummary> get transactions => _wallet?.transactions ?? [];
   ProtectedPolicy? get activePolicy => _client?.activeSpendingPolicy;
   List<ProtectedPolicy> get policies => _client?.spendingPolicies ?? [];
 
+  // --- Ark state ---
+  GetArkInfoResponse? _arkInfo;
+  GetArkInfoResponse? get arkInfo => _arkInfo;
+  String? _arkAddress;
+  String? get arkAddress => _arkAddress;
+  String? _boardingAddress;
+  String? get boardingAddress => _boardingAddress;
+  List<VtxoInfo> _vtxos = [];
+  List<VtxoInfo> get vtxos => _vtxos;
+  BigInt _arkBalance = BigInt.zero;
+  BigInt get arkBalance => _arkBalance;
+  List<ArkTransactionSummary> _arkTransactions = [];
+  List<ArkTransactionSummary> get arkTransactions => _arkTransactions;
+  int _boardingBalance = 0;
+  int get boardingBalance => _boardingBalance;
+  int _boardingUtxoCount = 0;
+  int get boardingUtxoCount => _boardingUtxoCount;
+  bool _arkAvailable = false;
+  bool get arkAvailable => _arkAvailable;
+
   void policyUpdated() {
     notifyListeners();
+  }
+
+  Future<void> reconnectHardwareSigner() async {
+    try {
+      await _hardwareSigner?.disconnect();
+    } catch (_) {}
+    _hardwareSigner = _createSigner();
+    await _hardwareSigner!.connect();
+    _client?.hardwareSigner = _hardwareSigner!;
   }
 
   String? get receiveAddress {
@@ -172,6 +206,55 @@ class MpcService extends ChangeNotifier {
     _isConnected = true;
     await _identityBox!.put('dkgComplete', true);
 
+    await initArk();
+    notifyListeners();
+  }
+
+  /// Restore wallet via re-DKG using the hardware signer's stored secrets.
+  /// The group public key (and Bitcoin address) is preserved.
+  Future<void> doRestore() async {
+    if (!_isInitialized) throw StateError("MPC Service not initialized");
+
+    final storageId = _storageId ?? 'mpc_wallet_state_default';
+
+    debugPrint("[RESTORE] Connecting hardware signer...");
+    _hardwareSigner = _createSigner();
+    await _hardwareSigner!.connect();
+    debugPrint("[RESTORE] Hardware signer connected.");
+
+    _channel = ClientChannel(
+      _host,
+      port: _port,
+      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
+    );
+
+    _client = MpcClient(
+      _channel!,
+      storageId: storageId,
+      hardwareSigner: _hardwareSigner!,
+    );
+
+    debugPrint("[RESTORE] Starting re-DKG...");
+    // Re-DKG: derive new shares from existing secrets on HW + server
+    await _client!.doRestore().timeout(
+      const Duration(seconds: 30),
+      onTimeout: () => throw StateError(
+          'Restore timed out. Check that the server is running and ADB reverse is set up.'),
+    );
+    debugPrint("[RESTORE] Re-DKG complete.");
+
+    _wallet = MpcBitcoinWallet(_client!, isTestnet: true, storageId: storageId);
+    _wallet!.onSyncComplete = _onWalletSyncComplete;
+
+    // init() will find restored state and skip DKG, then sync
+    await _wallet!.init();
+    _balance = await _wallet!.getBalance();
+
+    _dkgComplete = true;
+    _isConnected = true;
+    await _identityBox!.put('dkgComplete', true);
+
+    await initArk();
     notifyListeners();
   }
 
@@ -184,10 +267,14 @@ class MpcService extends ChangeNotifier {
 
     final storageId = _storageId ?? 'mpc_wallet_state_default';
 
-    // Reconnect hardware signer
+    // Reconnect hardware signer (non-fatal if device not plugged in yet)
     if (_hardwareSigner == null) {
       _hardwareSigner = _createSigner();
-      await _hardwareSigner!.connect();
+      try {
+        await _hardwareSigner!.connect();
+      } catch (e) {
+        debugPrint("Hardware signer not available: $e");
+      }
     }
 
     _channel = ClientChannel(
@@ -208,6 +295,7 @@ class MpcService extends ChangeNotifier {
     _balance = await _wallet!.getBalance();
     _isConnected = true;
 
+    await initArk();
     notifyListeners();
   }
 
@@ -249,6 +337,83 @@ class MpcService extends ChangeNotifier {
       print("Post-sync balance update failed: $e");
     }
     notifyListeners();
+  }
+
+  // --- Ark methods ---
+
+  Future<void> initArk() async {
+    if (_client == null) return;
+    try {
+      _arkInfo = await _client!.getArkInfo();
+      _arkAddress = await _client!.getArkAddress();
+      _boardingAddress = await _client!.getBoardingAddress();
+      _arkWallet = MpcArkWallet(_client!);
+      _arkAvailable = true;
+      await refreshVtxos();
+    } catch (e) {
+      debugPrint("Ark init failed (ASP may not be configured): $e");
+      _arkWallet = null;
+      _arkAvailable = false;
+    }
+    notifyListeners();
+  }
+
+  Future<void> refreshVtxos() async {
+    if (_client == null) return;
+    try {
+      final resp = await _client!.listVtxos();
+      _vtxos = resp.vtxos;
+      _arkBalance = BigInt.from(resp.totalBalance.toInt());
+    } catch (e) {
+      debugPrint("Refresh VTXOs failed: $e");
+    }
+    await refreshArkTransactions();
+    notifyListeners();
+  }
+
+  Future<void> refreshArkTransactions() async {
+    if (_client == null) return;
+    try {
+      final resp = await _client!.listArkTransactions();
+      _arkTransactions = resp.transactions;
+    } catch (e) {
+      debugPrint("Refresh Ark transactions failed: $e");
+    }
+  }
+
+  Future<void> refreshBoardingBalance() async {
+    if (_client == null) return;
+    try {
+      final resp = await _client!.checkBoardingBalance();
+      _boardingBalance = resp.balance.toInt();
+      _boardingUtxoCount = resp.utxoCount;
+    } catch (e) {
+      debugPrint("Refresh boarding balance failed: $e");
+    }
+    notifyListeners();
+  }
+
+  Future<String> boardFunds() async {
+    if (_client == null) throw StateError("Client not initialized");
+    final txid = await _client!.settle();
+    await refreshVtxos();
+    return txid;
+  }
+
+  Future<String> sendArk(String recipientArkAddress, int amountSats,
+      {String? policyId, String? pin}) async {
+    if (_client == null) throw StateError("Client not initialized");
+    final arkTxid = await _client!.sendVtxo(recipientArkAddress, amountSats,
+        policyId: policyId, pin: pin);
+    await refreshVtxos();
+    return arkTxid;
+  }
+
+  Future<String> settleDelegate() async {
+    if (_client == null) throw StateError("Client not initialized");
+    final txid = await _client!.settleDelegate();
+    await refreshVtxos();
+    return txid;
   }
 
   String _generateSessionId() {

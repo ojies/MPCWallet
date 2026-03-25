@@ -14,6 +14,10 @@ import 'screens/policies/policies_screen.dart';
 import 'screens/policies/edit_policy_screen.dart';
 import 'screens/receive_screen.dart';
 import 'screens/splash_screen.dart';
+import 'screens/ark/ark_screen.dart';
+import 'screens/ark/ark_receive_screen.dart';
+import 'screens/ark/ark_send_screen.dart';
+import 'screens/ark/ark_board_screen.dart';
 
 import 'package:provider/provider.dart';
 import 'services/mpc_service.dart';
@@ -99,6 +103,22 @@ GoRoute(
         final extras = state.extra as Map<String, dynamic>? ?? {};
         return SigningScreen(extras: extras);
       },
+    ),
+    GoRoute(
+      path: '/ark',
+      builder: (context, state) => const ArkScreen(),
+    ),
+    GoRoute(
+      path: '/ark/receive',
+      builder: (context, state) => const ArkReceiveScreen(),
+    ),
+    GoRoute(
+      path: '/ark/send',
+      builder: (context, state) => const ArkSendScreen(),
+    ),
+    GoRoute(
+      path: '/ark/board',
+      builder: (context, state) => const ArkBoardScreen(),
     ),
     GoRoute(
       path: '/policies',

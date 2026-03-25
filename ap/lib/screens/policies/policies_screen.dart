@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../services/mpc_service.dart';
 
+
+
 class PoliciesScreen extends StatefulWidget {
   const PoliciesScreen({super.key});
 
@@ -75,9 +77,57 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
+        final isHardwareError = e.toString().contains('No Pico Signer device found') ||
+            e.toString().contains('USB') ||
+            e.toString().contains('transport');
+        if (isHardwareError) {
+          final retry = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              backgroundColor: Colors.grey[900],
+              icon: const Icon(Icons.usb_off, color: Colors.amber, size: 48),
+              title: Text(
+                'Hardware Key Required',
+                style: GoogleFonts.inter(
+                    color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              content: Text(
+                'Connect your Pico Signer via USB OTG, then tap Retry.',
+                style: GoogleFonts.inter(color: Colors.white70),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text('Cancel',
+                      style: GoogleFonts.inter(color: Colors.white54)),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
+          if (retry == true && mounted) {
+            try {
+              await context.read<MpcService>().reconnectHardwareSigner();
+              _deletePolicy(policyId);
+            } catch (_) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Still unable to connect. Check your device.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          );
+        }
       }
     } finally {
       if (mounted) setState(() => _isDeleting = false);
@@ -96,6 +146,30 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Scope banner
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline,
+                      color: Colors.blueAccent, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Policies apply to all transactions — both on-chain Bitcoin and off-chain Ark sends.',
+                      style: GoogleFonts.inter(
+                          color: Colors.blueAccent, fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             if (policies.isEmpty)
               Expanded(
                 child: Center(
@@ -110,7 +184,7 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
                               fontSize: 18, color: Colors.white54)),
                       const SizedBox(height: 8),
                       Text(
-                          'Add a policy to set spending limits that require PIN authorization.',
+                          'Add a policy to set spending limits that require PIN authorization for Bitcoin and Ark transactions.',
                           style: GoogleFonts.inter(
                               fontSize: 12, color: Colors.white24),
                           textAlign: TextAlign.center),

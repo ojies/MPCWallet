@@ -27,6 +27,16 @@ class AuthMessage {
   static const String opSubscribeHistory = 'SUBSCRIBE_HISTORY';
   static const String opUpdatePolicy = 'UPDATE_POLICY';
   static const String opDeletePolicy = 'DELETE_POLICY';
+  static const String opGetArkInfo = 'GET_ARK_INFO';
+  static const String opGetArkAddress = 'GET_ARK_ADDRESS';
+  static const String opGetBoardingAddress = 'GET_BOARDING_ADDRESS';
+  static const String opListVtxos = 'LIST_VTXOS';
+  static const String opSendVtxo = 'SEND_VTXO';
+  static const String opRedeemVtxo = 'REDEEM_VTXO';
+  static const String opSettle = 'SETTLE';
+  static const String opSettleDelegate = 'SETTLE_DELEGATE';
+  static const String opListArkTxs = 'LIST_ARK_TXS';
+  static const String opCheckBoardingBalance = 'CHECK_BOARDING_BALANCE';
 
   final String operation;
   final int timestampMs;

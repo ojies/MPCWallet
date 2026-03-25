@@ -133,6 +133,113 @@ class ClientAuthHelper {
     );
     return AuthSignature(signature, timestamp);
   }
+
+  /// Creates an authentication signature for GetArkInfo.
+  AuthSignature signForGetArkInfo() {
+    final timestamp = currentTimestamp;
+    final signature = _signer.signOperation(
+      operation: threshold.AuthMessage.opGetArkInfo,
+      userIdHex: _userIdHex,
+      timestampMs: timestamp.toInt(),
+    );
+    return AuthSignature(signature, timestamp);
+  }
+
+  /// Creates an authentication signature for GetArkAddress.
+  AuthSignature signForGetArkAddress() {
+    final timestamp = currentTimestamp;
+    final signature = _signer.signOperation(
+      operation: threshold.AuthMessage.opGetArkAddress,
+      userIdHex: _userIdHex,
+      timestampMs: timestamp.toInt(),
+    );
+    return AuthSignature(signature, timestamp);
+  }
+
+  /// Creates an authentication signature for GetBoardingAddress.
+  AuthSignature signForGetBoardingAddress() {
+    final timestamp = currentTimestamp;
+    final signature = _signer.signOperation(
+      operation: threshold.AuthMessage.opGetBoardingAddress,
+      userIdHex: _userIdHex,
+      timestampMs: timestamp.toInt(),
+    );
+    return AuthSignature(signature, timestamp);
+  }
+
+  /// Creates an authentication signature for ListVtxos.
+  AuthSignature signForListVtxos() {
+    final timestamp = currentTimestamp;
+    final signature = _signer.signOperation(
+      operation: threshold.AuthMessage.opListVtxos,
+      userIdHex: _userIdHex,
+      timestampMs: timestamp.toInt(),
+    );
+    return AuthSignature(signature, timestamp);
+  }
+
+  /// Creates an authentication signature for CheckBoardingBalance.
+  AuthSignature signForCheckBoardingBalance() {
+    final timestamp = currentTimestamp;
+    final signature = _signer.signOperation(
+      operation: threshold.AuthMessage.opCheckBoardingBalance,
+      userIdHex: _userIdHex,
+      timestampMs: timestamp.toInt(),
+    );
+    return AuthSignature(signature, timestamp);
+  }
+
+  AuthSignature signForListArkTransactions() {
+    final timestamp = currentTimestamp;
+    final signature = _signer.signOperation(
+      operation: threshold.AuthMessage.opListArkTxs,
+      userIdHex: _userIdHex,
+      timestampMs: timestamp.toInt(),
+    );
+    return AuthSignature(signature, timestamp);
+  }
+
+  AuthSignature signForSendVtxo() {
+    final timestamp = currentTimestamp;
+    final signature = _signer.signOperation(
+      operation: threshold.AuthMessage.opSendVtxo,
+      userIdHex: _userIdHex,
+      timestampMs: timestamp.toInt(),
+    );
+    return AuthSignature(signature, timestamp);
+  }
+
+  /// Creates an authentication signature for RedeemVtxo.
+  AuthSignature signForRedeemVtxo() {
+    final timestamp = currentTimestamp;
+    final signature = _signer.signOperation(
+      operation: threshold.AuthMessage.opRedeemVtxo,
+      userIdHex: _userIdHex,
+      timestampMs: timestamp.toInt(),
+    );
+    return AuthSignature(signature, timestamp);
+  }
+  /// Creates an authentication signature for Settle.
+  AuthSignature signForSettle() {
+    final timestamp = currentTimestamp;
+    final signature = _signer.signOperation(
+      operation: threshold.AuthMessage.opSettle,
+      userIdHex: _userIdHex,
+      timestampMs: timestamp.toInt(),
+    );
+    return AuthSignature(signature, timestamp);
+  }
+
+  /// Creates an authentication signature for SettleDelegate.
+  AuthSignature signForSettleDelegate() {
+    final timestamp = currentTimestamp;
+    final signature = _signer.signOperation(
+      operation: threshold.AuthMessage.opSettleDelegate,
+      userIdHex: _userIdHex,
+      timestampMs: timestamp.toInt(),
+    );
+    return AuthSignature(signature, timestamp);
+  }
 }
 
 /// Represents an authentication signature with its timestamp.

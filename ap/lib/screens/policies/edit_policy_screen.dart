@@ -131,9 +131,7 @@ class _EditPolicyScreenState extends State<EditPolicyScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSigning = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
+        _showErrorFeedback(e);
       }
     }
   }
@@ -158,10 +156,62 @@ class _EditPolicyScreenState extends State<EditPolicyScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSigning = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
+        _showErrorFeedback(e);
       }
+    }
+  }
+
+  Future<void> _showErrorFeedback(Object e) async {
+    final msg = e.toString();
+    final isHardwareError = msg.contains('No Pico Signer device found') ||
+        msg.contains('USB') ||
+        msg.contains('transport');
+    if (isHardwareError) {
+      final retry = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.grey[900],
+          icon: const Icon(Icons.usb_off, color: Colors.amber, size: 48),
+          title: Text('Hardware Key Required',
+              style: GoogleFonts.inter(
+                  color: Colors.white, fontWeight: FontWeight.bold)),
+          content: Text(
+              'Connect your Pico Signer via USB OTG, then tap Retry.',
+              style: GoogleFonts.inter(color: Colors.white70)),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text('Cancel',
+                    style: GoogleFonts.inter(color: Colors.white54))),
+            ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Retry')),
+          ],
+        ),
+      );
+      if (retry == true && mounted) {
+        final mpc = context.read<MpcService>();
+        final messenger = ScaffoldMessenger.of(context);
+        try {
+          await mpc.reconnectHardwareSigner();
+          messenger.showSnackBar(
+            const SnackBar(content: Text('Hardware key reconnected. Try again.')),
+          );
+        } catch (_) {
+          if (mounted) {
+            messenger.showSnackBar(
+              const SnackBar(
+                content: Text('Still unable to connect. Check your device.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
     }
   }
 
