@@ -251,13 +251,20 @@ pub fn insert_send_signatures(handle: u64, signatures_json: &str) -> Result<Stri
 
         match &entry.target {
             SighashTarget::ArkTx(input_idx) => {
-                state.ark_tx.inputs[*input_idx]
-                    .tap_script_sigs
+                if *input_idx >= state.ark_tx.inputs.len() {
+                    return Err(format!("ark tx input index {} out of bounds (len={})", input_idx, state.ark_tx.inputs.len()));
+                }
+                state.ark_tx.inputs[*input_idx].tap_script_sigs
                     .insert((state.owner_pk, entry.leaf_hash), sig);
             }
             SighashTarget::Checkpoint(cp_idx) => {
-                state.checkpoint_txs[*cp_idx].inputs[0]
-                    .tap_script_sigs
+                if *cp_idx >= state.checkpoint_txs.len() {
+                    return Err(format!("checkpoint index {} out of bounds (len={})", cp_idx, state.checkpoint_txs.len()));
+                }
+                if state.checkpoint_txs[*cp_idx].inputs.is_empty() {
+                    return Err(format!("checkpoint {} has no inputs", cp_idx));
+                }
+                state.checkpoint_txs[*cp_idx].inputs[0].tap_script_sigs
                     .insert((state.owner_pk, entry.leaf_hash), sig);
             }
         }

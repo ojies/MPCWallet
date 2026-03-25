@@ -240,7 +240,7 @@ arkd-down:
 	docker compose -f docker-compose.yml -f docker-compose.ark.yml down
 
 # Run Ark E2E test (requires arkd running)
-e2e-ark-test: threshold-ffi-build cosigner-build server-build signer-run
+e2e-ark-test: threshold-ffi-build ark-ffi-build cosigner-build server-build signer-run
 	@echo "Running Ark E2E test..."
 	cd e2e && dart test test/ark_e2e_test.dart
 	-pkill -f "signer-server" || true

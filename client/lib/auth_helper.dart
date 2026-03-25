@@ -178,7 +178,7 @@ class ClientAuthHelper {
     return AuthSignature(signature, timestamp);
   }
 
-  /// Creates an authentication signature for SendVtxo.
+  /// Creates an authentication signature for CheckBoardingBalance.
   AuthSignature signForCheckBoardingBalance() {
     final timestamp = currentTimestamp;
     final signature = _signer.signOperation(
