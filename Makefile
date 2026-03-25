@@ -1,4 +1,4 @@
-.PHONY: regtest-up regtest-down regtest regtest-hardware regtest-hardware-ark regtest-hardware-ark-down proto bitcoin-init mine-loop signer-build signer-run signer-stop pico-build pico-flash pico-test flutter-run threshold-ffi-build threshold-ffi-android ark-ffi-build threshold-test threshold-ffi-test e2e-test e2e-ark-test cosigner-build server-build server-run server-stop arkd-up arkd-down arkd-init
+.PHONY: regtest-up regtest-down regtest regtest-hardware regtest-hardware-ark regtest-hardware-ark-down proto bitcoin-init mine-loop signer-build signer-run signer-stop pico-build pico-flash pico-test flutter flutter-run threshold-ffi-build threshold-ffi-android ark-ffi-build threshold-test threshold-ffi-test e2e-test e2e-ark-test cosigner-build server-build server-run server-stop arkd-up arkd-down arkd-init
 # Start Docker environment (Bitcoind + Electrs)
 regtest-up:
 	@echo "Starting Regtest environment..."
@@ -44,7 +44,7 @@ mine-loop:
 	@while true; do ./scripts/bitcoin.sh mine; sleep 10; done
 
 # Hardware device setup: regtest + ADB reverse + mine loop (bg) + server (foreground with logs)
-regtest-hardware: regtest-up bitcoin-init adb-reverse cosigner-build server-build
+regtest-hardware: regtest-up bitcoin-init adb-reverse cosigner-build server-build threshold-ffi-build threshold-ffi-android ark-ffi-build ark-ffi-android
 	@echo "Starting mine loop in background..."
 	@(while true; do ./scripts/bitcoin.sh mine 2>/dev/null; sleep 10; done) &
 	@echo ""
@@ -60,7 +60,7 @@ regtest-hardware: regtest-up bitcoin-init adb-reverse cosigner-build server-buil
 		--port 50051
 
 # Hardware device setup with Ark: regtest + arkd + ADB reverse + mine loop (bg) + server (foreground)
-regtest-hardware-ark: cosigner-build server-build
+regtest-hardware-ark: cosigner-build server-build threshold-ffi-build threshold-ffi-android ark-ffi-build ark-ffi-android
 	@echo "=== Starting regtest + arkd ==="
 	docker compose -f docker-compose.yml -f docker-compose.ark.yml up -d
 	@echo "Waiting for services to stabilize (10s)..."
@@ -137,6 +137,10 @@ pico-flash: pico-build
 pico-test:
 	@echo "Testing Pico Signer over USB HID..."
 	scripts/.venv/bin/python3 scripts/test_pico.py $(ARGS)
+
+# Build FFI libs for Android and run Flutter app
+flutter: threshold-ffi-android ark-ffi-android
+	cd ap && flutter run
 
 # Build threshold FFI shared library (desktop)
 threshold-ffi-build:

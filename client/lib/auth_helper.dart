@@ -179,6 +179,26 @@ class ClientAuthHelper {
   }
 
   /// Creates an authentication signature for SendVtxo.
+  AuthSignature signForCheckBoardingBalance() {
+    final timestamp = currentTimestamp;
+    final signature = _signer.signOperation(
+      operation: threshold.AuthMessage.opCheckBoardingBalance,
+      userIdHex: _userIdHex,
+      timestampMs: timestamp.toInt(),
+    );
+    return AuthSignature(signature, timestamp);
+  }
+
+  AuthSignature signForListArkTransactions() {
+    final timestamp = currentTimestamp;
+    final signature = _signer.signOperation(
+      operation: threshold.AuthMessage.opListArkTxs,
+      userIdHex: _userIdHex,
+      timestampMs: timestamp.toInt(),
+    );
+    return AuthSignature(signature, timestamp);
+  }
+
   AuthSignature signForSendVtxo() {
     final timestamp = currentTimestamp;
     final signature = _signer.signOperation(

@@ -13,7 +13,7 @@ class ArkScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final mpcService = context.watch<MpcService>();
     final arkBalance = mpcService.arkBalance;
-    final vtxos = mpcService.vtxos;
+    final arkTxs = mpcService.arkTransactions;
     final arkAvailable = mpcService.arkAvailable;
 
     final balanceBtc = arkBalance.toDouble() / 100000000;
@@ -46,7 +46,7 @@ class ArkScreen extends StatelessWidget {
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'VTXOs',
+                        'Transactions',
                         style: GoogleFonts.inter(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -57,16 +57,16 @@ class ArkScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Expanded(
-                    child: vtxos.isEmpty
+                    child: arkTxs.isEmpty
                         ? Center(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.account_tree_outlined,
+                                Icon(Icons.receipt_long_outlined,
                                     size: 48, color: Colors.white24),
                                 const SizedBox(height: 12),
                                 Text(
-                                  'No VTXOs yet',
+                                  'No transactions yet',
                                   style:
                                       GoogleFonts.inter(color: Colors.white38),
                                 ),
@@ -81,10 +81,10 @@ class ArkScreen extends StatelessWidget {
                           )
                         : ListView.builder(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: vtxos.length,
+                            itemCount: arkTxs.length,
                             itemBuilder: (context, index) {
-                              final vtxo = vtxos[index];
-                              return _buildVtxoItem(vtxo);
+                              final tx = arkTxs[arkTxs.length - 1 - index];
+                              return _buildTransactionItem(tx);
                             },
                           ),
                   ),
@@ -278,11 +278,34 @@ class ArkScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildVtxoItem(VtxoInfo vtxo) {
-    final amount = vtxo.amount.toInt();
+  Widget _buildTransactionItem(ArkTransactionSummary tx) {
+    final amount = tx.amountSats.toInt();
+    final isIncoming = amount >= 0;
+    final absAmount = amount.abs();
     final formatter = NumberFormat("#,##0", "en_US");
-    final txidShort =
-        vtxo.txid.length > 12 ? '${vtxo.txid.substring(0, 12)}...' : vtxo.txid;
+
+    String title;
+    switch (tx.txType) {
+      case 'board':
+        title = 'Boarded (UTXO → VTXO)';
+        break;
+      case 'send':
+        title = 'Sent';
+        break;
+      case 'receive':
+        title = 'Received';
+        break;
+      case 'settle':
+        title = 'Refreshed (VTXO)';
+        break;
+      default:
+        title = tx.txType;
+    }
+
+    final date = tx.timestamp > 0
+        ? DateFormat.yMMMd().add_jm().format(
+            DateTime.fromMillisecondsSinceEpoch(tx.timestamp.toInt() * 1000))
+        : '';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -297,12 +320,14 @@ class ArkScreen extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
+              color: isIncoming
+                  ? Colors.green.withOpacity(0.1)
+                  : Colors.white10,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.token,
-              color: Colors.blueAccent,
+            child: Icon(
+              isIncoming ? Icons.arrow_downward : Icons.arrow_upward,
+              color: isIncoming ? Colors.greenAccent : Colors.white,
               size: 20,
             ),
           ),
@@ -312,7 +337,7 @@ class ArkScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  txidShort,
+                  title,
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -320,7 +345,7 @@ class ArkScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'vout: ${vtxo.vout}',
+                  date,
                   style: GoogleFonts.inter(
                     color: Colors.white38,
                     fontSize: 12,
@@ -330,10 +355,10 @@ class ArkScreen extends StatelessWidget {
             ),
           ),
           Text(
-            '${formatter.format(amount)} Sats',
+            '${isIncoming ? '+' : '-'}${formatter.format(absAmount)} Sats',
             style: GoogleFonts.inter(
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: isIncoming ? Colors.greenAccent : Colors.white,
             ),
           ),
         ],

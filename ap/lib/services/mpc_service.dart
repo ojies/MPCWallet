@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:grpc/grpc.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:client/ark_wallet.dart';
 import 'package:client/bitcoin.dart';
 import 'package:client/client.dart';
 import 'package:client/hardware_signer.dart';
@@ -36,6 +37,9 @@ class MpcService extends ChangeNotifier {
   MpcBitcoinWallet? _wallet;
   MpcBitcoinWallet? get wallet => _wallet;
 
+  MpcArkWallet? _arkWallet;
+  MpcArkWallet? get arkWallet => _arkWallet;
+
   BigInt _balance = BigInt.zero;
   BigInt get balance => _balance;
   List<TransactionSummary> get transactions => _wallet?.transactions ?? [];
@@ -53,6 +57,12 @@ class MpcService extends ChangeNotifier {
   List<VtxoInfo> get vtxos => _vtxos;
   BigInt _arkBalance = BigInt.zero;
   BigInt get arkBalance => _arkBalance;
+  List<ArkTransactionSummary> _arkTransactions = [];
+  List<ArkTransactionSummary> get arkTransactions => _arkTransactions;
+  int _boardingBalance = 0;
+  int get boardingBalance => _boardingBalance;
+  int _boardingUtxoCount = 0;
+  int get boardingUtxoCount => _boardingUtxoCount;
   bool _arkAvailable = false;
   bool get arkAvailable => _arkAvailable;
 
@@ -337,10 +347,12 @@ class MpcService extends ChangeNotifier {
       _arkInfo = await _client!.getArkInfo();
       _arkAddress = await _client!.getArkAddress();
       _boardingAddress = await _client!.getBoardingAddress();
+      _arkWallet = MpcArkWallet(_client!);
       _arkAvailable = true;
       await refreshVtxos();
     } catch (e) {
       debugPrint("Ark init failed (ASP may not be configured): $e");
+      _arkWallet = null;
       _arkAvailable = false;
     }
     notifyListeners();
@@ -355,6 +367,29 @@ class MpcService extends ChangeNotifier {
     } catch (e) {
       debugPrint("Refresh VTXOs failed: $e");
     }
+    await refreshArkTransactions();
+    notifyListeners();
+  }
+
+  Future<void> refreshArkTransactions() async {
+    if (_client == null) return;
+    try {
+      final resp = await _client!.listArkTransactions();
+      _arkTransactions = resp.transactions;
+    } catch (e) {
+      debugPrint("Refresh Ark transactions failed: $e");
+    }
+  }
+
+  Future<void> refreshBoardingBalance() async {
+    if (_client == null) return;
+    try {
+      final resp = await _client!.checkBoardingBalance();
+      _boardingBalance = resp.balance.toInt();
+      _boardingUtxoCount = resp.utxoCount;
+    } catch (e) {
+      debugPrint("Refresh boarding balance failed: $e");
+    }
     notifyListeners();
   }
 
@@ -365,9 +400,11 @@ class MpcService extends ChangeNotifier {
     return txid;
   }
 
-  Future<String> sendArk(String recipientArkAddress, int amountSats) async {
+  Future<String> sendArk(String recipientArkAddress, int amountSats,
+      {String? policyId, String? pin}) async {
     if (_client == null) throw StateError("Client not initialized");
-    final arkTxid = await _client!.sendVtxo(recipientArkAddress, amountSats);
+    final arkTxid = await _client!.sendVtxo(recipientArkAddress, amountSats,
+        policyId: policyId, pin: pin);
     await refreshVtxos();
     return arkTxid;
   }

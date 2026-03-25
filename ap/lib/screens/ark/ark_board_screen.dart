@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:ap/services/mpc_service.dart';
 
@@ -16,6 +18,27 @@ class _ArkBoardScreenState extends State<ArkBoardScreen> {
   _BoardState _state = _BoardState.ready;
   String? _commitmentTxid;
   String? _error;
+  Timer? _pollTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initial check + poll every 5 seconds
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<MpcService>().refreshBoardingBalance();
+    });
+    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted && _state == _BoardState.ready) {
+        context.read<MpcService>().refreshBoardingBalance();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
 
   Future<void> _startBoarding() async {
     setState(() {
@@ -76,6 +99,10 @@ class _ArkBoardScreenState extends State<ArkBoardScreen> {
   }
 
   Widget _buildReadyState(BuildContext context, String? boardingAddress) {
+    final mpcService = context.watch<MpcService>();
+    final balance = mpcService.boardingBalance;
+    final hasFunds = balance > 0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -112,7 +139,56 @@ class _ArkBoardScreenState extends State<ArkBoardScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
+        // Boarding balance indicator
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: hasFunds
+                ? Colors.green.withOpacity(0.1)
+                : const Color(0xFF1E1E1E),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: hasFunds ? Colors.greenAccent.withOpacity(0.3) : Colors.white10,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                hasFunds ? Icons.check_circle : Icons.hourglass_empty,
+                color: hasFunds ? Colors.greenAccent : Colors.white38,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hasFunds
+                          ? 'Funds detected: ${NumberFormat("#,##0").format(balance)} sats'
+                          : 'No funds detected yet',
+                      style: GoogleFonts.inter(
+                        color: hasFunds ? Colors.greenAccent : Colors.white54,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    if (!hasFunds)
+                      Text(
+                        'Checking every 5 seconds...',
+                        style: GoogleFonts.inter(
+                          color: Colors.white24,
+                          fontSize: 11,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
         if (boardingAddress != null) ...[
           Text(
             'Your Boarding Address',
@@ -160,12 +236,14 @@ class _ArkBoardScreenState extends State<ArkBoardScreen> {
         ],
         const Spacer(),
         ElevatedButton(
-          onPressed: _startBoarding,
-          child: const Text('Board Now'),
+          onPressed: hasFunds ? _startBoarding : null,
+          child: Text(hasFunds ? 'Board Now' : 'Waiting for funds...'),
         ),
         const SizedBox(height: 8),
         Text(
-          'This will settle any confirmed boarding UTXOs into Ark VTXOs',
+          hasFunds
+              ? 'Tap to settle your on-chain funds into Ark VTXOs'
+              : 'Send BTC to the address above, then board',
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(color: Colors.white38, fontSize: 11),
         ),

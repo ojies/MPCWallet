@@ -2,7 +2,9 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
 import 'package:test/test.dart';
+import 'package:client/ark_wallet.dart';
 import 'package:client/client.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:client/hardware_signer.dart';
 import 'package:e2e/regtest_helper.dart';
 import 'package:grpc/grpc.dart';
@@ -322,8 +324,7 @@ void main() {
     print('   UTXO amount: ${utxos[0]['amount']} BTC');
 
     // 4. Settle (board on-chain UTXO into Ark VTXO)
-    print('4. Settle');
-    // The settle RPC blocks while driving the ASP event stream.
+    print('4. Settle (board)');
     // We need to mine blocks to trigger ASP batches (ARKD_SCHEDULER_TYPE=block).
     bool settling = true;
     int blocksMined = 0;
@@ -378,12 +379,85 @@ void main() {
     final bobArkAddress = await bob.getArkAddress();
     print('   Bob Ark: $bobArkAddress');
 
-    // 8. Alice sends VTXO to Bob
+    // 8. Alice sends VTXO to Bob via MpcArkWallet
     print('8. Alice sends to Bob');
     final sendAmount = 100000; // 100k sats
-    final arkTxid = await alice.sendVtxo(bobArkAddress, sendAmount);
+    final aliceArkWallet = MpcArkWallet(alice);
+    final unsigned = await aliceArkWallet.createTransaction(
+      destination: bobArkAddress,
+      amountSats: sendAmount,
+    );
+    print('   Built tx: ${unsigned.sighashes.length} sighashes');
+    final signed = await aliceArkWallet.signTransaction(unsigned);
+    print('   Signed tx');
+    final arkTxid = await aliceArkWallet.submit(signed);
     print('   Send ark_txid: $arkTxid');
     expect(arkTxid, isNotEmpty);
+
+    // 9. Alice sends again to Bob (uses change VTXO from first send)
+    print('9. Alice sends to Bob again');
+    final sendAmount2 = 50000; // 50k sats
+    final unsigned2 = await aliceArkWallet.createTransaction(
+      destination: bobArkAddress,
+      amountSats: sendAmount2,
+    );
+    print('   Built tx: ${unsigned2.sighashes.length} sighashes');
+    final signed2 = await aliceArkWallet.signTransaction(unsigned2);
+    print('   Signed tx');
+    final arkTxid2 = await aliceArkWallet.submit(signed2);
+    print('   Send ark_txid: $arkTxid2');
+    expect(arkTxid2, isNotEmpty);
+
+    // 10. Create spending policy (limit 10k sats)
+    print('10. Creating spending policy (limit 10,000 sats)');
+    const pin = '123456';
+    final limit = Int64(10000);
+    final interval = Duration(hours: 1);
+    await alice.createSpendingPolicy(interval, limit, pin);
+    print('   Policy created');
+
+    // 11. Send 20k sats WITHOUT PIN — should fail (policy triggered)
+    print('11. Send 20k WITHOUT PIN (expect failure)');
+    final sendAmount3 = 20000;
+    bool failedWithoutPin = false;
+    try {
+      final unsigned3 = await aliceArkWallet.createTransaction(
+        destination: bobArkAddress,
+        amountSats: sendAmount3,
+      );
+      final signed3 = await aliceArkWallet.signTransaction(unsigned3);
+      await aliceArkWallet.submit(signed3);
+    } catch (e) {
+      print('   Expected failure: $e');
+      failedWithoutPin = true;
+    }
+    expect(failedWithoutPin, isTrue, reason: 'Should fail without PIN when policy is triggered');
+
+    // 12. Send 20k sats WITH PIN — should succeed
+    print('12. Send 20k WITH PIN');
+    final unsigned4 = await aliceArkWallet.createTransaction(
+      destination: bobArkAddress,
+      amountSats: sendAmount3,
+    );
+    final policyId = await aliceArkWallet.getPolicyId(unsigned4);
+    print('   policyId: $policyId');
+    expect(policyId, isNotEmpty, reason: 'Policy should be triggered for 20k > 10k limit');
+    final signed4 = await aliceArkWallet.signTransaction(
+      unsigned4,
+      policyId: policyId,
+      pin: pin,
+    );
+    print('   Signed with PIN');
+    final arkTxid4 = await aliceArkWallet.submit(signed4);
+    print('   Send ark_txid: $arkTxid4');
+    expect(arkTxid4, isNotEmpty);
+
+    // 13. Clean up — delete policy
+    print('13. Deleting policy');
+    final policy = alice.activeSpendingPolicy;
+    expect(policy, isNotNull);
+    await alice.deletePolicy(policy!.id);
+    print('   Policy deleted');
 
     print('Full Ark E2E flow complete!');
   }, timeout: Timeout(Duration(minutes: 10)));

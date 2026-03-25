@@ -15,7 +15,6 @@ class ArkSendScreen extends StatefulWidget {
 class _ArkSendScreenState extends State<ArkSendScreen> {
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
-  bool _sending = false;
   String? _error;
 
   @override
@@ -25,7 +24,7 @@ class _ArkSendScreenState extends State<ArkSendScreen> {
     super.dispose();
   }
 
-  Future<void> _send() async {
+  void _send() {
     final address = _addressController.text.trim();
     final amountText = _amountController.text.trim();
 
@@ -51,28 +50,12 @@ class _ArkSendScreenState extends State<ArkSendScreen> {
       return;
     }
 
-    setState(() {
-      _sending = true;
-      _error = null;
+    // Navigate to signing screen with 3-step Build → Sign → Submit flow
+    context.push('/spending/signing', extra: {
+      'isArk': true,
+      'address': address,
+      'amount': amountText,
     });
-
-    try {
-      final arkTxid = await mpcService.sendArk(address, amount);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Sent! Ark TX: ${arkTxid.substring(0, 16)}...'),
-          duration: const Duration(seconds: 3),
-        ),
-      );
-      context.pop();
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _sending = false;
-        _error = e.toString();
-      });
-    }
   }
 
   @override
@@ -96,7 +79,7 @@ class _ArkSendScreenState extends State<ArkSendScreen> {
           children: [
             TextField(
               controller: _addressController,
-              enabled: !_sending,
+              enabled: true,
               decoration: InputDecoration(
                 labelText: 'Recipient Ark Address',
                 hintText: 'tark1...',
@@ -110,7 +93,7 @@ class _ArkSendScreenState extends State<ArkSendScreen> {
             const SizedBox(height: 24),
             TextField(
               controller: _amountController,
-              enabled: !_sending,
+              enabled: true,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
                 labelText: 'Amount',
@@ -139,21 +122,7 @@ class _ArkSendScreenState extends State<ArkSendScreen> {
               ),
             ],
             const Spacer(),
-            if (_sending)
-              const Center(
-                child: Column(
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text(
-                      'Signing and sending...',
-                      style: TextStyle(color: Colors.white54),
-                    ),
-                  ],
-                ),
-              )
-            else
-              ElevatedButton(
+            ElevatedButton(
                 onPressed: _send,
                 child: const Text('Send VTXO'),
               ),

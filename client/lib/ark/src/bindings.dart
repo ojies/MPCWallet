@@ -53,3 +53,33 @@ typedef _ArkTapleafHashDart = Pointer<FfiResult> Function(Pointer<Utf8>);
 final arkTapleafHashFfi = nativeLib
     .lookupFunction<_ArkTapleafHashNative, _ArkTapleafHashDart>(
         'ark_tapleaf_hash');
+
+// ---------------------------------------------------------------------------
+// Ark Send bindings
+// ---------------------------------------------------------------------------
+
+typedef _ArkBuildSendTxNative = Pointer<FfiResult> Function(Pointer<Utf8>);
+typedef _ArkBuildSendTxDart = Pointer<FfiResult> Function(Pointer<Utf8>);
+final arkBuildSendTxFfi = nativeLib
+    .lookupFunction<_ArkBuildSendTxNative, _ArkBuildSendTxDart>(
+        'ark_build_send_tx');
+
+typedef _ArkInsertSendSigsNative = Pointer<FfiResult> Function(
+    Uint64, Pointer<Utf8>);
+typedef _ArkInsertSendSigsDart = Pointer<FfiResult> Function(
+    int, Pointer<Utf8>);
+final arkInsertSendSignaturesFfi = nativeLib
+    .lookupFunction<_ArkInsertSendSigsNative, _ArkInsertSendSigsDart>(
+        'ark_insert_send_signatures');
+
+typedef _ArkGetChangeVtxoNative = Pointer<FfiResult> Function(Uint64);
+typedef _ArkGetChangeVtxoDart = Pointer<FfiResult> Function(int);
+final arkGetChangeVtxoFfi = nativeLib
+    .lookupFunction<_ArkGetChangeVtxoNative, _ArkGetChangeVtxoDart>(
+        'ark_get_change_vtxo');
+
+typedef _ArkFreeSendSessionNative = Void Function(Uint64);
+typedef _ArkFreeSendSessionDart = void Function(int);
+final arkFreeSendSessionFfi = nativeLib
+    .lookupFunction<_ArkFreeSendSessionNative, _ArkFreeSendSessionDart>(
+        'ark_free_send_session');

@@ -23,8 +23,8 @@ class _SigningScreenState extends State<SigningScreen> {
   @override
   void initState() {
     super.initState();
-    _steps = _isArk ? ['Sign', 'Send'] : ['Build', 'Sign', 'Broadcast'];
-    _statusText = _isArk ? 'Signing with FROST...' : 'Building transaction...';
+    _steps = _isArk ? ['Build', 'Sign', 'Submit'] : ['Build', 'Sign', 'Broadcast'];
+    _statusText = 'Building transaction...';
     _startSigning();
   }
 
@@ -91,6 +91,17 @@ class _SigningScreenState extends State<SigningScreen> {
 
   Future<void> _startArkSend() async {
     final mpcService = context.read<MpcService>();
+    final arkWallet = mpcService.arkWallet;
+
+    if (arkWallet == null || !mpcService.arkAvailable) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ark wallet not initialized!')),
+        );
+        context.pop();
+      }
+      return;
+    }
 
     final destination = widget.extras['address'] as String?;
     final amountStr = widget.extras['amount'] as String?;
@@ -117,19 +128,71 @@ class _SigningScreenState extends State<SigningScreen> {
     }
 
     try {
-      // Step 0: Sign
+      // Step 0: Build transaction
       setState(() {
         _currentStep = 0;
-        _statusText = 'Signing with FROST...';
+        _statusText = 'Building transaction...';
       });
 
-      final arkTxid = await mpcService.sendArk(destination, amount);
+      final unsigned = await arkWallet.createTransaction(
+        destination: destination,
+        amountSats: amount,
+      );
 
-      // Step 1: Done
+      // Step 1: Sign — check if policy is triggered
       setState(() {
         _currentStep = 1;
-        _statusText = 'Sent!';
+        _statusText = 'Checking spending policy...';
       });
+
+      String? pin;
+      String? policyId;
+
+      try {
+        final resolvedPolicyId = await arkWallet.getPolicyId(unsigned);
+        if (resolvedPolicyId.isNotEmpty) {
+          setState(() {
+            _statusText = 'Policy triggered — PIN required';
+          });
+
+          if (!mounted) return;
+          pin = await _showPinDialog();
+          if (pin == null || pin.isEmpty) {
+            unsigned.dispose();
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Signing cancelled')),
+              );
+              context.pop();
+            }
+            return;
+          }
+          policyId = resolvedPolicyId;
+        }
+      } catch (e) {
+        debugPrint("getPolicyId failed: $e — proceeding without policy");
+      }
+
+      setState(() {
+        _statusText = 'Signing with your Key Share...';
+      });
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      final signed = await arkWallet.signTransaction(
+        unsigned,
+        pin: pin,
+        policyId: policyId,
+      );
+
+      // Step 2: Submit
+      setState(() {
+        _currentStep = 2;
+        _statusText = 'Submitting to Ark...';
+      });
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      final arkTxid = await arkWallet.submit(signed);
+      await mpcService.refreshVtxos();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

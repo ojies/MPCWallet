@@ -9,6 +9,8 @@ use std::ptr;
 
 use ark::taptree::TapLeaf;
 
+mod send;
+
 // ---------------------------------------------------------------------------
 // FfiResult
 // ---------------------------------------------------------------------------
@@ -265,5 +267,73 @@ pub extern "C" fn ark_tapleaf_hash(
     match result {
         Ok(data) => FfiResult::ok(&data),
         Err(e) => FfiResult::err(&e),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Ark Send FFI functions
+// ---------------------------------------------------------------------------
+
+/// Build an off-chain Ark send transaction.
+///
+/// Input: JSON string with BuildSendParams.
+/// Returns JSON: `{"handle": <u64>, "sighashes": ["hex"...], "ark_tx_bytes": "hex"}`
+#[no_mangle]
+pub extern "C" fn ark_build_send_tx(params_json: *const c_char) -> *mut FfiResult {
+    let result = (|| -> Result<String, String> {
+        let json = read_cstr(params_json).ok_or("null params_json")?;
+        send::build_send_tx(&json)
+    })();
+    match result {
+        Ok(data) => FfiResult::ok(&data),
+        Err(e) => FfiResult::err(&e),
+    }
+}
+
+/// Insert FROST signatures into a send session's PSBTs.
+///
+/// Input: handle (u64), signatures as JSON array of hex strings.
+/// Returns JSON: `{"signed_ark_tx_b64": "...", "signed_checkpoint_txs_b64": [...]}`
+#[no_mangle]
+pub extern "C" fn ark_insert_send_signatures(
+    handle: u64,
+    signatures_json: *const c_char,
+) -> *mut FfiResult {
+    let result = (|| -> Result<String, String> {
+        let json = read_cstr(signatures_json).ok_or("null signatures_json")?;
+        send::insert_send_signatures(handle, &json)
+    })();
+    match result {
+        Ok(data) => FfiResult::ok(&data),
+        Err(e) => FfiResult::err(&e),
+    }
+}
+
+/// Get change VTXO info from a send session.
+///
+/// Returns JSON: `{"txid": "...", "vout": <u32>, "amount": <u64>}` or `"null"`.
+#[no_mangle]
+pub extern "C" fn ark_get_change_vtxo(handle: u64) -> *mut FfiResult {
+    match send::get_change_vtxo(handle) {
+        Ok(data) => FfiResult::ok(&data),
+        Err(e) => FfiResult::err(&e),
+    }
+}
+
+/// Free a send session.
+#[no_mangle]
+pub extern "C" fn ark_free_send_session(handle: u64) {
+    send::free_send_session(handle);
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_parse_sequence() {
+        let seq = ark_core::server::parse_sequence_number(86016).unwrap();
+        println!("Sequence for 86016: {} = 0x{:08x}", seq.0, seq.0);
+        let rl = seq.to_relative_lock_time();
+        println!("Relative lock time: {:?}", rl);
+        assert!(matches!(rl, Some(bitcoin::relative::LockTime::Time(_))));
     }
 }

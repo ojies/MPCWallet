@@ -135,6 +135,18 @@ class MPCWalletClient extends $grpc.Client {
           ($0.ListVtxosRequest value) => value.writeToBuffer(),
           ($core.List<$core.int> value) =>
               $0.ListVtxosResponse.fromBuffer(value));
+  static final _$listArkTransactions = $grpc.ClientMethod<
+          $0.ListArkTransactionsRequest, $0.ListArkTransactionsResponse>(
+      '/mpc_wallet.MPCWallet/ListArkTransactions',
+      ($0.ListArkTransactionsRequest value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) =>
+          $0.ListArkTransactionsResponse.fromBuffer(value));
+  static final _$checkBoardingBalance = $grpc.ClientMethod<
+          $0.CheckBoardingBalanceRequest, $0.CheckBoardingBalanceResponse>(
+      '/mpc_wallet.MPCWallet/CheckBoardingBalance',
+      ($0.CheckBoardingBalanceRequest value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) =>
+          $0.CheckBoardingBalanceResponse.fromBuffer(value));
   static final _$sendVtxo =
       $grpc.ClientMethod<$0.SendVtxoRequest, $0.SendVtxoResponse>(
           '/mpc_wallet.MPCWallet/SendVtxo',
@@ -158,6 +170,12 @@ class MPCWalletClient extends $grpc.Client {
           ($0.SettleDelegateRequest value) => value.writeToBuffer(),
           ($core.List<$core.int> value) =>
               $0.SettleDelegateResponse.fromBuffer(value));
+  static final _$submitArkSend =
+      $grpc.ClientMethod<$0.SubmitArkSendRequest, $0.SubmitArkSendResponse>(
+          '/mpc_wallet.MPCWallet/SubmitArkSend',
+          ($0.SubmitArkSendRequest value) => value.writeToBuffer(),
+          ($core.List<$core.int> value) =>
+              $0.SubmitArkSendResponse.fromBuffer(value));
 
   MPCWalletClient($grpc.ClientChannel channel,
       {$grpc.CallOptions? options,
@@ -284,6 +302,18 @@ class MPCWalletClient extends $grpc.Client {
     return $createUnaryCall(_$listVtxos, request, options: options);
   }
 
+  $grpc.ResponseFuture<$0.ListArkTransactionsResponse> listArkTransactions(
+      $0.ListArkTransactionsRequest request,
+      {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$listArkTransactions, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.CheckBoardingBalanceResponse> checkBoardingBalance(
+      $0.CheckBoardingBalanceRequest request,
+      {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$checkBoardingBalance, request, options: options);
+  }
+
   $grpc.ResponseFuture<$0.SendVtxoResponse> sendVtxo($0.SendVtxoRequest request,
       {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$sendVtxo, request, options: options);
@@ -304,6 +334,12 @@ class MPCWalletClient extends $grpc.Client {
       $0.SettleDelegateRequest request,
       {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$settleDelegate, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.SubmitArkSendResponse> submitArkSend(
+      $0.SubmitArkSendRequest request,
+      {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$submitArkSend, request, options: options);
   }
 }
 
@@ -477,6 +513,24 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.ListVtxosRequest.fromBuffer(value),
         ($0.ListVtxosResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.ListArkTransactionsRequest,
+            $0.ListArkTransactionsResponse>(
+        'ListArkTransactions',
+        listArkTransactions_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.ListArkTransactionsRequest.fromBuffer(value),
+        ($0.ListArkTransactionsResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.CheckBoardingBalanceRequest,
+            $0.CheckBoardingBalanceResponse>(
+        'CheckBoardingBalance',
+        checkBoardingBalance_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.CheckBoardingBalanceRequest.fromBuffer(value),
+        ($0.CheckBoardingBalanceResponse value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.SendVtxoRequest, $0.SendVtxoResponse>(
         'SendVtxo',
         sendVtxo_Pre,
@@ -507,6 +561,15 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
         ($core.List<$core.int> value) =>
             $0.SettleDelegateRequest.fromBuffer(value),
         ($0.SettleDelegateResponse value) => value.writeToBuffer()));
+    $addMethod(
+        $grpc.ServiceMethod<$0.SubmitArkSendRequest, $0.SubmitArkSendResponse>(
+            'SubmitArkSend',
+            submitArkSend_Pre,
+            false,
+            false,
+            ($core.List<$core.int> value) =>
+                $0.SubmitArkSendRequest.fromBuffer(value),
+            ($0.SubmitArkSendResponse value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.DKGStep1Response> dKGStep1_Pre(
@@ -621,6 +684,18 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
     return listVtxos(call, await request);
   }
 
+  $async.Future<$0.ListArkTransactionsResponse> listArkTransactions_Pre(
+      $grpc.ServiceCall call,
+      $async.Future<$0.ListArkTransactionsRequest> request) async {
+    return listArkTransactions(call, await request);
+  }
+
+  $async.Future<$0.CheckBoardingBalanceResponse> checkBoardingBalance_Pre(
+      $grpc.ServiceCall call,
+      $async.Future<$0.CheckBoardingBalanceRequest> request) async {
+    return checkBoardingBalance(call, await request);
+  }
+
   $async.Future<$0.SendVtxoResponse> sendVtxo_Pre(
       $grpc.ServiceCall call, $async.Future<$0.SendVtxoRequest> request) async {
     return sendVtxo(call, await request);
@@ -640,6 +715,12 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
       $grpc.ServiceCall call,
       $async.Future<$0.SettleDelegateRequest> request) async {
     return settleDelegate(call, await request);
+  }
+
+  $async.Future<$0.SubmitArkSendResponse> submitArkSend_Pre(
+      $grpc.ServiceCall call,
+      $async.Future<$0.SubmitArkSendRequest> request) async {
+    return submitArkSend(call, await request);
   }
 
   $async.Future<$0.DKGStep1Response> dKGStep1(
@@ -682,6 +763,10 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
       $grpc.ServiceCall call, $0.GetBoardingAddressRequest request);
   $async.Future<$0.ListVtxosResponse> listVtxos(
       $grpc.ServiceCall call, $0.ListVtxosRequest request);
+  $async.Future<$0.ListArkTransactionsResponse> listArkTransactions(
+      $grpc.ServiceCall call, $0.ListArkTransactionsRequest request);
+  $async.Future<$0.CheckBoardingBalanceResponse> checkBoardingBalance(
+      $grpc.ServiceCall call, $0.CheckBoardingBalanceRequest request);
   $async.Future<$0.SendVtxoResponse> sendVtxo(
       $grpc.ServiceCall call, $0.SendVtxoRequest request);
   $async.Future<$0.RedeemVtxoResponse> redeemVtxo(
@@ -690,4 +775,6 @@ abstract class MPCWalletServiceBase extends $grpc.Service {
       $grpc.ServiceCall call, $0.SettleRequest request);
   $async.Future<$0.SettleDelegateResponse> settleDelegate(
       $grpc.ServiceCall call, $0.SettleDelegateRequest request);
+  $async.Future<$0.SubmitArkSendResponse> submitArkSend(
+      $grpc.ServiceCall call, $0.SubmitArkSendRequest request);
 }
