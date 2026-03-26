@@ -39,5 +39,15 @@ ark-ffi/target
 .idea/
 *.iml
 
+# Secrets / environment
+.env
+*.env
+
+# Downloaded tooling (vendored protoc binary — install via package manager instead)
+bin/
+
+# Generated code (regenerate with: make proto)
+protocol/lib/src/generated/
+
 # Data
 e2e/hive_db
