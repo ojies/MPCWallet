@@ -1,11 +1,5 @@
 .PHONY: regtest-up regtest-down regtest regtest-hardware regtest-hardware-ark regtest-hardware-ark-down proto bitcoin-init mine-loop signer-build signer-run signer-stop pico-build pico-flash pico-test flutter flutter-run threshold-ffi-build threshold-ffi-android ark-ffi-build threshold-test threshold-ffi-test e2e-test e2e-ark-test cosigner-build server-build server-run server-stop arkd-up arkd-down arkd-init crypto-bench stress-test load-test
 
-# Rust and Flutter environment for sudo compatibility
-export RUSTUP_HOME=/home/ehis/.rustup
-export CARGO_HOME=/home/ehis/.cargo
-export FLUTTER_HOME=/home/ehis/flutter
-export PATH:=$(CARGO_HOME)/bin:$(FLUTTER_HOME)/bin:$(PATH)
-
 # Stress test data isolation
 export DATA_DIR=/tmp/mpc_wallet_stress
 # Start Docker environment (Bitcoind + Electrs)
@@ -222,7 +216,6 @@ server-run: cosigner-build server-build
 	export ELECTRUM_PORT=50001 && \
 	export BITCOIN_RPC_USER=admin1 && \
 	export BITCOIN_RPC_PASSWORD=123 && \
-	export PROTOC=/home/ehis/vscode/work/MPCWallet/bin/bin/protoc && \
 	cd server && cargo run --release --bin server -- \
 		--wasm ../cosigner/target/wasm32-wasip1/release/cosigner.wasm \
 		--port 50051 &
@@ -271,7 +264,7 @@ ark-newaddress:
 # Generate Dart gRPC stubs from protos
 proto:
 	@echo "Generating Dart gRPC stubs..."
-	/home/ehis/vscode/work/MPCWallet/bin/bin/protoc -I protocol/protos --dart_out=grpc:protocol/lib/src/generated protocol/protos/mpc_wallet.proto
+	protoc -I protocol/protos --dart_out=grpc:protocol/lib/src/generated protocol/protos/mpc_wallet.proto
 
 # Run Rust cryptography benchmarks
 crypto-bench:
