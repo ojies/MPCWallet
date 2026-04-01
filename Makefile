@@ -1,4 +1,4 @@
-.PHONY: regtest-up regtest-down regtest regtest-hardware regtest-hardware-ark regtest-hardware-ark-down proto bitcoin-init mine-loop signer-build signer-run signer-stop pico-build pico-flash pico-test flutter flutter-run threshold-ffi-build threshold-ffi-android ark-ffi-build threshold-test threshold-ffi-test e2e-test e2e-ark-test cosigner-build server-build server-run server-stop arkd-up arkd-down arkd-init crypto-bench stress-test load-test
+.PHONY: regtest-up regtest-down regtest regtest-hardware regtest-hardware-ark regtest-hardware-ark-down proto bitcoin-init mine-loop signer-build signer-run signer-stop hw-build hw-build-secure hw-build-ns hw-flash hw-flash-probe hw-test flutter flutter-run threshold-ffi-build threshold-ffi-android ark-ffi-build threshold-test threshold-ffi-test e2e-test e2e-ark-test cosigner-build server-build server-run server-stop arkd-up arkd-down arkd-init crypto-bench stress-test load-test
 
 # Stress test data isolation
 export DATA_DIR=/tmp/mpc_wallet_stress
@@ -113,37 +113,48 @@ adb-reverse:
 	@echo "Forwarding active: phone 127.0.0.1:50051 -> PC gRPC server"
 	@echo "Forwarding active: phone 127.0.0.1:50001 -> PC Electrs"
 
-# Build Pico 2 firmware
-pico-build:
-	@echo "Building Pico Signer firmware..."
-	cd pico-signer && cargo build --release
+# Build HW Signer Secure world firmware (requires nightly for CMSE)
+hw-build-secure:
+	@echo "Building HW Signer Secure world..."
+	cd hwsigner-secure && cargo +nightly build --release
 
-# Flash Pico 2 via debug probe (requires SWD probe connected)
-pico-flash-probe: pico-build
+# Build HW Signer Non-Secure world firmware
+hw-build-ns: hw-build-secure
+	@echo "Building HW Signer Non-Secure world..."
+	cd hwsigner && cargo build --release
+
+# Build both worlds
+hw-build: hw-build-ns
+
+# Flash HW Signer via debug probe (requires SWD probe connected)
+hw-flash-probe: hw-build
 	@echo "Flashing via debug probe..."
-	cd pico-signer && cargo run --release
+	cd hwsigner-secure && cargo +nightly run --release
 
-# Flash Pico 2 via UF2 bootloader (hold BOOTSEL + plug in USB first)
-pico-flash: pico-build
-	@echo "Converting ELF to UF2..."
-	cp pico-signer/target/thumbv8m.main-none-eabihf/release/pico-signer pico-signer/pico-signer.elf
-	picotool uf2 convert pico-signer/pico-signer.elf pico-signer/pico-signer.uf2 --family rp2350-arm-s
+# Flash HW Signer via UF2 bootloader (hold BOOTSEL + plug in USB first)
+hw-flash: hw-build
+	@echo "Converting ELFs to UF2 and merging..."
+	cp hwsigner-secure/target/thumbv8m.main-none-eabihf/release/hwsigner-secure hwsigner-secure/hwsigner-secure.elf
+	cp hwsigner/target/thumbv8m.main-none-eabihf/release/hwsigner hwsigner/hwsigner.elf
+	picotool uf2 convert hwsigner-secure/hwsigner-secure.elf hwsigner-secure/hwsigner-secure.uf2 --family rp2350-arm-s
+	picotool uf2 convert hwsigner/hwsigner.elf hwsigner/hwsigner-ns.uf2 --family rp2350-arm-ns
+	cat hwsigner-secure/hwsigner-secure.uf2 hwsigner/hwsigner-ns.uf2 > hwsigner/hwsigner-combined.uf2
 	@echo ""
-	@echo "==> Created pico-signer/pico-signer.uf2"
-	@echo "==> Copy to the RP2350 drive:  cp pico-signer/pico-signer.uf2 /media/$$USER/RP2350/"
+	@echo "==> Created hwsigner/hwsigner-combined.uf2"
+	@echo "==> Copy to the RP2350 drive:  cp hwsigner/hwsigner-combined.uf2 /media/$$USER/RP2350/"
 	@echo ""
 	@if [ -d "/media/$$USER/RP2350" ]; then \
-		cp pico-signer/pico-signer.uf2 /media/$$USER/RP2350/ && \
-		echo "Copied! Pico will reboot with new firmware."; \
+		cp hwsigner/hwsigner-combined.uf2 /media/$$USER/RP2350/ && \
+		echo "Copied! Device will reboot with new firmware."; \
 	else \
-		echo "RP2350 drive not found. Hold BOOTSEL + plug in the Pico, then run:"; \
-		echo "  cp pico-signer/pico-signer.uf2 /media/$$USER/RP2350/"; \
+		echo "RP2350 drive not found. Hold BOOTSEL + plug in the device, then run:"; \
+		echo "  cp hwsigner/hwsigner-combined.uf2 /media/$$USER/RP2350/"; \
 	fi
 
-# Smoke test Pico Signer over USB HID (no phone needed)
-pico-test:
-	@echo "Testing Pico Signer over USB HID..."
-	scripts/.venv/bin/python3 scripts/test_pico.py $(ARGS)
+# Smoke test HW Signer over USB HID (no phone needed)
+hw-test:
+	@echo "Testing HW Signer over USB HID..."
+	scripts/.venv/bin/python3 scripts/test_hwsigner.py $(ARGS)
 
 # Build FFI libs for Android and run Flutter app
 flutter: threshold-ffi-android ark-ffi-android
