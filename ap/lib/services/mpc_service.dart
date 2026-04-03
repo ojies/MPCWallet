@@ -20,6 +20,7 @@ class MpcService extends ChangeNotifier {
   bool _isConnected = false;
   Box? _identityBox;
   ClientChannel? _channel;
+  String _network = 'regtest';
 
   String? _storageId;
 
@@ -81,8 +82,7 @@ class MpcService extends ChangeNotifier {
 
   String? get receiveAddress {
     if (_wallet == null) return null;
-    // Force Regtest format for this environment
-    return _wallet!.toAddressCustom(hrp: 'bcrt');
+    return _wallet!.toAddress();
   }
 
   Future<void> refreshHistory() async {
@@ -124,6 +124,7 @@ class MpcService extends ChangeNotifier {
       print("MPC Service: Using host: $_host");
 
       _dkgComplete = _identityBox!.get('dkgComplete', defaultValue: false);
+      _network = _identityBox!.get('network', defaultValue: 'regtest') as String;
       _storageId = _identityBox!.get('storageId') as String?;
       if (_storageId == null || _storageId!.isEmpty) {
         _storageId = 'mpc_wallet_state_${_generateSessionId()}';
@@ -196,7 +197,7 @@ class MpcService extends ChangeNotifier {
       storageId: storageId,
       hardwareSigner: _hardwareSigner!,
     );
-    _wallet = MpcBitcoinWallet(_client!, isTestnet: true, storageId: storageId);
+    _wallet = MpcBitcoinWallet(_client!, networkName: _network, storageId: storageId);
     _wallet!.onSyncComplete = _onWalletSyncComplete;
 
     await _wallet!.init();
@@ -243,7 +244,7 @@ class MpcService extends ChangeNotifier {
     );
     debugPrint("[RESTORE] Re-DKG complete.");
 
-    _wallet = MpcBitcoinWallet(_client!, isTestnet: true, storageId: storageId);
+    _wallet = MpcBitcoinWallet(_client!, networkName: _network, storageId: storageId);
     _wallet!.onSyncComplete = _onWalletSyncComplete;
 
     // init() will find restored state and skip DKG, then sync
@@ -288,7 +289,7 @@ class MpcService extends ChangeNotifier {
       storageId: storageId,
       hardwareSigner: _hardwareSigner!,
     );
-    _wallet = MpcBitcoinWallet(_client!, isTestnet: true, storageId: storageId);
+    _wallet = MpcBitcoinWallet(_client!, networkName: _network, storageId: storageId);
     _wallet!.onSyncComplete = _onWalletSyncComplete;
 
     await _wallet!.init();
@@ -345,6 +346,10 @@ class MpcService extends ChangeNotifier {
     if (_client == null) return;
     try {
       _arkInfo = await _client!.getArkInfo();
+      if (_arkInfo != null && _arkInfo!.network.isNotEmpty) {
+        _network = _arkInfo!.network;
+        await _identityBox?.put('network', _network);
+      }
       _arkAddress = await _client!.getArkAddress();
       _boardingAddress = await _client!.getBoardingAddress();
       _arkWallet = MpcArkWallet(_client!);

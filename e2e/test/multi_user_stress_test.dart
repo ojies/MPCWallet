@@ -60,13 +60,13 @@ void main() {
     Log.ok('DKG complete for both users.');
 
     final walletA = MpcBitcoinWallet(clientA,
-        isTestnet: true, storageId: 'user_a_wallet_stress');
+        networkName: 'regtest', storageId: 'user_a_wallet_stress');
     final walletB = MpcBitcoinWallet(clientB,
-        isTestnet: true, storageId: 'user_b_wallet_stress');
+        networkName: 'regtest', storageId: 'user_b_wallet_stress');
     await Future.wait([walletA.init(), walletB.init()]);
 
-    final addrA = walletA.toAddressCustom(hrp: 'bcrt');
-    final addrB = walletB.toAddressCustom(hrp: 'bcrt');
+    final addrA = walletA.toAddress();
+    final addrB = walletB.toAddress();
     Log.info('User A: $addrA');
     Log.info('User B: $addrB');
 

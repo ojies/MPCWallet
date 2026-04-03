@@ -180,10 +180,10 @@ void main() {
     Log.ok('DKG complete.');
 
     // 2. Init Wallet
-    final wallet = MpcBitcoinWallet(client1, isTestnet: true);
+    final wallet = MpcBitcoinWallet(client1, networkName: 'regtest');
     await wallet.init();
 
-    final address = wallet.toAddressCustom(hrp: 'bcrt');
+    final address = wallet.toAddress();
     Log.info('Wallet address: $address');
 
     // 3. Fund Wallet
@@ -322,9 +322,9 @@ void main() {
     await client2.doRestore();
     Log.ok('Restore complete.');
 
-    final wallet2 = MpcBitcoinWallet(client2, isTestnet: true);
+    final wallet2 = MpcBitcoinWallet(client2, networkName: 'regtest');
     await wallet2.init();
-    final restoredAddress = wallet2.toAddressCustom(hrp: 'bcrt');
+    final restoredAddress = wallet2.toAddress();
     Log.info('Restored address: $restoredAddress');
     expect(restoredAddress, equals(originalAddress),
         reason: "Restored wallet must have the same Bitcoin address");
@@ -399,9 +399,9 @@ void main() {
     await client.doDkg();
     print('   DKG Complete');
 
-    final wallet = MpcBitcoinWallet(client, isTestnet: true);
+    final wallet = MpcBitcoinWallet(client, networkName: 'regtest');
     await wallet.init();
-    final address = wallet.toAddressCustom(hrp: 'bcrt');
+    final address = wallet.toAddress();
     print('   Wallet Address: $address');
 
     // 2. Fund wallet generously
