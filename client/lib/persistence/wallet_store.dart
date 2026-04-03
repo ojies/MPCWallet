@@ -10,6 +10,7 @@ import 'package:synchronized/synchronized.dart';
 class WalletStore {
   final String boxName;
   final HiveCipher? _cipher;
+  final BitcoinNetwork network;
   late Box _box;
   bool _isInitialized = false;
   final Lock _lock = Lock();
@@ -19,9 +20,11 @@ class WalletStore {
   /// [boxName] - Name of the Hive box
   /// [cipher] - Optional cipher for encrypted storage. Pass a HiveAesCipher
   ///            created from a SecureKeyProvider for encrypted storage.
+  /// [network] - Bitcoin network for address encoding/decoding.
   WalletStore({
     this.boxName = 'bitcoin_wallet_state',
     HiveCipher? cipher,
+    this.network = BitcoinNetwork.mainnet,
   }) : _cipher = cipher;
 
   bool get isInitialized => _isInitialized;
@@ -53,7 +56,7 @@ class WalletStore {
                 'vout': u.utxo.vout,
                 'value': u.utxo.value.toString(),
                 'address': u.ownerDetails.address
-                    .toAddress(BitcoinNetwork.mainnet),
+                    .toAddress(network),
                 'publicKey': u.ownerDetails.publicKey,
                 'scriptType': 'P2TR',
               })
@@ -100,8 +103,15 @@ class WalletStore {
         throw FormatException('Invalid or missing publicKey in stored UTXO');
       }
 
-      final address = P2trAddress.fromAddress(
-          address: addressStr, network: BitcoinNetwork.mainnet);
+      late P2trAddress address;
+      try {
+        address = P2trAddress.fromAddress(
+            address: addressStr, network: network);
+      } catch (_) {
+        // Fallback for legacy data stored with mainnet encoding
+        address = P2trAddress.fromAddress(
+            address: addressStr, network: BitcoinNetwork.mainnet);
+      }
 
       final utxo = BitcoinUtxo(
         txHash: txHash,

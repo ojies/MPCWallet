@@ -1,4 +1,4 @@
-.PHONY: regtest-up regtest-down regtest regtest-hardware regtest-hardware-ark regtest-hardware-ark-down proto bitcoin-init mine-loop signer-build signer-run signer-stop pico-build pico-flash pico-test flutter flutter-run threshold-ffi-build threshold-ffi-android ark-ffi-build threshold-test threshold-ffi-test e2e-test e2e-ark-test cosigner-build server-build server-run server-stop arkd-up arkd-down arkd-init crypto-bench stress-test load-test
+.PHONY: regtest-up regtest-down regtest regtest-hardware regtest-hardware-ark regtest-hardware-ark-down proto bitcoin-init mine-loop signer-build signer-run signer-stop pico-build pico-flash pico-test flutter flutter-run threshold-ffi-build threshold-ffi-android ark-ffi-build threshold-test threshold-ffi-test e2e-test e2e-ark-test cosigner-build server-build server-run server-stop arkd-up arkd-down arkd-init crypto-bench stress-test load-test signet-down signet-hardware-ark e2e-mutinynet
 
 # Stress test data isolation
 export DATA_DIR=/tmp/mpc_wallet_stress
@@ -104,6 +104,40 @@ regtest-hardware-ark-down:
 	@echo "Stopping Docker services..."
 	docker compose -f docker-compose.yml -f docker-compose.ark.yml down
 	@echo "All stopped."
+
+# --- Signet (MutinyNet) ---
+# No local bitcoind/electrs/arkd needed -- uses MutinyNet public infra + a remote ASP.
+# Set MUTINYNET_ASP_URL to the ASP you want to connect to.
+
+MUTINYNET_ASP_URL ?= http://localhost:7070
+
+# MutinyNet with Ark: MPC server connecting to public MutinyNet + remote ASP (foreground)
+signet-hardware-ark: cosigner-build server-build threshold-ffi-build threshold-ffi-android ark-ffi-build ark-ffi-android
+	@echo "=== Setting up ADB reverse ==="
+	-adb reverse tcp:50051 tcp:50051
+	@echo ""
+	@echo "==> Run Flutter in a separate terminal:  cd ap && flutter run"
+	@echo "==> Server logs below (Ctrl+C to stop):"
+	@echo ""
+	export ELECTRUM_URL=electrum.mutinynet.com && \
+	export ELECTRUM_PORT=50001 && \
+	export BITCOIN_NETWORK=signet && \
+	export ASP_URL=$(MUTINYNET_ASP_URL) && \
+	cd server && cargo run --release -- \
+		--wasm ../cosigner/target/wasm32-wasip1/release/cosigner.wasm \
+		--port 50051
+
+# Stop MutinyNet MPC server
+signet-down:
+	@echo "Stopping MPC server..."
+	-pkill -f "target/release/server" || true
+	@echo "Stopped."
+
+# Run MutinyNet Bitcoin integration test (requires MUTINYNET_FUNDER_KEY env var)
+e2e-mutinynet: threshold-ffi-build cosigner-build server-build signer-run
+	@echo "Running MutinyNet E2E test..."
+	cd e2e && dart test test/mutinynet_e2e_test.dart --timeout 600s
+	-pkill -f "signer-server" || true
 
 # Set up ADB reverse port forwarding for physical device
 adb-reverse:

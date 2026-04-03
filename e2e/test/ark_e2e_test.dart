@@ -264,9 +264,9 @@ void main() {
     final boardingAddress = await client.getBoardingAddress();
     print('   Boarding Address: $boardingAddress');
     expect(boardingAddress, isNotEmpty);
-    // Boarding address is a P2TR address (bcrt1p... on regtest)
-    expect(boardingAddress.startsWith('bcrt1p'), isTrue,
-        reason: "Boarding address should be P2TR on regtest, got: $boardingAddress");
+    // Boarding address is a P2TR address (bcrt1p... on regtest, tb1p... on signet/testnet)
+    expect(boardingAddress.startsWith('bcrt1p') || boardingAddress.startsWith('tb1p'), isTrue,
+        reason: "Boarding address should be P2TR, got: $boardingAddress");
 
     // 5. ListVtxos (should be empty for new wallet)
     print('5. ListVtxos');
