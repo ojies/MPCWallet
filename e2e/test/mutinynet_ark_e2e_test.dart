@@ -1,0 +1,245 @@
+/// MutinyNet (signet) Ark integration test.
+///
+/// Prerequisites:
+///   1. Generate funder key: cd e2e && dart run bin/gen_funder_key.dart
+///   2. Export: MUTINYNET_FUNDER_KEY=<hex>
+///   3. Fund the funder's tb1p... address via https://faucet.mutinynet.com
+///   4. Build: make threshold-ffi-build ark-ffi-build cosigner-build server-build signer-build
+///   5. Run:  make e2e-mutinynet-ark
+///
+/// The test:
+///   - Starts MPC server pointed at mutinynet.com Electrum + public ASP
+///   - Alice: DKG, get boarding address, fund, settle (board into Ark)
+///   - Verify VTXOs
+///   - Bob: DKG, get Ark address
+///   - Alice sends off-chain to Bob
+///   - Verify balances
+library;
+
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:test/test.dart';
+import 'package:client/ark_wallet.dart';
+import 'package:client/client.dart';
+import 'package:client/hardware_signer.dart';
+import 'package:e2e/mutinynet_funder.dart';
+import 'package:e2e/logger.dart';
+import 'package:grpc/grpc.dart';
+import 'package:hive/hive.dart';
+
+const _aspUrl = 'https://mutinynet.arkade.sh';
+
+void main() {
+  Process? serverProcess;
+  late MutinyNetFunder funder;
+  late Directory tempDir;
+  late Directory serverTempDir;
+  late int serverPort;
+
+  setUpAll(() async {
+    Log.header('MutinyNet Ark E2E Setup');
+
+    // 0. Validate env
+    final funderKey = Platform.environment['MUTINYNET_FUNDER_KEY'];
+    if (funderKey == null || funderKey.isEmpty) {
+      throw Exception(
+          'MUTINYNET_FUNDER_KEY env var not set. '
+          'Run: cd e2e && dart run bin/gen_funder_key.dart');
+    }
+
+    // 1. Hive init
+    tempDir = await Directory.systemTemp.createTemp('mpc_mutinynet_ark_e2e_');
+    Hive.init(tempDir.path);
+
+    // 2. Connect funder to MutinyNet Electrum
+    funder = MutinyNetFunder(funderKey);
+    await funder.connect();
+    final balance = await funder.getBalanceSats();
+    Log.info('Funder address: ${funder.address}');
+    Log.info('Funder balance: $balance sats');
+    if (balance < 20000) {
+      throw Exception(
+          'Funder balance too low ($balance sats). '
+          'Fund ${funder.address} with at least 20,000 sats via '
+          'https://faucet.mutinynet.com');
+    }
+    Log.ok('Funder wallet ready.');
+
+    // 3. Start MPC server pointed at MutinyNet + public ASP
+    Log.info('Starting MPC Server (MutinyNet + Ark)...');
+    final portSocket = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+    serverPort = portSocket.port;
+    await portSocket.close();
+    serverTempDir = await Directory.systemTemp.createTemp('mpc_server_mutinynet_ark_');
+
+    final serverReady = Completer<void>();
+    final serverFailed = Completer<void>();
+    serverProcess = await Process.start(
+      '../server/target/release/server',
+      [
+        '--wasm', '../cosigner/target/wasm32-wasip1/release/cosigner.wasm',
+        '--port', serverPort.toString(),
+      ],
+      mode: ProcessStartMode.normal,
+      environment: {
+        'ELECTRUM_URL': 'electrum.mutinynet.com',
+        'ELECTRUM_PORT': '50001',
+        'BITCOIN_NETWORK': 'signet',
+        'ASP_URL': _aspUrl,
+        'HOME': serverTempDir.path,
+      },
+    );
+
+    final outputBuffer = StringBuffer();
+    void handleOutput(String data) {
+      outputBuffer.write(data);
+      Log.server(data);
+      if (!serverReady.isCompleted &&
+          outputBuffer.toString().contains('MPC Wallet Server listening on')) {
+        serverReady.complete();
+      }
+    }
+
+    serverProcess!.stdout.transform(utf8.decoder).listen(handleOutput,
+        onDone: () {
+      if (!serverReady.isCompleted && !serverFailed.isCompleted) {
+        serverFailed.complete();
+      }
+    });
+    serverProcess!.stderr.transform(utf8.decoder).listen(handleOutput,
+        onDone: () {
+      if (!serverReady.isCompleted && !serverFailed.isCompleted) {
+        serverFailed.complete();
+      }
+    });
+
+    try {
+      await Future.any([
+        serverReady.future,
+        serverFailed.future.then((_) {
+          throw Exception('MPC Server failed to start');
+        }),
+      ]).timeout(Duration(seconds: 30), onTimeout: () {
+        throw Exception('MPC Server did not become ready in time');
+      });
+    } catch (e) {
+      serverProcess?.kill();
+      rethrow;
+    }
+    Log.ok('MPC Server ready on port $serverPort (ASP: $_aspUrl)');
+    Log.separator();
+  });
+
+  tearDownAll(() async {
+    serverProcess?.kill();
+    await funder.close();
+    try {
+      await serverTempDir.delete(recursive: true);
+    } catch (_) {}
+    try {
+      await tempDir.delete(recursive: true);
+    } catch (_) {}
+  });
+
+  test('MutinyNet Ark: Board + Send', () async {
+    // 1. Alice DKG
+    Log.step(1, 'Alice DKG');
+    final channel = ClientChannel(
+      '127.0.0.1',
+      port: serverPort,
+      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
+    );
+    final aliceSigner = TcpHardwareSigner(host: '127.0.0.1', port: 9090);
+    await aliceSigner.connect();
+    final alice = MpcClient(channel, hardwareSigner: aliceSigner);
+    await alice.doDkg();
+    Log.ok('Alice DKG complete.');
+
+    // 2. Get Ark info from public ASP
+    Log.step(2, 'Get Ark Info');
+    final arkInfo = await alice.getArkInfo();
+    Log.info('network=${arkInfo.network}');
+    Log.info('signerPubkey=${arkInfo.signerPubkey.substring(0, 16)}...');
+    Log.info('boardingExitDelay=${arkInfo.boardingExitDelay}');
+    expect(arkInfo.signerPubkey, isNotEmpty);
+    expect(arkInfo.network, isNotEmpty);
+
+    // 3. Get Ark address
+    Log.step(3, 'Get Ark Address');
+    final arkAddress = await alice.getArkAddress();
+    Log.info('Ark address: $arkAddress');
+    expect(
+      arkAddress.startsWith('ark1') || arkAddress.startsWith('tark1'),
+      isTrue,
+      reason: 'Ark address should start with ark1 or tark1, got: $arkAddress',
+    );
+
+    // 4. Get boarding address
+    Log.step(4, 'Get Boarding Address');
+    final boardingAddress = await alice.getBoardingAddress();
+    Log.info('Boarding address: $boardingAddress');
+    expect(boardingAddress.startsWith('tb1p'), isTrue,
+        reason: 'Boarding address should be signet P2TR, got: $boardingAddress');
+
+    // 5. Fund boarding address from funder
+    Log.step(5, 'Fund Boarding Address');
+    const fundAmountSats = 10000;
+    Log.info('Sending $fundAmountSats sats to boarding address...');
+    final fundTxid = await funder.sendToAddress(boardingAddress, fundAmountSats);
+    Log.ok('Funding txid: $fundTxid');
+
+    // 6. Wait for confirmation
+    Log.step(6, 'Waiting for Funding Confirmation');
+    Log.info('Waiting for MutinyNet block (~30s)...');
+    await funder.waitForConfirmation(fundTxid, timeoutSecs: 180);
+    Log.ok('Funding confirmed on MutinyNet.');
+
+    // 7. Settle (board into Ark)
+    Log.step(7, 'Settle (Board into Ark)');
+    Log.info('Calling settle() — waiting for ASP batch round...');
+    final commitmentTxid = await alice.settle();
+    Log.ok('Settled! commitment_txid=$commitmentTxid');
+    expect(commitmentTxid, isNotEmpty);
+
+    // 8. Verify VTXOs
+    Log.step(8, 'Verify VTXOs');
+    final vtxosResp = await alice.listVtxos();
+    Log.info('VTXOs: ${vtxosResp.vtxos.length}, balance: ${vtxosResp.totalBalance}');
+    expect(vtxosResp.totalBalance.toInt(), greaterThan(0));
+
+    // 9. Bob DKG
+    Log.step(9, 'Bob DKG');
+    final bobSigner = TcpHardwareSigner(host: '127.0.0.1', port: 9090);
+    await bobSigner.connect();
+    final bob = MpcClient(channel, hardwareSigner: bobSigner, storageId: 'bob_mutinynet_ark');
+    await bob.doDkg();
+    final bobArkAddress = await bob.getArkAddress();
+    Log.ok('Bob Ark address: $bobArkAddress');
+
+    // 10. Alice sends off-chain to Bob
+    Log.step(10, 'Alice sends to Bob (off-chain)');
+    const sendAmount = 3000;
+    final aliceArkWallet = MpcArkWallet(alice);
+    final unsigned = await aliceArkWallet.createTransaction(
+      destination: bobArkAddress,
+      amountSats: sendAmount,
+    );
+    Log.info('Built tx: ${unsigned.sighashes.length} sighashes');
+    final signed = await aliceArkWallet.signTransaction(unsigned);
+    final arkTxid = await aliceArkWallet.submit(signed);
+    Log.ok('Send ark_txid: $arkTxid');
+    expect(arkTxid, isNotEmpty);
+
+    // 11. Verify balances
+    Log.step(11, 'Verify Final Balances');
+    final aliceVtxos = await alice.listVtxos();
+    Log.info('Alice VTXOs: ${aliceVtxos.vtxos.length}, balance: ${aliceVtxos.totalBalance}');
+    expect(aliceVtxos.totalBalance.toInt(), greaterThan(0));
+    expect(aliceVtxos.totalBalance.toInt(), lessThan(fundAmountSats));
+
+    Log.separator();
+    Log.ok('MutinyNet Ark E2E test passed!');
+  }, timeout: Timeout(Duration(minutes: 15)));
+}

@@ -23,6 +23,7 @@ BitcoinNetwork parseBitcoinNetwork(String network) {
     case 'testnet3':
       return BitcoinNetwork.testnet;
     case 'signet':
+    case 'mutinynet':
       return BitcoinNetwork.signet;
     case 'regtest':
     default:
