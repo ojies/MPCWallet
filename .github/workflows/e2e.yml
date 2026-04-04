@@ -21,6 +21,9 @@ jobs:
         with:
           targets: wasm32-wasip1
 
+      - name: Install protoc
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+
       - name: Install cargo-component
         run: cargo install cargo-component
 
@@ -40,11 +43,11 @@ jobs:
 
       - name: Build all
         run: |
-          cd threshold-ffi && cargo build --release && cd ..
-          cd ark-ffi && cargo build --release && cd ..
-          cd cosigner && cargo component build --release && cd ..
-          cd server && cargo build --release && cd ..
-          cd e2e/signer-server && cargo build --release && cd ../..
+          cargo build --release --manifest-path threshold-ffi/Cargo.toml
+          cargo build --release --manifest-path ark-ffi/Cargo.toml
+          cd cosigner && cargo component build --release
+          cargo build --release --manifest-path server/Cargo.toml
+          cargo build --release --manifest-path e2e/signer-server/Cargo.toml
 
       - name: Upload binaries
         uses: actions/upload-artifact@v4
