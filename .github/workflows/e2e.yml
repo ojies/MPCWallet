@@ -82,7 +82,7 @@ jobs:
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
         with:
-          sdk: '3.3.0'
+          sdk: '3.11.4'
 
       - name: Install Dart dependencies
         run: cd e2e && dart pub get
@@ -122,7 +122,7 @@ jobs:
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
         with:
-          sdk: '3.3.0'
+          sdk: '3.11.4'
 
       - name: Install Dart dependencies
         run: cd e2e && dart pub get
