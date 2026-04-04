@@ -45,7 +45,7 @@ jobs:
         run: |
           cargo build --release --manifest-path threshold-ffi/Cargo.toml
           cargo build --release --manifest-path ark-ffi/Cargo.toml
-          cd cosigner && cargo component build --release
+          (cd cosigner && cargo component build --release)
           cargo build --release --manifest-path server/Cargo.toml
           cargo build --release --manifest-path e2e/signer-server/Cargo.toml
 
