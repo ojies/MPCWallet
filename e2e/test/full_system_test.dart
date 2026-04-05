@@ -7,7 +7,6 @@ import 'package:client/bitcoin.dart';
 import 'package:client/hardware_signer.dart';
 import 'package:e2e/regtest_helper.dart';
 import 'package:e2e/logger.dart';
-import 'package:grpc/grpc.dart';
 import 'package:hive/hive.dart';
 import 'package:fixnum/fixnum.dart';
 
@@ -164,17 +163,20 @@ void main() {
     } catch (_) {}
   });
 
+  MpcClient createClient(HardwareSignerInterface signer, {String? storageId}) {
+    return MpcClient.rest(
+      'http://127.0.0.1:$serverPort',
+      hardwareSigner: signer,
+      storageId: storageId,
+    );
+  }
+
   test('Full E2E Regtest Flow with Policies', () async {
     // 1. MPC Setup
     Log.step(1, 'MPC Setup');
-    final channel = ClientChannel(
-      '127.0.0.1',
-      port: serverPort,
-      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
-    );
     final signer = TcpHardwareSigner(host: '127.0.0.1', port: 9090);
     await signer.connect();
-    final client1 = MpcClient(channel, hardwareSigner: signer);
+    final client1 = createClient(signer);
 
     await client1.doDkg();
     Log.ok('DKG complete.');
@@ -318,7 +320,7 @@ void main() {
     // 11. Restore wallet (simulate new phone)
     Log.step(10, 'Restoring Wallet via re-DKG');
     final originalAddress = address;
-    final client2 = MpcClient(channel, hardwareSigner: signer, storageId: 'restore_e2e');
+    final client2 = createClient(signer, storageId: 'restore_e2e');
     await client2.doRestore();
     Log.ok('Restore complete.');
 
@@ -387,14 +389,9 @@ void main() {
 
     // 1. Setup fresh client
     print('1. MPC Setup');
-    final channel = ClientChannel(
-      '127.0.0.1',
-      port: serverPort,
-      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
-    );
     final signer = TcpHardwareSigner(host: '127.0.0.1', port: 9090);
     await signer.connect();
-    final client = MpcClient(channel, hardwareSigner: signer, storageId: 'policy_cumulative');
+    final client = createClient(signer, storageId: 'policy_cumulative');
 
     await client.doDkg();
     print('   DKG Complete');

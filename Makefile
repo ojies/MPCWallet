@@ -1,4 +1,4 @@
-.PHONY: regtest-up regtest-down regtest regtest-hardware regtest-hardware-ark regtest-hardware-ark-down proto bitcoin-init mine-loop signer-build signer-run signer-stop pico-build pico-flash pico-test flutter flutter-run threshold-ffi-build threshold-ffi-android ark-ffi-build threshold-test threshold-ffi-test e2e-test e2e-ark-test cosigner-build server-build server-run server-stop arkd-up arkd-down arkd-init crypto-bench stress-test load-test signet-down signet-hardware-ark e2e-mutinynet e2e-mutinynet-ark
+.PHONY: regtest-up regtest-down regtest regtest-ark regtest-hardware regtest-hardware-ark regtest-hardware-ark-down proto bitcoin-init mine-loop signer-build signer-run signer-stop pico-build pico-flash pico-test flutter flutter-run threshold-ffi-build threshold-ffi-android ark-ffi-build threshold-test threshold-ffi-test e2e-test e2e-ark-test cosigner-build server-build server-run server-stop arkd-up arkd-down arkd-init crypto-bench stress-test load-test signet-down signet-hardware-ark e2e-mutinynet e2e-mutinynet-ark
 
 # Stress test data isolation
 export DATA_DIR=/tmp/mpc_wallet_stress
@@ -274,6 +274,9 @@ server-stop:
 
 # --- Ark (ASP) ---
 
+# Start everything for Ark regtest (clean state + Docker + chain init + arkd init + fund + signer)
+regtest-ark: server-stop signer-stop arkd-up bitcoin-init arkd-init signer-run
+
 # Start arkd + dependencies (brings up regtest + ark together)
 arkd-up:
 	@echo "Starting regtest + arkd (ASP) services..."
@@ -291,8 +294,8 @@ arkd-down:
 	@echo "Stopping arkd services..."
 	docker compose -f docker-compose.yml -f docker-compose.ark.yml down
 
-# Run Ark E2E test (requires arkd running)
-e2e-ark-test: threshold-ffi-build ark-ffi-build cosigner-build server-build signer-run
+# Run Ark E2E test (starts everything automatically)
+e2e-ark-test: regtest-ark threshold-ffi-build ark-ffi-build cosigner-build server-build
 	@echo "Running Ark E2E test..."
 	cd e2e && dart test test/ark_e2e_test.dart
 	-pkill -f "signer-server" || true

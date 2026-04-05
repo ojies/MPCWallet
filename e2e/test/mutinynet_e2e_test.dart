@@ -26,7 +26,6 @@ import 'package:client/bitcoin.dart';
 import 'package:client/hardware_signer.dart';
 import 'package:e2e/mutinynet_funder.dart';
 import 'package:e2e/logger.dart';
-import 'package:grpc/grpc.dart';
 import 'package:hive/hive.dart';
 
 void main() {
@@ -143,14 +142,9 @@ void main() {
   test('MutinyNet: DKG + Fund + Send', () async {
     // 1. MPC Setup
     Log.step(1, 'MPC Setup (DKG)');
-    final channel = ClientChannel(
-      '127.0.0.1',
-      port: serverPort,
-      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
-    );
     final signer = TcpHardwareSigner(host: '127.0.0.1', port: 9090);
     await signer.connect();
-    final client = MpcClient(channel, hardwareSigner: signer);
+    final client = MpcClient.rest('http://127.0.0.1:$serverPort', hardwareSigner: signer);
     await client.doDkg();
     Log.ok('DKG complete.');
 

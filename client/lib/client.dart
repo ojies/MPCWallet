@@ -6,6 +6,10 @@ import 'package:client/policy.dart';
 import 'package:client/auth_helper.dart';
 import 'package:client/ark/ark_send.dart';
 import 'package:grpc/grpc.dart';
+import 'package:grpc/src/client/channel.dart' as grpc_base;
+import 'package:client/wallet_api.dart';
+import 'package:client/grpc_wallet_api.dart';
+import 'package:client/rest_wallet_api.dart';
 import 'package:client/threshold/core/dkg.dart';
 import 'package:client/threshold/threshold.dart' as threshold;
 import 'package:client/threshold/frost/signing.dart' as frost;
@@ -22,7 +26,7 @@ import 'package:client/persistence/wallet_store.dart';
 import 'package:client/hardware_signer.dart';
 
 class MpcClient {
-  final MPCWalletClient _stub;
+  final WalletApi _stub;
   // Store
   late final WalletStore _store;
 
@@ -74,14 +78,34 @@ class MpcClient {
   /// [hardwareSigner] - Hardware signer for recovery identity.
   ///                    The recovery identity's secret stays on the
   ///                    hardware signer and DKG/signing is delegated.
+  /// Create an MpcClient using gRPC transport (HTTP/2).
   MpcClient(
-    ClientChannel channel, {
+    grpc_base.ClientChannel channel, {
     int maxSigners = 3,
     int minSigners = 2,
     String? storageId,
     HiveCipher? encryptionCipher,
     required HardwareSignerInterface hardwareSigner,
-  })  : _stub = MPCWalletClient(channel),
+  })  : _stub = GrpcWalletApi(channel),
+        _maxSigners = maxSigners,
+        _minSigners = minSigners,
+        _hardwareSigner = hardwareSigner,
+        _protectedPolicies = {} {
+    _store = WalletStore(
+      boxName: storageId ?? 'mpc_wallet_state_default',
+      cipher: encryptionCipher,
+    );
+  }
+
+  /// Create an MpcClient using REST transport (HTTP/1.1).
+  MpcClient.rest(
+    String baseUrl, {
+    int maxSigners = 3,
+    int minSigners = 2,
+    String? storageId,
+    HiveCipher? encryptionCipher,
+    required HardwareSignerInterface hardwareSigner,
+  })  : _stub = RestWalletApi(baseUrl),
         _maxSigners = maxSigners,
         _minSigners = minSigners,
         _hardwareSigner = hardwareSigner,
@@ -1294,11 +1318,16 @@ class MpcClient {
       throw StateError("User ID is null, cannot subscribe to history.");
     }
 
-    final auth = _authHelper!.signForSubscribeHistory();
-    return _stub.subscribeToHistory(SubscribeToHistoryRequest()
-      ..userId = _userId!
-      ..signature = auth.signature
-      ..timestampMs = auth.timestampMs);
+    if (_stub is GrpcWalletApi) {
+      final grpc = _stub as GrpcWalletApi;
+      final auth = _authHelper!.signForSubscribeHistory();
+      return grpc.subscribeToHistory(SubscribeToHistoryRequest()
+        ..userId = _userId!
+        ..signature = auth.signature
+        ..timestampMs = auth.timestampMs);
+    }
+    // REST transport: no streaming, return empty stream (caller uses polling).
+    return const Stream.empty();
   }
 
   Future<List<TransactionSummary>> fetchRecentTransactions() async {

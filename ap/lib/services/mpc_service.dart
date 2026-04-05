@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:grpc/grpc.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:client/ark_wallet.dart';
 import 'package:client/bitcoin.dart';
@@ -19,7 +18,6 @@ class MpcService extends ChangeNotifier {
   bool _dkgComplete = false;
   bool _isConnected = false;
   Box? _identityBox;
-  ClientChannel? _channel;
   String _network = 'regtest';
 
   String? _storageId;
@@ -101,7 +99,9 @@ class MpcService extends ChangeNotifier {
 
   // Hardcoded for now, could be configurable
   String _host = '10.0.2.2'; // Default, will be overwritten by persistence
-  static const int _port = 50051;
+  static const int _port = 7074;
+
+  String get _baseUrl => 'http://$_host:$_port';
 
   Future<void> _ensurePersistenceInitialized() async {
     _persistenceInitFuture ??= () async {
@@ -186,14 +186,8 @@ class MpcService extends ChangeNotifier {
     _hardwareSigner = _createSigner();
     await _hardwareSigner!.connect();
 
-    _channel = ClientChannel(
-      _host,
-      port: _port,
-      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
-    );
-
-    _client = MpcClient(
-      _channel!,
+    _client = MpcClient.rest(
+      _baseUrl,
       storageId: storageId,
       hardwareSigner: _hardwareSigner!,
     );
@@ -223,14 +217,8 @@ class MpcService extends ChangeNotifier {
     await _hardwareSigner!.connect();
     debugPrint("[RESTORE] Hardware signer connected.");
 
-    _channel = ClientChannel(
-      _host,
-      port: _port,
-      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
-    );
-
-    _client = MpcClient(
-      _channel!,
+    _client = MpcClient.rest(
+      _baseUrl,
       storageId: storageId,
       hardwareSigner: _hardwareSigner!,
     );
@@ -278,14 +266,8 @@ class MpcService extends ChangeNotifier {
       }
     }
 
-    _channel = ClientChannel(
-      _host,
-      port: _port,
-      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
-    );
-
-    _client = MpcClient(
-      _channel!,
+    _client = MpcClient.rest(
+      _baseUrl,
       storageId: storageId,
       hardwareSigner: _hardwareSigner!,
     );
@@ -309,12 +291,11 @@ class MpcService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _channel?.shutdown();
+      // REST client cleanup handled by MpcClient
     } catch (_) {}
     try {
       await _hardwareSigner?.disconnect();
     } catch (_) {}
-    _channel = null;
     _client = null;
     _wallet = null;
     _hardwareSigner = null;

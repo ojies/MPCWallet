@@ -6,7 +6,6 @@ import 'package:client/bitcoin.dart';
 import 'package:client/hardware_signer.dart';
 import 'package:e2e/regtest_helper.dart';
 import 'package:e2e/logger.dart';
-import 'package:grpc/grpc.dart';
 import 'package:hive/hive.dart';
 
 void main() {
@@ -33,12 +32,6 @@ void main() {
 
   test('Multi-User Stress Test: Concurrent DKGs and Sequential Transactions',
       () async {
-    final channel = ClientChannel(
-      '127.0.0.1',
-      port: 50051,
-      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
-    );
-
     // 1. Setup two hardware signers (both connect to the same signer-server;
     //    each TCP connection gets its own independent SignerState).
     Log.step(1, 'Connecting hardware signers');
@@ -47,10 +40,11 @@ void main() {
     await Future.wait([signerA.connect(), signerB.connect()]);
     Log.ok('Both signers connected.');
 
+    const serverUrl = 'http://127.0.0.1:7074';
     final clientA =
-        MpcClient(channel, hardwareSigner: signerA, storageId: 'user_a_stress');
+        MpcClient.rest(serverUrl, hardwareSigner: signerA, storageId: 'user_a_stress');
     final clientB =
-        MpcClient(channel, hardwareSigner: signerB, storageId: 'user_b_stress');
+        MpcClient.rest(serverUrl, hardwareSigner: signerB, storageId: 'user_b_stress');
 
     Log.step(2, 'Concurrent DKG — User A & User B');
     await Future.wait([
