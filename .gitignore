@@ -23,9 +23,12 @@
 **/.venv/
 **/__pycache__/
 
-# HW Signer firmware
-*/hwsigner.elf
-*/hwsigner.uf2
+# HW Signer firmware build artifacts
+*.elf
+*.uf2
+*.bak
+hwsigner-secure/target/
+embassy-rp-fork/target/
 threshold/target
 threshold-ffi/target
 cosigner/target
