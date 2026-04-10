@@ -91,46 +91,41 @@ fn main() -> ! {
         info!("NS peripherals deasserted from reset");
     }
 
-    // 5. Configure DMA security — allow NS access to all channels and IRQs
+    // 5. Configure DMA internal security — allow NS access to all channels/IRQs
     unsafe { configure_dma_security() };
 
-    // 6. Configure SAU
+    // 6. Configure SAU — mark NS regions, protect Secure flash/RAM/keys
     unsafe { configure_sau() };
 
-    // 5. Configure ACCESSCTRL
+    // 7. Configure ACCESSCTRL — grant NS access to USB/clocks/timers, keep TRNG Secure
     unsafe { configure_accessctrl() };
 
-    // 6. Retarget NS-needed interrupts
-    unsafe { retarget_interrupts_to_ns() };
-
-    // 7. Set NS VTOR and MSP from NS vector table
+    // 8. Lock ACCESSCTRL — prevent NS code from reconfiguring peripheral security.
+    //    Bit 4 = lock Core0. Once set, only a full chip reset can change ACCESSCTRL.
     unsafe {
-        // SCB_NS->VTOR = NS vector table
-        core::ptr::write_volatile(0xE002_ED08 as *mut u32, NS_FLASH_BASE);
-        // MSP_NS = first word of NS vector table (initial SP)
-        let ns_sp = core::ptr::read_volatile(NS_FLASH_BASE as *const u32);
-        cortex_m::register::msp::write_ns(ns_sp);
+        core::ptr::write_volatile(0x4006_0000 as *mut u32, 0xACCE_0010);
     }
 
-    // 10. Allow NS access to FPU (NSACR) and configure FPU for TrustZone.
-    //     Without NSACR.CP10/CP11, NS code can't use FPU and NS→S transitions
-    //     fail with LSERR when trying to save FPU context.
+    // 9. Retarget NS-needed interrupts to Non-Secure via NVIC_ITNS
+    unsafe { retarget_interrupts_to_ns() };
+
+    // 10. Allow NS access to FPU coprocessor (NSACR)
     unsafe {
-        // NSACR at 0xE000ED8C — Non-Secure Access Control Register
-        // Set bits 10+11 to allow NS access to CP10+CP11 (FPU)
         let nsacr = core::ptr::read_volatile(0xE000_ED8C as *const u32);
         core::ptr::write_volatile(0xE000_ED8C as *mut u32, nsacr | (3 << 10));
     }
 
-    // 11. Disable ALL FPU automatic state preservation for TrustZone.
-    //     ASPEN=0, LSPEN=0 means the CPU never tries to save/restore FPU
-    //     context on exception/security transitions. This prevents LSERR.
-    //     Software must manually save/restore FPU regs if needed (we don't use FPU in crypto).
+    // 11. Disable FPU automatic state preservation for TrustZone transitions
     unsafe {
-        // FPCCR_S at 0xE000EF34: clear ASPEN (bit 31) and LSPEN (bit 30)
-        core::ptr::write_volatile(0xE000_EF34 as *mut u32, 0x0000_0000);
-        // FPCCR_NS at 0xE002EF34: same
-        core::ptr::write_volatile(0xE002_EF34 as *mut u32, 0x0000_0000);
+        core::ptr::write_volatile(0xE000_EF34 as *mut u32, 0x0000_0000); // FPCCR_S
+        core::ptr::write_volatile(0xE002_EF34 as *mut u32, 0x0000_0000); // FPCCR_NS
+    }
+
+    // 12. Set NS VTOR and MSP from NS vector table
+    unsafe {
+        core::ptr::write_volatile(0xE002_ED08 as *mut u32, NS_FLASH_BASE);
+        let ns_sp = core::ptr::read_volatile(NS_FLASH_BASE as *const u32);
+        cortex_m::register::msp::write_ns(ns_sp);
     }
 
     cortex_m::asm::dsb();

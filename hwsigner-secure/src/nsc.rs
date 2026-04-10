@@ -19,10 +19,9 @@ const BUF_SIZE: usize = 4096;
 
 static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
-// Shared buffers in Secure RAM.
-// The NS world gets pointers to these via NSC calls.
+// Secure-side input buffer — NS data is copied here for processing.
+// Output goes directly to the NS buffer pointer (no Secure output buffer needed).
 static mut NSC_IN_BUF: [u8; BUF_SIZE] = [0u8; BUF_SIZE];
-static mut NSC_OUT_BUF: [u8; BUF_SIZE] = [0u8; BUF_SIZE];
 
 // SignerState and KeyStorage live in Secure static memory.
 static mut SIGNER_STATE: Option<SignerState> = None;
@@ -118,7 +117,7 @@ pub extern "cmse-nonsecure-entry" fn nsc_process(
         // Copy response to NS buffer
         core::ptr::copy_nonoverlapping(response_bytes.as_ptr(), ns_out_ptr, resp_len);
 
-        // Zero Secure input buffer
+        // Zero Secure input buffer (may contain DKG secrets)
         NSC_IN_BUF[..in_len].zeroize();
 
         resp_len as i32
