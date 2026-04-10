@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:grpc/grpc.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:client/ark_wallet.dart';
 import 'package:client/bitcoin.dart';
@@ -19,7 +18,7 @@ class MpcService extends ChangeNotifier {
   bool _dkgComplete = false;
   bool _isConnected = false;
   Box? _identityBox;
-  ClientChannel? _channel;
+  String _network = 'regtest';
 
   String? _storageId;
 
@@ -81,8 +80,7 @@ class MpcService extends ChangeNotifier {
 
   String? get receiveAddress {
     if (_wallet == null) return null;
-    // Force Regtest format for this environment
-    return _wallet!.toAddressCustom(hrp: 'bcrt');
+    return _wallet!.toAddress();
   }
 
   Future<void> refreshHistory() async {
@@ -101,7 +99,9 @@ class MpcService extends ChangeNotifier {
 
   // Hardcoded for now, could be configurable
   String _host = '10.0.2.2'; // Default, will be overwritten by persistence
-  static const int _port = 50051;
+  static const int _port = 7074;
+
+  String get _baseUrl => 'http://$_host:$_port';
 
   Future<void> _ensurePersistenceInitialized() async {
     _persistenceInitFuture ??= () async {
@@ -124,6 +124,7 @@ class MpcService extends ChangeNotifier {
       print("MPC Service: Using host: $_host");
 
       _dkgComplete = _identityBox!.get('dkgComplete', defaultValue: false);
+      _network = _identityBox!.get('network', defaultValue: 'regtest') as String;
       _storageId = _identityBox!.get('storageId') as String?;
       if (_storageId == null || _storageId!.isEmpty) {
         _storageId = 'mpc_wallet_state_${_generateSessionId()}';
@@ -185,18 +186,12 @@ class MpcService extends ChangeNotifier {
     _hardwareSigner = _createSigner();
     await _hardwareSigner!.connect();
 
-    _channel = ClientChannel(
-      _host,
-      port: _port,
-      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
-    );
-
-    _client = MpcClient(
-      _channel!,
+    _client = MpcClient.rest(
+      _baseUrl,
       storageId: storageId,
       hardwareSigner: _hardwareSigner!,
     );
-    _wallet = MpcBitcoinWallet(_client!, isTestnet: true, storageId: storageId);
+    _wallet = MpcBitcoinWallet(_client!, networkName: _network, storageId: storageId);
     _wallet!.onSyncComplete = _onWalletSyncComplete;
 
     await _wallet!.init();
@@ -222,14 +217,8 @@ class MpcService extends ChangeNotifier {
     await _hardwareSigner!.connect();
     debugPrint("[RESTORE] Hardware signer connected.");
 
-    _channel = ClientChannel(
-      _host,
-      port: _port,
-      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
-    );
-
-    _client = MpcClient(
-      _channel!,
+    _client = MpcClient.rest(
+      _baseUrl,
       storageId: storageId,
       hardwareSigner: _hardwareSigner!,
     );
@@ -243,7 +232,7 @@ class MpcService extends ChangeNotifier {
     );
     debugPrint("[RESTORE] Re-DKG complete.");
 
-    _wallet = MpcBitcoinWallet(_client!, isTestnet: true, storageId: storageId);
+    _wallet = MpcBitcoinWallet(_client!, networkName: _network, storageId: storageId);
     _wallet!.onSyncComplete = _onWalletSyncComplete;
 
     // init() will find restored state and skip DKG, then sync
@@ -277,18 +266,12 @@ class MpcService extends ChangeNotifier {
       }
     }
 
-    _channel = ClientChannel(
-      _host,
-      port: _port,
-      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
-    );
-
-    _client = MpcClient(
-      _channel!,
+    _client = MpcClient.rest(
+      _baseUrl,
       storageId: storageId,
       hardwareSigner: _hardwareSigner!,
     );
-    _wallet = MpcBitcoinWallet(_client!, isTestnet: true, storageId: storageId);
+    _wallet = MpcBitcoinWallet(_client!, networkName: _network, storageId: storageId);
     _wallet!.onSyncComplete = _onWalletSyncComplete;
 
     await _wallet!.init();
@@ -308,12 +291,11 @@ class MpcService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _channel?.shutdown();
+      // REST client cleanup handled by MpcClient
     } catch (_) {}
     try {
       await _hardwareSigner?.disconnect();
     } catch (_) {}
-    _channel = null;
     _client = null;
     _wallet = null;
     _hardwareSigner = null;
@@ -345,6 +327,10 @@ class MpcService extends ChangeNotifier {
     if (_client == null) return;
     try {
       _arkInfo = await _client!.getArkInfo();
+      if (_arkInfo != null && _arkInfo!.network.isNotEmpty) {
+        _network = _arkInfo!.network;
+        await _identityBox?.put('network', _network);
+      }
       _arkAddress = await _client!.getArkAddress();
       _boardingAddress = await _client!.getBoardingAddress();
       _arkWallet = MpcArkWallet(_client!);

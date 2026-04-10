@@ -13,6 +13,28 @@ import 'package:client/ark/ark.dart';
 import 'package:client/threshold/threshold.dart' as threshold; // Access bigIntToBytes
 import 'package:protocol/protocol.dart';
 
+/// Maps a server/ASP network string to bitcoin_base BitcoinNetwork.
+BitcoinNetwork parseBitcoinNetwork(String network) {
+  switch (network) {
+    case 'bitcoin':
+    case 'mainnet':
+      return BitcoinNetwork.mainnet;
+    case 'testnet':
+    case 'testnet3':
+      return BitcoinNetwork.testnet;
+    case 'signet':
+    case 'mutinynet':
+      return BitcoinNetwork.signet;
+    case 'regtest':
+    default:
+      // regtest has no BitcoinNetwork constant; use testnet (same tb HRP).
+      // Regtest bcrt addresses are handled separately via SegwitBech32Encoder.
+      return BitcoinNetwork.testnet;
+  }
+}
+
+bool isRegtestNetwork(String network) => network == 'regtest';
+
 class UnsignedTransaction {
   final BtcTransaction btcTransaction;
   final List<List<int>> sighashes;
@@ -56,7 +78,10 @@ class UnsignedScriptPathTransaction {
 class MpcBitcoinWallet {
   final MpcClient client;
   final WalletStore store;
-  final bool isTestnet;
+  final String networkName;
+
+  BitcoinNetwork get bitcoinNetwork => parseBitcoinNetwork(networkName);
+  bool get isRegtest => isRegtestNetwork(networkName);
 
   /// Called after a background sync completes (e.g. from a transaction
   /// notification). The caller (MpcService) can use this to update
@@ -80,8 +105,11 @@ class MpcBitcoinWallet {
   }
 
   MpcBitcoinWallet(this.client,
-      {this.isTestnet = false, String? storageId, bool useIdentity2 = false})
-      : store = WalletStore(boxName: storageId ?? 'mpc_wallet_state_default');
+      {this.networkName = 'regtest', String? storageId, bool useIdentity2 = false})
+      : store = WalletStore(
+            boxName: storageId ?? 'mpc_wallet_state_default',
+            network: parseBitcoinNetwork(networkName),
+        );
 
   Future<void> init() async {
     await store.init();
@@ -149,6 +177,14 @@ class MpcBitcoinWallet {
     final program = decoded.item2;
     // Encode with custom HRP
     return SegwitBech32Encoder.encode(hrp, version, program);
+  }
+
+  /// Returns the wallet address formatted for the configured network.
+  String toAddress() {
+    if (isRegtest) {
+      return toAddressCustom(hrp: 'bcrt');
+    }
+    return address.toAddress(bitcoinNetwork);
   }
 
   /// Builds an unsigned transaction, hashes it, and returns the UnsignedTransaction object.
@@ -230,7 +266,7 @@ class MpcBitcoinWallet {
     } else {
       outputAddress = P2trAddress.fromAddress(
           address: destination,
-          network: isTestnet ? BitcoinNetwork.testnet : BitcoinNetwork.mainnet);
+          network: bitcoinNetwork);
     }
 
     final outputs = <BitcoinOutput>[
@@ -251,7 +287,7 @@ class MpcBitcoinWallet {
     final builder = BitcoinTransactionBuilder(
       outPuts: outputs,
       fee: fee,
-      network: isTestnet ? BitcoinNetwork.testnet : BitcoinNetwork.mainnet,
+      network: bitcoinNetwork,
       utxos: selected,
     );
 
@@ -409,7 +445,7 @@ class MpcBitcoinWallet {
     }
     return P2trAddress.fromAddress(
       address: destination,
-      network: isTestnet ? BitcoinNetwork.testnet : BitcoinNetwork.mainnet,
+      network: bitcoinNetwork,
     );
   }
 

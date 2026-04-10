@@ -7,7 +7,6 @@ import 'package:client/client.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:client/hardware_signer.dart';
 import 'package:e2e/regtest_helper.dart';
-import 'package:grpc/grpc.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 
@@ -23,7 +22,8 @@ class ArkdAdmin {
 
   Future<Map<String, dynamic>> getInfo() async {
     final resp = await http.get(Uri.parse('$publicUrl/v1/info'));
-    if (resp.statusCode != 200) throw Exception('arkd info failed: ${resp.body}');
+    if (resp.statusCode != 200)
+      throw Exception('arkd info failed: ${resp.body}');
     return jsonDecode(resp.body) as Map<String, dynamic>;
   }
 
@@ -38,8 +38,10 @@ class ArkdAdmin {
 
   Future<void> initWallet() async {
     // Get seed
-    final seedResp = await http.get(Uri.parse('$adminUrl/v1/admin/wallet/seed'));
-    if (seedResp.statusCode != 200) throw Exception('seed failed: ${seedResp.body}');
+    final seedResp =
+        await http.get(Uri.parse('$adminUrl/v1/admin/wallet/seed'));
+    if (seedResp.statusCode != 200)
+      throw Exception('seed failed: ${seedResp.body}');
     final seed = jsonDecode(seedResp.body)['seed'] as String;
 
     // Create wallet
@@ -63,7 +65,8 @@ class ArkdAdmin {
 
   Future<String> getWalletAddress() async {
     final resp = await http.get(Uri.parse('$adminUrl/v1/admin/wallet/address'));
-    if (resp.statusCode != 200) throw Exception('wallet address failed: ${resp.body}');
+    if (resp.statusCode != 200)
+      throw Exception('wallet address failed: ${resp.body}');
     return jsonDecode(resp.body)['address'] as String;
   }
 }
@@ -75,6 +78,14 @@ void main() {
   late Directory tempDir;
   late Directory serverTempDir;
   late int serverPort;
+
+  MpcClient createClient(HardwareSignerInterface signer, {String? storageId}) {
+    return MpcClient.rest(
+      'http://127.0.0.1:$serverPort',
+      hardwareSigner: signer,
+      storageId: storageId,
+    );
+  }
 
   setUpAll(() async {
     print('--- Ark E2E Setup ---');
@@ -98,7 +109,8 @@ void main() {
       await btc.getNewAddress();
       print("  Bitcoind: OK");
     } catch (e) {
-      throw Exception("Bitcoind not reachable. Run: make arkd-up && make bitcoin-init\nError: $e");
+      throw Exception(
+          "Bitcoind not reachable. Run: make arkd-up && make bitcoin-init\nError: $e");
     }
 
     // 2. Check arkd
@@ -123,12 +135,14 @@ void main() {
         final info = await arkd.getInfo();
         print('  arkd initialized: $info');
       } catch (e) {
-        throw Exception("arkd not reachable. Run: make arkd-up && make arkd-init\nError: $e");
+        throw Exception(
+            "arkd not reachable. Run: make arkd-up && make arkd-init\nError: $e");
       }
     }
 
     final info = await arkd.getInfo();
-    print('  arkd info: pubkey=${(info['pubkey'] as String?)?.substring(0, 16)}...');
+    print(
+        '  arkd info: pubkey=${(info['pubkey'] as String?)?.substring(0, 16)}...');
 
     // 3. Fund ASP wallet if needed
     try {
@@ -156,8 +170,10 @@ void main() {
     serverProcess = await Process.start(
       '../server/target/release/server',
       [
-        '--wasm', '../cosigner/target/wasm32-wasip1/release/cosigner.wasm',
-        '--port', serverPort.toString(),
+        '--wasm',
+        '../cosigner/target/wasm32-wasip1/release/cosigner.wasm',
+        '--port',
+        serverPort.toString(),
       ],
       mode: ProcessStartMode.normal,
       environment: {
@@ -207,7 +223,9 @@ void main() {
       });
     } catch (e) {
       serverProcess?.kill();
-      try { await serverTempDir.delete(recursive: true); } catch (_) {}
+      try {
+        await serverTempDir.delete(recursive: true);
+      } catch (_) {}
       rethrow;
     }
     print('--- Ark E2E Setup Complete ---');
@@ -215,21 +233,20 @@ void main() {
 
   tearDownAll(() async {
     serverProcess?.kill();
-    try { await serverTempDir.delete(recursive: true); } catch (_) {}
-    try { await tempDir.delete(recursive: true); } catch (_) {}
+    try {
+      await serverTempDir.delete(recursive: true);
+    } catch (_) {}
+    try {
+      await tempDir.delete(recursive: true);
+    } catch (_) {}
   });
 
   test('Ark: DKG + GetArkInfo + GetArkAddress + GetBoardingAddress', () async {
     // 1. DKG Setup
     print('1. DKG Setup');
-    final channel = ClientChannel(
-      '127.0.0.1',
-      port: serverPort,
-      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
-    );
     final signer = TcpHardwareSigner(host: '127.0.0.1', port: 9090);
     await signer.connect();
-    final client = MpcClient(channel, hardwareSigner: signer);
+    final client = createClient(signer);
 
     await client.doDkg();
     print('   DKG Complete. userId=${client.userId?.substring(0, 16)}...');
@@ -264,14 +281,18 @@ void main() {
     final boardingAddress = await client.getBoardingAddress();
     print('   Boarding Address: $boardingAddress');
     expect(boardingAddress, isNotEmpty);
-    // Boarding address is a P2TR address (bcrt1p... on regtest)
-    expect(boardingAddress.startsWith('bcrt1p'), isTrue,
-        reason: "Boarding address should be P2TR on regtest, got: $boardingAddress");
+    // Boarding address is a P2TR address (bcrt1p... on regtest, tb1p... on signet/testnet)
+    expect(
+        boardingAddress.startsWith('bcrt1p') ||
+            boardingAddress.startsWith('tb1p'),
+        isTrue,
+        reason: "Boarding address should be P2TR, got: $boardingAddress");
 
     // 5. ListVtxos (should be empty for new wallet)
     print('5. ListVtxos');
     final vtxosResp = await client.listVtxos();
-    print('   VTXOs: ${vtxosResp.vtxos.length}, balance: ${vtxosResp.totalBalance}');
+    print(
+        '   VTXOs: ${vtxosResp.vtxos.length}, balance: ${vtxosResp.totalBalance}');
     expect(vtxosResp.vtxos, isEmpty);
     expect(vtxosResp.totalBalance.toInt(), equals(0));
 
@@ -289,14 +310,9 @@ void main() {
   test('Ark: Full flow - fund boarding, settle, send Alice→Bob', () async {
     // 1. Alice DKG
     print('1. Alice DKG');
-    final aliceChannel = ClientChannel(
-      '127.0.0.1',
-      port: serverPort,
-      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
-    );
     final aliceSigner = TcpHardwareSigner(host: '127.0.0.1', port: 9090);
     await aliceSigner.connect();
-    final alice = MpcClient(aliceChannel, hardwareSigner: aliceSigner);
+    final alice = createClient(aliceSigner);
     await alice.doDkg();
     print('   Alice userId=${alice.userId?.substring(0, 16)}...');
 
@@ -358,19 +374,15 @@ void main() {
     // 5. Verify Alice has a VTXO
     print('5. List VTXOs');
     final vtxosResp = await alice.listVtxos();
-    print('   VTXOs: ${vtxosResp.vtxos.length}, balance: ${vtxosResp.totalBalance}');
+    print(
+        '   VTXOs: ${vtxosResp.vtxos.length}, balance: ${vtxosResp.totalBalance}');
     expect(vtxosResp.totalBalance.toInt(), greaterThan(0));
 
     // 6. Bob DKG
     print('6. Bob DKG');
-    final bobChannel = ClientChannel(
-      '127.0.0.1',
-      port: serverPort,
-      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
-    );
     final bobSigner = TcpHardwareSigner(host: '127.0.0.1', port: 9090);
     await bobSigner.connect();
-    final bob = MpcClient(bobChannel, hardwareSigner: bobSigner);
+    final bob = createClient(bobSigner);
     await bob.doDkg();
     print('   Bob userId=${bob.userId?.substring(0, 16)}...');
 
@@ -431,7 +443,8 @@ void main() {
       print('   Expected failure: $e');
       failedWithoutPin = true;
     }
-    expect(failedWithoutPin, isTrue, reason: 'Should fail without PIN when policy is triggered');
+    expect(failedWithoutPin, isTrue,
+        reason: 'Should fail without PIN when policy is triggered');
 
     // 12. Send 20k sats WITH PIN — should succeed
     print('12. Send 20k WITH PIN');
@@ -441,7 +454,8 @@ void main() {
     );
     final policyId = await aliceArkWallet.getPolicyId(unsigned4);
     print('   policyId: $policyId');
-    expect(policyId, isNotEmpty, reason: 'Policy should be triggered for 20k > 10k limit');
+    expect(policyId, isNotEmpty,
+        reason: 'Policy should be triggered for 20k > 10k limit');
     final signed4 = await aliceArkWallet.signTransaction(
       unsigned4,
       policyId: policyId,
