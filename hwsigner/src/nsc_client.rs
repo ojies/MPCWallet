@@ -1,39 +1,44 @@
 //! Non-Secure world client for calling into the Secure world via NSC veneers.
-//!
-//! The Secure world exposes three NSC functions:
-//!   - nsc_get_in_buf_ptr()  -> pointer to shared input buffer
-//!   - nsc_get_out_buf_ptr() -> pointer to shared output buffer
-//!   - nsc_process(in_len)   -> process request, return response length
 
 extern "C" {
     fn nsc_init() -> i32;
-    fn nsc_get_in_buf_ptr() -> *mut u8;
-    fn nsc_get_out_buf_ptr() -> *const u8;
-    fn nsc_process(in_len: u32) -> i32;
+    fn nsc_process(ns_in_ptr: *const u8, in_len: u32, ns_out_ptr: *mut u8, out_cap: u32) -> i32;
 }
 
 /// Initialize the Secure crypto library.
-/// Must be called once before any other NSC calls, while still in Secure state.
 pub fn init() -> Result<(), i32> {
     let result = unsafe { nsc_init() };
     if result < 0 { Err(result) } else { Ok(()) }
 }
 
-/// Send a JSON request to the Secure world, get JSON response back.
-///
-/// Copies `request_json` into the shared input buffer, calls `nsc_process()`,
-/// and returns a slice of the shared output buffer containing the response.
-pub fn call_secure(request_json: &[u8]) -> Result<&'static [u8], i32> {
-    unsafe {
-        let in_ptr = nsc_get_in_buf_ptr();
-        core::ptr::copy_nonoverlapping(request_json.as_ptr(), in_ptr, request_json.len());
+const BUF_SIZE: usize = 4096;
 
-        let result = nsc_process(request_json.len() as u32);
+/// NS-side buffers (in NS RAM — accessible from both NS and Secure)
+static mut NS_IN_BUF: [u8; BUF_SIZE] = [0u8; BUF_SIZE];
+static mut NS_OUT_BUF: [u8; BUF_SIZE] = [0u8; BUF_SIZE];
+
+/// Send a JSON request to the Secure world, get JSON response back.
+pub fn call_secure(request_json: &[u8]) -> Result<&'static [u8], i32> {
+    if request_json.len() > BUF_SIZE {
+        return Err(-2);
+    }
+
+    unsafe {
+        // Copy request into NS buffer
+        NS_IN_BUF[..request_json.len()].copy_from_slice(request_json);
+
+        // Call Secure world — it reads from NS_IN_BUF, writes to NS_OUT_BUF
+        let result = nsc_process(
+            NS_IN_BUF.as_ptr(),
+            request_json.len() as u32,
+            NS_OUT_BUF.as_mut_ptr(),
+            BUF_SIZE as u32,
+        );
+
         if result < 0 {
             return Err(result);
         }
 
-        let out_ptr = nsc_get_out_buf_ptr();
-        Ok(core::slice::from_raw_parts(out_ptr, result as usize))
+        Ok(&NS_OUT_BUF[..result as usize])
     }
 }

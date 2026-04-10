@@ -76,50 +76,53 @@ pub extern "cmse-nonsecure-entry" fn nsc_init() -> i32 {
 
 /// Main NSC entry point.
 ///
-/// NS world writes JSON request bytes into `NSC_IN_BUF[..in_len]`,
-/// calls this function, then reads response bytes from `NSC_OUT_BUF`.
+/// NS world passes pointers to its own buffers (in NS RAM).
+/// Secure world copies request in, processes it, copies response out.
+///
+/// Args:
+///   ns_in_ptr:  pointer to NS input buffer (JSON request bytes)
+///   in_len:     length of input
+///   ns_out_ptr: pointer to NS output buffer (JSON response will be written here)
+///   out_cap:    capacity of output buffer
 ///
 /// Returns the response length (>0) on success, or a negative error code.
 #[no_mangle]
 #[inline(never)]
-pub extern "cmse-nonsecure-entry" fn nsc_process(in_len: u32) -> i32 {
+pub extern "cmse-nonsecure-entry" fn nsc_process(
+    ns_in_ptr: *const u8,
+    in_len: u32,
+    ns_out_ptr: *mut u8,
+    out_cap: u32,
+) -> i32 {
     if !INITIALIZED.load(Ordering::SeqCst) {
         return -1;
     }
     let in_len = in_len as usize;
-    if in_len > BUF_SIZE {
+    let out_cap = out_cap as usize;
+    if in_len > BUF_SIZE || out_cap > BUF_SIZE {
         return -2;
     }
 
     unsafe {
+        // Copy request from NS buffer into Secure buffer
+        core::ptr::copy_nonoverlapping(ns_in_ptr, NSC_IN_BUF.as_mut_ptr(), in_len);
+
         let request_bytes = &NSC_IN_BUF[..in_len];
 
         let state = SIGNER_STATE.as_mut().unwrap();
         let key_storage = KEY_STORAGE.as_mut().unwrap();
 
         let response_bytes = process_message(request_bytes, state, key_storage);
-        let resp_len = response_bytes.len().min(BUF_SIZE);
-        NSC_OUT_BUF[..resp_len].copy_from_slice(&response_bytes[..resp_len]);
+        let resp_len = response_bytes.len().min(out_cap);
 
-        // Zero input buffer (may contain DKG secrets during key generation)
+        // Copy response to NS buffer
+        core::ptr::copy_nonoverlapping(response_bytes.as_ptr(), ns_out_ptr, resp_len);
+
+        // Zero Secure input buffer
         NSC_IN_BUF[..in_len].zeroize();
 
         resp_len as i32
     }
-}
-
-/// Get pointer to the input buffer (NS world writes request bytes here).
-#[no_mangle]
-#[inline(never)]
-pub extern "cmse-nonsecure-entry" fn nsc_get_in_buf_ptr() -> *mut u8 {
-    unsafe { NSC_IN_BUF.as_mut_ptr() }
-}
-
-/// Get pointer to the output buffer (NS world reads response bytes here).
-#[no_mangle]
-#[inline(never)]
-pub extern "cmse-nonsecure-entry" fn nsc_get_out_buf_ptr() -> *const u8 {
-    unsafe { NSC_OUT_BUF.as_ptr() }
 }
 
 /// Parse JSON request, dispatch to handler, persist keys if needed, return JSON response.

@@ -91,7 +91,10 @@ fn main() -> ! {
         info!("NS peripherals deasserted from reset");
     }
 
-    // 5. Configure SAU
+    // 5. Configure DMA security — allow NS access to all channels and IRQs
+    unsafe { configure_dma_security() };
+
+    // 6. Configure SAU
     unsafe { configure_sau() };
 
     // 5. Configure ACCESSCTRL
@@ -107,6 +110,27 @@ fn main() -> ! {
         // MSP_NS = first word of NS vector table (initial SP)
         let ns_sp = core::ptr::read_volatile(NS_FLASH_BASE as *const u32);
         cortex_m::register::msp::write_ns(ns_sp);
+    }
+
+    // 10. Allow NS access to FPU (NSACR) and configure FPU for TrustZone.
+    //     Without NSACR.CP10/CP11, NS code can't use FPU and NS→S transitions
+    //     fail with LSERR when trying to save FPU context.
+    unsafe {
+        // NSACR at 0xE000ED8C — Non-Secure Access Control Register
+        // Set bits 10+11 to allow NS access to CP10+CP11 (FPU)
+        let nsacr = core::ptr::read_volatile(0xE000_ED8C as *const u32);
+        core::ptr::write_volatile(0xE000_ED8C as *mut u32, nsacr | (3 << 10));
+    }
+
+    // 11. Disable ALL FPU automatic state preservation for TrustZone.
+    //     ASPEN=0, LSPEN=0 means the CPU never tries to save/restore FPU
+    //     context on exception/security transitions. This prevents LSERR.
+    //     Software must manually save/restore FPU regs if needed (we don't use FPU in crypto).
+    unsafe {
+        // FPCCR_S at 0xE000EF34: clear ASPEN (bit 31) and LSPEN (bit 30)
+        core::ptr::write_volatile(0xE000_EF34 as *mut u32, 0x0000_0000);
+        // FPCCR_NS at 0xE002EF34: same
+        core::ptr::write_volatile(0xE002_EF34 as *mut u32, 0x0000_0000);
     }
 
     cortex_m::asm::dsb();
@@ -153,6 +177,31 @@ unsafe fn init_ns_memory() {
     core::ptr::copy_nonoverlapping(ns_sidata, ns_sdata, ns_data_len);
 
     info!("NS .bss zeroed, .data copied");
+}
+
+/// Configure DMA internal security — allow NS access to all channels and IRQs.
+///
+/// The DMA peripheral has its own per-channel and per-IRQ security registers
+/// (SECCFG_CH, SECCFG_IRQ, SECCFG_MISC) that are separate from ACCESSCTRL.
+/// Without this, NS code cannot write DMA interrupt enable registers.
+unsafe fn configure_dma_security() {
+    const DMA_BASE: u32 = 0x5000_0000;
+
+    // SECCFG_CH[0..15] at offset 0x480, stride 4
+    // Set all channels to NS (bit 1 = S flag, clear it; bit 0 = P flag)
+    for i in 0..16u32 {
+        core::ptr::write_volatile((DMA_BASE + 0x480 + i * 4) as *mut u32, 0x0);
+    }
+
+    // SECCFG_IRQ[0..3] at offset 0x4C0, stride 4
+    // Set all DMA IRQs to NS accessible
+    for i in 0..4u32 {
+        core::ptr::write_volatile((DMA_BASE + 0x4C0 + i * 4) as *mut u32, 0x0);
+    }
+
+    // SECCFG_MISC at offset 0x4D0
+    // Set sniff, timer, multi-channel trigger to NS
+    core::ptr::write_volatile((DMA_BASE + 0x4D0) as *mut u32, 0x0);
 }
 
 /// Configure SAU regions.
@@ -210,7 +259,13 @@ unsafe fn configure_sau() {
 unsafe fn configure_accessctrl() {
     #[inline(always)]
     unsafe fn grant_ns(offset: u32) {
-        core::ptr::write_volatile((0x4006_0000 + offset) as *mut u32, 0xFF);
+        // ACCESSCTRL registers require password 0xACCE0000 in the upper 16 bits
+        // Lower 8 bits are the access control value
+        // 0xFF = all masters, all security levels (S + NS + DMA + debug)
+        core::ptr::write_volatile(
+            (0x4006_0000 + offset) as *mut u32,
+            0xACCE_00FF,
+        );
     }
 
     grant_ns(0x0C0); // CLOCKS

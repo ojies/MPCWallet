@@ -52,18 +52,14 @@ fn main() -> ! {
 
     info!("NS world running — Embassy initialized via init_ns()");
 
-    // DEBUG: Blink LED to prove Embassy works in NS state
-    {
-        use embassy_rp::gpio::{Level, Output};
-        let mut led = Output::new(p.PIN_25, Level::Low);
-        loop {
-            led.set_high();
-            // Busy-wait delay (no timer/executor needed)
-            for _ in 0..1_000_000 { cortex_m::asm::nop(); }
-            led.set_low();
-            for _ in 0..1_000_000 { cortex_m::asm::nop(); }
-        }
-    }
+    // 3. Create and run Embassy executor
+    let mut executor = embassy_executor::Executor::new();
+    let executor = unsafe {
+        core::mem::transmute::<&mut embassy_executor::Executor, &'static mut embassy_executor::Executor>(&mut executor)
+    };
+    executor.run(|spawner| {
+        spawner.must_spawn(run_usb(spawner, p));
+    })
 }
 
 /// Main USB HID task.
