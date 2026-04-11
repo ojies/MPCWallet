@@ -6,21 +6,24 @@
 #    make e2e-ark        Run Ark E2E test
 #    make hardware       Start regtest for hardware device (no Ark)
 #    make hardware-ark   Start regtest for hardware device with Ark
-#    make flash          Build & flash Pico 2 firmware (UF2)
+#    make hw-build       Build HW Signer TrustZone firmware (Secure + NS)
+#    make hw-flash       Flash HW Signer via debug probe
+#    make hw-test        Smoke test HW Signer over USB HID
 #    make down           Stop everything
 # ═══════════════════════════════════════════════════════════════════════════════
 
-.PHONY: e2e e2e-ark hardware hardware-ark flash down \
+.PHONY: e2e e2e-ark hardware hardware-ark down \
 	ffi-build ffi-android threshold-ffi-build threshold-ffi-android ark-ffi-build ark-ffi-android \
-	cosigner-build server-build signer-build pico-build \
+	cosigner-build server-build signer-build \
+	hw-build hw-build-secure hw-build-ns hw-flash hw-flash-probe hw-test \
 	regtest-up regtest-down bitcoin-init mine-loop adb-reverse \
 	signer-run signer-stop server-run server-stop \
 	arkd-up arkd-down arkd-init \
-	proto threshold-test threshold-ffi-test pico-flash-probe pico-test \
+	proto threshold-test threshold-ffi-test \
 	flutter flutter-run ark-newaddress crypto-bench \
 	stress-test load-test \
 	signet-hardware-ark signet-down e2e-mutinynet e2e-mutinynet-ark \
-	e2e-test e2e-ark-test regtest regtest-ark regtest-hardware regtest-hardware-ark regtest-hardware-ark-down pico-flash
+	e2e-test e2e-ark-test regtest regtest-ark regtest-hardware regtest-hardware-ark regtest-hardware-ark-down
 
 # ── Variables ─────────────────────────────────────────────────────────────────
 
@@ -96,24 +99,7 @@ hardware-ark: cosigner-build server-build ffi-build ffi-android
 		--wasm ../cosigner/target/wasm32-wasip1/release/cosigner.wasm \
 		--port 50051
 
-# 5) Build and flash Pico 2 firmware via UF2 (hold BOOTSEL + plug in USB first)
-flash: pico-build
-	@echo "Converting ELF to UF2..."
-	cp pico-signer/target/thumbv8m.main-none-eabihf/release/pico-signer pico-signer/pico-signer.elf
-	picotool uf2 convert pico-signer/pico-signer.elf pico-signer/pico-signer.uf2 --family rp2350-arm-s
-	@echo ""
-	@echo "==> Created pico-signer/pico-signer.uf2"
-	@echo "==> Copy to the RP2350 drive:  cp pico-signer/pico-signer.uf2 /media/$$USER/RP2350/"
-	@echo ""
-	@if [ -d "/media/$$USER/RP2350" ]; then \
-		cp pico-signer/pico-signer.uf2 /media/$$USER/RP2350/ && \
-		echo "Copied! Pico will reboot with new firmware."; \
-	else \
-		echo "RP2350 drive not found. Hold BOOTSEL + plug in the Pico, then run:"; \
-		echo "  cp pico-signer/pico-signer.uf2 /media/$$USER/RP2350/"; \
-	fi
-
-# Stop everything (server, signer, mine loop, Docker)
+# 5) Stop everything (server, signer, mine loop, Docker)
 down:
 	@echo "Stopping all services..."
 	-pkill -f "target/release/server" || true
@@ -124,6 +110,38 @@ down:
 	sudo rm -rf /root/.mpc_wallet/server/db 2>/dev/null || true
 	sudo rm -rf $(DATA_DIR) 2>/dev/null || true
 	@echo "All stopped."
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  HW SIGNER (TrustZone — Secure + Non-Secure worlds)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Build Secure world (rp235x-hal, crypto, SAU — generates target/veneers.o)
+hw-build-secure:
+	@echo "Building HW Signer Secure world..."
+	cd hwsigner-secure && cargo +nightly build --release
+
+# Build Non-Secure world (Embassy, USB HID — links veneers.o from Secure build)
+hw-build-ns: hw-build-secure
+	@echo "Building HW Signer Non-Secure world..."
+	cd hwsigner && cargo clean && cargo +nightly build --release
+
+# Build both worlds
+hw-build: hw-build-ns
+
+# Flash both worlds via debug probe (requires SWD probe connected)
+hw-flash: hw-build
+	@echo "Flashing via debug probe..."
+	cp hwsigner-secure/target/thumbv8m.main-none-eabihf/release/hwsigner-secure hwsigner-secure/hwsigner-secure.elf
+	cp hwsigner/target/thumbv8m.main-none-eabihf/release/hwsigner hwsigner/hwsigner.elf
+	probe-rs download --chip RP2350 hwsigner-secure/hwsigner-secure.elf
+	probe-rs download --chip RP2350 hwsigner/hwsigner.elf
+	probe-rs reset --chip RP2350
+	@echo "Flashed and reset!"
+
+# Smoke test HW Signer over USB HID (no phone needed)
+hw-test:
+	@echo "Testing HW Signer over USB HID..."
+	scripts/.venv/bin/python3 scripts/test_hwsigner.py $(ARGS)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  BUILD TARGETS
@@ -177,10 +195,6 @@ signer-build:
 	@echo "Building Hardware Signer Test Server..."
 	-sudo chown -R $(USER):$(USER) e2e/signer-server/target 2>/dev/null || true
 	cd e2e/signer-server && cargo build --release
-
-pico-build:
-	@echo "Building Pico Signer firmware..."
-	cd pico-signer && cargo build --release
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  INFRASTRUCTURE
@@ -268,14 +282,6 @@ threshold-ffi-test:
 	@echo "Running threshold-ffi tests..."
 	cd threshold-ffi && cargo test
 
-pico-flash-probe: pico-build
-	@echo "Flashing via debug probe..."
-	cd pico-signer && cargo run --release
-
-pico-test:
-	@echo "Testing Pico Signer over USB HID..."
-	scripts/.venv/bin/python3 scripts/test_pico.py $(ARGS)
-
 flutter: ffi-android
 	cd ap && flutter run
 
@@ -354,4 +360,3 @@ regtest-down: down
 regtest-hardware: hardware
 regtest-hardware-ark: hardware-ark
 regtest-hardware-ark-down: down
-pico-flash: flash

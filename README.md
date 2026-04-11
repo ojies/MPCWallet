@@ -1,6 +1,6 @@
 # Merlin Wallet
 
-A **self-custodial Bitcoin wallet** powered by **FROST threshold signatures** and a **Raspberry Pi Pico 2 hardware signer**. No single device ever holds the full private key.
+A **self-custodial Bitcoin wallet** powered by **FROST threshold signatures** and an **RP2350 hardware signer**. No single device ever holds the full private key.
 
 Three independent identities — your phone, a hardware signer, and a coordination server — jointly control your funds through a 2-of-3 threshold scheme. Transactions require cooperation between any two parties, eliminating single points of failure while keeping the user in control.
 
@@ -18,7 +18,7 @@ Three independent identities — your phone, a hardware signer, and a coordinati
               +---------------------+---------------------+
               |                                           |
 +-------------+--------------+             +--------------+-------------+
-|   Android Phone            |   USB OTG   |   Pico 2 Hardware Signer  |
+|   Android Phone            |   USB OTG   |   HW Signer (RP2350)     |
 |   Flutter App              +-------------+   Embassy firmware         |
 |   Identity 1/3             |   HID 64B   |   Identity 2/3            |
 |   Signing + wallet logic   |   reports   |   Recovery key in flash   |
@@ -28,7 +28,7 @@ Three independent identities — your phone, a hardware signer, and a coordinati
 | Identity | Held by | Purpose |
 |----------|---------|---------|
 | **Signing** | Phone (local) | Day-to-day transaction signing |
-| **Recovery** | Pico 2 (USB HID) | Policy changes, recovery operations |
+| **Recovery** | HW Signer (USB HID) | Policy changes, recovery operations |
 | **Server** | Coordination server | Co-signs transactions, never learns the full key |
 
 Any 2-of-3 can produce a valid Taproot (BIP-340) signature. The server alone cannot move funds.
@@ -43,10 +43,10 @@ MPCWallet/
 +-- threshold-ffi/      C-ABI shared library wrapping threshold for Dart FFI
 +-- server/             Rust gRPC coordination server (Wasmtime + cosigner WASM)
 +-- cosigner/           WASM cosigner component (server-side threshold crypto)
-+-- pico-signer/        Raspberry Pi Pico 2 firmware (Embassy + USB HID)
++-- hwsigner/           Hardware signer firmware (Embassy + USB HID, RP2350)
 +-- protocol/           gRPC stubs and proto definitions
 +-- e2e/                End-to-end integration tests (includes signer-server)
-+-- scripts/            Utilities (bitcoin.sh, test_pico.py, udev rules)
++-- scripts/            Utilities (bitcoin.sh, test_hwsigner.py, udev rules)
 +-- docker-compose.yml  Bitcoin regtest environment (bitcoind + electrs)
 +-- Makefile            Build, flash, and run targets
 ```
@@ -61,7 +61,7 @@ High-level Dart API that orchestrates the full MPC protocol. Manages two local i
 
 ### Threshold Library (`threshold/`)
 
-`#![no_std]` Rust implementation of FROST (Flexible Round-Optimized Schnorr Threshold Signatures) over secp256k1 using the `k256` crate. Includes the full 3-round DKG protocol, Pedersen VSS, nonce commitment generation, signature share computation, Lagrange interpolation, Taproot key tweaking, and key refresh. Compiles for four targets: native (tests & server), `wasm32-wasip1` (cosigner), `thumbv8m.main-none-eabihf` (Pico 2), and Dart FFI (`libthreshold_ffi.so`).
+`#![no_std]` Rust implementation of FROST (Flexible Round-Optimized Schnorr Threshold Signatures) over secp256k1 using the `k256` crate. Includes the full 3-round DKG protocol, Pedersen VSS, nonce commitment generation, signature share computation, Lagrange interpolation, Taproot key tweaking, and key refresh. Compiles for four targets: native (tests & server), `wasm32-wasip1` (cosigner), `thumbv8m.main-none-eabihf` (hwsigner), and Dart FFI (`libthreshold_ffi.so`).
 
 ### Threshold FFI (`threshold-ffi/`)
 
@@ -75,13 +75,13 @@ Rust gRPC server that participates as the third identity in DKG and signing. Eac
 
 WASI P2 Component Model guest that encapsulates all threshold cryptography on the server side. Compiled to `wasm32-wasip1` and loaded by the server into per-user Wasmtime instances. Exposes DKG, nonce generation, signing, and key refresh operations through a WIT interface. Shares no memory between users.
 
-### Pico Signer Firmware (`pico-signer/`)
+### HW Signer Firmware (`hwsigner/`)
 
 Embassy-based async firmware for the RP2350 (Raspberry Pi Pico 2). Communicates over vendor-defined USB HID (64-byte reports) using a chunking protocol for JSON messages up to 8KB. Persists key material to the last 4KB flash sector after DKG. Handles all six commands: `dkg_init`, `dkg_round2`, `dkg_round3`, `generate_nonce`, `sign`, `get_info`.
 
 ### Signer Server (`e2e/signer-server/`)
 
-Standalone Rust TCP server that implements the same JSON command protocol as the Pico firmware. Used in E2E and integration tests to simulate the hardware signer without physical hardware.
+Standalone Rust TCP server that implements the same JSON command protocol as the hwsigner firmware. Used in E2E and integration tests to simulate the hardware signer without physical hardware.
 
 ## Protocol
 
@@ -95,11 +95,11 @@ Any two identities can co-sign. Each generates an ephemeral nonce pair and excha
 
 ### Spending Policies
 
-Key refresh creates additional key shares with time-windowed spending limits. Transactions below the threshold use the policy key (phone + server, no hardware signer needed). Policy updates and deletion require a recovery signature from the Pico.
+Key refresh creates additional key shares with time-windowed spending limits. Transactions below the threshold use the policy key (phone + server, no hardware signer needed). Policy updates and deletion require a recovery signature from the hardware signer.
 
 ### USB HID Chunking
 
-Messages between the phone and Pico are split into 64-byte HID reports:
+Messages between the phone and hardware signer are split into 64-byte HID reports:
 
 ```
 First report:  [channel:2][cmd:1][seq:2][total_len:2][payload:57B]
@@ -120,12 +120,12 @@ Channel `0x0101`, command `0x05` (MSG). Sequence numbers are big-endian `u16`. L
 ```bash
 # Install Rust targets
 rustup target add wasm32-wasip1                  # Cosigner WASM component
-rustup target add thumbv8m.main-none-eabihf      # Pico 2 firmware
+rustup target add thumbv8m.main-none-eabihf      # HW Signer firmware
 
 # Install cargo-component for building WASI components
 cargo install cargo-component
 
-# Install probe-rs for Pico flashing (optional, UF2 also supported)
+# Install probe-rs for HW Signer flashing (optional, UF2 also supported)
 cargo install probe-rs-tools
 ```
 
@@ -152,15 +152,15 @@ In a second terminal:
 cd ap && flutter run   # Launch on emulator
 ```
 
-### 3b. Physical device + Pico hardware signer
+### 3b. Physical device + hardware signer
 
-Flash the Pico (hold BOOTSEL, plug in USB, release):
+Flash the device (hold BOOTSEL, plug in USB, release):
 
 ```bash
-make pico-flash       # Build firmware, convert to UF2, copy to RP2350 drive
+make hw-flash         # Build firmware, convert to UF2, copy to RP2350 drive
 ```
 
-Connect your Android phone via ADB (wireless debugging recommended to free the USB port for the Pico):
+Connect your Android phone via ADB (wireless debugging recommended to free the USB port for the signer):
 
 ```bash
 adb pair <ip>:<pairing-port>     # Pair once
@@ -174,22 +174,22 @@ In a second terminal:
 cd ap && flutter run   # Select "Hardware Signer (USB)" in onboarding
 ```
 
-Connect the Pico to the phone via USB OTG adapter. The app will auto-discover it.
+Connect the signer to the phone via USB OTG adapter. The app will auto-discover it.
 
-### 4. Smoke test the Pico (no phone needed)
+### 4. Smoke test the hardware signer (no phone needed)
 
 ```bash
 # Quick: just get_info
-make pico-test
+make hw-test
 
 # Full: 2-of-2 DKG + sign with signer-server as second participant
-make pico-test ARGS="--full-dkg"
+make hw-test ARGS="--full-dkg"
 ```
 
 Requires the Python `hidapi` package (`pip install hidapi`) and the udev rule:
 
 ```bash
-sudo cp scripts/99-pico-signer.rules /etc/udev/rules.d/
+sudo cp scripts/99-hwsigner.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
 
@@ -205,8 +205,8 @@ cd threshold-ffi && cargo test
 # End-to-end (builds all deps, starts Docker automatically)
 make e2e-test
 
-# Pico firmware over USB HID
-make pico-test ARGS="--full-dkg"
+# HW Signer firmware over USB HID
+make hw-test ARGS="--full-dkg"
 
 ## Performance & Stress Testing
 
@@ -250,9 +250,9 @@ This target:
 | `threshold-ffi-build` | Build threshold FFI shared library (`libthreshold_ffi.so`) |
 | `threshold-test` | Run threshold Rust unit tests |
 | `threshold-ffi-test` | Run threshold-ffi tests |
-| `pico-build` | Build Pico 2 firmware |
-| `pico-flash` | Build, convert to UF2, and copy to RP2350 drive |
-| `pico-test` | Test Pico over USB HID (`ARGS="--full-dkg"` for full test) |
+| `hw-build` | Build HW Signer firmware |
+| `hw-flash` | Build, convert to UF2, and copy to RP2350 drive |
+| `hw-test` | Test HW Signer over USB HID (`ARGS="--full-dkg"` for full test) |
 | `adb-reverse` | Forward ports 50051 + 50001 from phone to PC |
 | `regtest` | Full dev stack: Docker + init + signer + server |
 | `regtest-hardware` | Hardware dev stack: Docker + init + ADB + server |
@@ -263,13 +263,13 @@ This target:
 ## Security Model
 
 - The **full private key never exists** on any single device.
-- The **hardware signer's secret share** never leaves the Pico's flash memory.
-- The **server cannot unilaterally sign** — it always needs cooperation from the phone or Pico.
+- The **hardware signer's secret share** never leaves the device's flash memory.
+- The **server cannot unilaterally sign** — it always needs cooperation from the phone or hardware signer.
 - The server is designed to run inside a **Trusted Execution Environment (TEE)**, ensuring the server operator cannot access key shares in memory.
 - Each user's server-side key share runs in an **isolated WASM sandbox** (Wasmtime) with no shared memory between users.
 - Signing requests are **authenticated** with Schnorr signatures over timestamped messages to prevent replay attacks.
 - Policy changes (update/delete spending limits) require a **recovery signature** from the hardware signer.
-- The Pico uses the RP2350's **hardware TRNG** for all randomness.
+- The hardware signer uses the RP2350's **hardware TRNG** for all randomness.
 
 ## References
 
