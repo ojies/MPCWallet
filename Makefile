@@ -128,12 +128,24 @@ hw-build-ns: hw-build-secure
 # Build both worlds
 hw-build: hw-build-ns
 
+# Sign Secure world firmware (ECDSA secp256k1 + SHA-256)
+hw-sign: hw-build
+	@echo "Signing Secure world firmware..."
+	cp hwsigner-secure/target/thumbv8m.main-none-eabihf/release/hwsigner-secure \
+		hwsigner-secure/hwsigner-secure.elf
+	picotool seal --sign --hash \
+		hwsigner-secure/hwsigner-secure.elf \
+		hwsigner-secure/hwsigner-secure-signed.elf \
+		keys/ec_private_key.pem \
+		keys/otp.json \
+		--major 0 --minor 1
+	@echo "Signed: hwsigner-secure/hwsigner-secure-signed.elf"
+
 # Flash both worlds via debug probe (requires SWD probe connected)
-hw-flash: hw-build
+hw-flash: hw-sign
 	@echo "Flashing via debug probe..."
-	cp hwsigner-secure/target/thumbv8m.main-none-eabihf/release/hwsigner-secure hwsigner-secure/hwsigner-secure.elf
 	cp hwsigner/target/thumbv8m.main-none-eabihf/release/hwsigner hwsigner/hwsigner.elf
-	probe-rs download --chip RP2350 hwsigner-secure/hwsigner-secure.elf
+	probe-rs download --chip RP2350 hwsigner-secure/hwsigner-secure-signed.elf
 	probe-rs download --chip RP2350 hwsigner/hwsigner.elf
 	probe-rs reset --chip RP2350
 	@echo "Flashed and reset!"

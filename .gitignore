@@ -47,6 +47,9 @@ hwsigner-secure/target
 .env
 *.env
 
+# Secure Boot signing keys (NEVER commit)
+keys/
+
 # Downloaded tooling (vendored protoc binary — install via package manager instead)
 /bin/
 
