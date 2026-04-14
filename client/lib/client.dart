@@ -10,6 +10,7 @@ import 'package:grpc/src/client/channel.dart' as grpc_base;
 import 'package:client/wallet_api.dart';
 import 'package:client/grpc_wallet_api.dart';
 import 'package:client/rest_wallet_api.dart';
+import 'package:http/http.dart' as http;
 import 'package:client/threshold/core/dkg.dart';
 import 'package:client/threshold/threshold.dart' as threshold;
 import 'package:client/threshold/frost/signing.dart' as frost;
@@ -105,7 +106,8 @@ class MpcClient {
     String? storageId,
     HiveCipher? encryptionCipher,
     required HardwareSignerInterface hardwareSigner,
-  })  : _stub = RestWalletApi(baseUrl),
+    http.Client? httpClient,
+  })  : _stub = RestWalletApi(baseUrl, httpClient: httpClient),
         _maxSigners = maxSigners,
         _minSigners = minSigners,
         _hardwareSigner = hardwareSigner,
