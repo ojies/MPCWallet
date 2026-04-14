@@ -216,12 +216,13 @@ unsafe fn configure_sau() {
     sau.rbar.write(Rbar(0x2000_0000));
     sau.rlar.write(Rlar(0x2005_FFE0 | 1));
 
-    // Region 2: SG veneers — crypto NSC entry points at 0x1002ABC0
-    // Address from: arm-none-eabi-nm target/veneers.o
-    // NOTE: Must update if Secure binary layout changes
+    // Region 2: SG veneers — crypto NSC entry points
+    // Covers the .gnu.sgstubs section in Secure flash.
+    // Wide range (0x1002A000-0x1002FFFF) to tolerate veneer address shifts
+    // when the Secure binary is rebuilt.
     sau.rnr.write(Rnr(2));
-    sau.rbar.write(Rbar(0x1002_AB00));
-    sau.rlar.write(Rlar(0x1002_ABE0 | 3)); // Enable + NSC
+    sau.rbar.write(Rbar(0x1002_A000));
+    sau.rlar.write(Rlar(0x1002_FFE0 | 3)); // Enable + NSC
 
     // Region 3: Peripherals + USB DPRAM (0x40000000 - 0x50FFFFFF) → NS
     sau.rnr.write(Rnr(3));
