@@ -7,6 +7,11 @@
 # Rust
 **/target/
 
+# Nix build outputs (symlinks to /nix/store/...)
+result
+result-*
+**/flake_result
+
 # Flutter
 **/build/
 **/.flutter-plugins

@@ -142,13 +142,22 @@ hw-sign: hw-build
 	@echo "Signed: hwsigner-secure/hwsigner-secure-signed.elf"
 
 # Flash both worlds via debug probe (requires SWD probe connected)
-hw-flash: hw-sign
+hw-flash-probe: hw-sign
 	@echo "Flashing via debug probe..."
 	cp hwsigner/target/thumbv8m.main-none-eabihf/release/hwsigner hwsigner/hwsigner.elf
 	probe-rs download --chip RP2350 hwsigner-secure/hwsigner-secure-signed.elf
 	probe-rs download --chip RP2350 hwsigner/hwsigner.elf
 	probe-rs reset --chip RP2350
 	@echo "Flashed and reset!"
+
+# Flash both worlds via BOOTSEL USB (hold BOOTSEL + plug in first)
+hw-flash: hw-sign
+	@echo "Flashing via picotool (device must be in BOOTSEL mode)..."
+	cp hwsigner/target/thumbv8m.main-none-eabihf/release/hwsigner hwsigner/hwsigner.elf
+	picotool load hwsigner-secure/hwsigner-secure-signed.elf --ignore-partitions --family rp2350-arm-s -v
+	picotool load hwsigner/hwsigner.elf --ignore-partitions --family rp2350-arm-s -v
+	picotool reboot
+	@echo "Flashed and rebooted!"
 
 # Smoke test HW Signer over USB HID (no phone needed)
 hw-test:
@@ -162,9 +171,10 @@ hw-test:
 # Combined FFI builds
 ffi-build: threshold-ffi-build ark-ffi-build
 
-ffi-android: threshold-ffi-android ark-ffi-android
+ffi-android: threshold-ffi-android ark-ffi-android              # arm64 only
+ffi-android-all: ffi-android threshold-ffi-android-32 ark-ffi-android-32  # arm64 + arm32
 
-# Individual FFI builds
+# Individual FFI builds (host)
 threshold-ffi-build:
 	@echo "Building threshold-ffi..."
 	cd threshold-ffi && cargo build --release
@@ -175,6 +185,7 @@ ark-ffi-build:
 	cd ark-ffi && cargo build --release
 	@echo "Built: ark-ffi/target/release/libark_ffi.so"
 
+# Android arm64 (aarch64)
 threshold-ffi-android:
 	@echo "Building threshold-ffi for Android arm64..."
 	export PATH="$(NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64/bin:$$PATH" && \
@@ -192,6 +203,29 @@ ark-ffi-android:
 	cp ark-ffi/target/aarch64-linux-android/release/libark_ffi.so \
 		ap/android/app/src/main/jniLibs/arm64-v8a/
 	@echo "Installed: ap/android/app/src/main/jniLibs/arm64-v8a/libark_ffi.so"
+
+# Android arm32 (armv7) — for 32-bit devices
+threshold-ffi-android-32:
+	@echo "Building threshold-ffi for Android arm32..."
+	export PATH="$(NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64/bin:$$PATH" && \
+	export CC_armv7_linux_androideabi=armv7a-linux-androideabi21-clang && \
+	export AR_armv7_linux_androideabi=llvm-ar && \
+	cd threshold-ffi && cargo build --release --target armv7-linux-androideabi
+	mkdir -p ap/android/app/src/main/jniLibs/armeabi-v7a
+	cp threshold-ffi/target/armv7-linux-androideabi/release/libthreshold_ffi.so \
+		ap/android/app/src/main/jniLibs/armeabi-v7a/
+	@echo "Installed: ap/android/app/src/main/jniLibs/armeabi-v7a/libthreshold_ffi.so"
+
+ark-ffi-android-32:
+	@echo "Building ark-ffi for Android arm32..."
+	export PATH="$(NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64/bin:$$PATH" && \
+	export CC_armv7_linux_androideabi=armv7a-linux-androideabi21-clang && \
+	export AR_armv7_linux_androideabi=llvm-ar && \
+	cd ark-ffi && cargo build --release --target armv7-linux-androideabi
+	mkdir -p ap/android/app/src/main/jniLibs/armeabi-v7a
+	cp ark-ffi/target/armv7-linux-androideabi/release/libark_ffi.so \
+		ap/android/app/src/main/jniLibs/armeabi-v7a/
+	@echo "Installed: ap/android/app/src/main/jniLibs/armeabi-v7a/libark_ffi.so"
 
 # Server & cosigner
 cosigner-build:
@@ -295,6 +329,9 @@ threshold-ffi-test:
 	cd threshold-ffi && cargo test
 
 flutter: ffi-android
+	cd ap && flutter run
+
+flutter-32: ffi-android-all
 	cd ap && flutter run
 
 ark-newaddress:
